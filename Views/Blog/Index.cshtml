@@ -1,0 +1,252 @@
+@model IEnumerable<Bloomie.Models.Entities.Blog>
+@{
+    ViewData["Title"] = "Blog & Tin Tức";
+}
+
+<style>
+    /* Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    .blog-list-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        margin-bottom: 30px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .blog-list-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .blog-list-image {
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .blog-list-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+    
+    .blog-list-card:hover .blog-list-image img {
+        transform: scale(1.1);
+    }
+    
+    .blog-list-content {
+        padding: 30px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .blog-meta {
+        display: flex;
+        gap: 20px;
+        color: #999;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+    }
+    
+    .blog-meta i {
+        margin-right: 5px;
+    }
+    
+    .blog-list-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #2d3436;
+        margin-bottom: 15px;
+        line-height: 1.4;
+    }
+    
+    .blog-list-title a {
+        color: #2d3436;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    
+    .blog-list-title a:hover {
+        color: #ff6b6b;
+    }
+    
+    .blog-list-excerpt {
+        color: #636e72;
+        line-height: 1.7;
+        margin-bottom: 20px;
+        flex: 1;
+    }
+    
+    .blog-read-more {
+        color: #ff6b6b;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: gap 0.3s;
+    }
+    
+    .blog-read-more:hover {
+        gap: 10px;
+        color: #ee5a6f;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: #999;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+</style>
+
+<!-- Customer-Friendly Header with Breadcrumb -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Blog & Tin Tức</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-newspaper me-2"></i>
+                Blog & Tin Tức
+            </h1>
+            <p class="header-subtitle">Mẹo chăm sóc hoa và xu hướng trang trí</p>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (Model != null && Model.Any())
+    {
+        <div class="row">
+            @foreach (var blog in Model)
+            {
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="blog-list-card">
+                        <div class="blog-list-image">
+                            <a href="@Url.Action("Details", "Blog", new { id = blog.Slug })">
+                                <img src="@(blog.ImageUrl ?? "/images/blog/default.jpg")" alt="@blog.Title">
+                            </a>
+                        </div>
+                        <div class="blog-list-content">
+                            <div class="blog-meta">
+                                <span><i class="bi bi-calendar3"></i>@blog.PublishDate.ToString("dd/MM/yyyy")</span>
+                                @if (!string.IsNullOrEmpty(blog.Author))
+                                {
+                                    <span><i class="bi bi-person"></i>@blog.Author</span>
+                                }
+                                <span><i class="bi bi-eye"></i>@blog.ViewCount</span>
+                            </div>
+                            <h3 class="blog-list-title">
+                                <a href="@Url.Action("Details", "Blog", new { id = blog.Slug })">@blog.Title</a>
+                            </h3>
+                            <p class="blog-list-excerpt">@(blog.Excerpt ?? "")</p>
+                            <a href="@Url.Action("Details", "Blog", new { id = blog.Slug })" class="blog-read-more">
+                                Đọc thêm <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-journal-x"></i>
+            <h3>Chưa có bài viết nào</h3>
+            <p>Hãy quay lại sau để đọc những bài viết mới nhất!</p>
+        </div>
+    }
+</div>

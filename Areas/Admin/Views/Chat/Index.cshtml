@@ -1,0 +1,4223 @@
+@{
+    ViewData["Title"] = "Quản Lý Chat Hỗ Trợ";
+    Layout = "~/Areas/Admin/Views/Shared/_ChatLayout.cshtml";
+}
+
+<div class="container-fluid">
+    @* <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h2 class="mb-1">
+                            <i class="fas fa-comments text-primary"></i> Quản Lý Chat Hỗ Trợ Khách Hàng
+                        </h2>
+                        <p class="text-muted mb-0">Tương tác và hỗ trợ khách hàng real-time</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Working Hours Info -->
+                        <div class="working-hours-admin-badge" id="admin-working-hours">
+                            <i class="fas fa-clock"></i>
+                            <span id="admin-working-hours-text">Đang tải...</span>
+                        </div>
+                        <span class="badge bg-success pulse-badge">
+                            <i class="fas fa-circle"></i> Online
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> *@
+
+    <div class="row mt-4">
+        <!-- Conversation List -->
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 conversation-card">
+                <div class="card-header conversation-list-header">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="mb-0"><i class="fas fa-inbox"></i> Hội Thoại</h5>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <a href="@Url.Action("Analytics", "Chat", new { area = "Admin" })" class="btn btn-sm" title="Xem báo cáo thống kê" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); text-decoration: none;">
+                                <i class="fas fa-chart-line"></i>
+                            </a>
+                            <span class="badge badge-counter" id="total-conversations">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Search & Filter Section -->
+                    <div class="search-filter-section mb-3">
+                        <!-- Search Input -->
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="search-conversations" 
+                                   placeholder="Tìm kiếm theo tên KH hoặc nội dung..."
+                                   autocomplete="off">
+                            <button class="btn btn-outline-secondary" type="button" id="clear-search-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <!-- Advanced Filters -->
+                        <div class="d-flex gap-1">
+                            <!-- Filter by Tag -->
+                            <select class="form-select form-select-sm" id="filter-tag" style="flex: 1;">
+                                <option value="">🏷️ Tag</option>
+                                <option value="Tư vấn">Tư vấn</option>
+                                <option value="Khiếu nại">Khiếu nại</option>
+                                <option value="VIP">VIP</option>
+                                <option value="Đặt hàng">Đặt hàng</option>
+                                <option value="Thanh toán">Thanh toán</option>
+                            </select>
+
+                            <!-- Filter by Priority -->
+                            <select class="form-select form-select-sm" id="filter-priority" style="flex: 1;">
+                                <option value="">⚡ Độ ưu tiên</option>
+                                <option value="0">Bình thường</option>
+                                <option value="1">Cao</option>
+                                <option value="2">Khẩn cấp</option>
+                            </select>
+
+                            <!-- Filter by Staff -->
+                            <select class="form-select form-select-sm" id="filter-staff" style="flex: 1;">
+                                <option value="">👤 Quản lý</option>
+                                <option value="unassigned">Chưa nhận</option>
+                                <!-- Staff list will be populated dynamically -->
+                            </select>
+
+                            <!-- Clear all filters -->
+                            <button class="btn btn-sm btn-outline-danger" id="clear-filters-btn" type="button" title="Xóa bộ lọc">
+                                <i class="fas fa-redo"></i>
+                            </button>
+                        </div>
+
+                        <!-- Active filters display -->
+                        <div id="active-filters" class="mt-2" style="display: none;">
+                            <small class="text-muted">Bộ lọc: </small>
+                            <span id="active-filters-badges"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-sm btn-filter active" data-filter="all">
+                            <i class="fas fa-list"></i> Tất cả
+                        </button>
+                        <button type="button" class="btn btn-sm btn-filter" data-filter="unread">
+                            <i class="fas fa-envelope"></i> Chưa đọc
+                        </button>
+                        <button type="button" class="btn btn-sm btn-filter" data-filter="closed">
+                            <i class="fas fa-check-circle"></i> Đã đóng
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0" style="max-height: 800px; overflow-y: auto;">
+                    <div class="list-group list-group-flush" id="conversation-list">
+                        <div class="text-center p-4 text-muted">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                            <p>Đang tải...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 chat-window-card" style="height: 900px; display: flex; flex-direction: column;">
+                <!-- Chat Header -->
+                <div class="chat-window-header" id="chat-header" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <div class="chat-avatar-wrapper me-3">
+                            <div class="chat-avatar" id="chat-customer-avatar">
+                                <i class="fas fa-user-circle fa-2x"></i>
+                            </div>
+                            <span class="customer-status-dot"></span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h5 class="mb-0" id="chat-customer-name">-</h5>
+                            <small id="chat-customer-status">-</small>
+                            <div class="mt-2">
+                                <span class="badge bg-info me-2" id="current-tag-badge" style="display: none;">
+                                    <i class="fas fa-tag"></i> <span id="current-tag-text"></span>
+                                </span>
+                                <span class="badge bg-warning" id="current-priority-badge" style="display: none;">
+                                    <i class="fas fa-exclamation-circle"></i> <span id="current-priority-text"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <!-- Tools -->
+                            <button class="btn btn-sm btn-light" id="search-in-chat-btn" title="Tìm kiếm tin nhắn">
+                                <i class="fas fa-search"></i> Tìm
+                            </button>
+                            <div class="dropdown d-inline">
+                                <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="tagDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Phân loại">
+                                    <i class="fas fa-tag"></i> Tag
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="tagDropdown">
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag(null, 0); return false;"><i class="fas fa-times"></i> Xóa tag</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag('Tư vấn', 0); return false;"><i class="fas fa-comments" style="color: #3b82f6;"></i> Tư vấn</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag('Khiếu nại', 2); return false;"><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Khiếu nại</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag('VIP', 1); return false;"><i class="fas fa-crown" style="color: #f59e0b;"></i> VIP</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag('Đặt hàng', 0); return false;"><i class="fas fa-shopping-cart" style="color: #10b981;"></i> Đặt hàng</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="setConversationTag('Thanh toán', 1); return false;"><i class="fas fa-credit-card" style="color: #8b5cf6;"></i> Thanh toán</a></li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-sm btn-warning" id="block-user-btn" title="Chặn người dùng" style="display: none;">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                            
+                            <!-- Divider -->
+                            <div style="height: 24px; width: 1px; background: #dee2e6; margin: 0 8px;"></div>
+                            
+                            <!-- Actions -->
+                            <button class="btn btn-sm btn-success" id="assign-to-me-btn" title="Nhận hỗ trợ">
+                                <i class="fas fa-hand-paper"></i> Nhận
+                            </button>
+                            <button class="btn btn-sm btn-info" id="transfer-chat-btn" title="Chuyển chat cho staff khác">
+                                <i class="fas fa-exchange-alt"></i> Chuyển
+                            </button>
+                            <button class="btn btn-sm btn-light" id="fullscreen-btn" title="Toàn màn hình">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" id="close-conversation-btn" title="Đóng hội thoại">
+                                <i class="fas fa-times-circle"></i> Đóng
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Search in chat toolbar -->
+                    <div id="search-in-chat-toolbar" style="display: none; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 12px 20px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-search"></i>
+                            <input type="text" 
+                                   class="form-control form-control-sm" 
+                                   id="search-in-chat-input" 
+                                   placeholder="Tìm kiếm tin nhắn..."
+                                   style="flex: 1; border: none; box-shadow: none;"
+                                   autocomplete="off">
+                            <span id="search-results-count" style="font-size: 13px; white-space: nowrap;">0/0</span>
+                            <button class="btn btn-sm btn-light" id="search-prev-btn" title="Kết quả trước">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light" id="search-next-btn" title="Kết quả sau">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <button class="btn btn-sm btn-light" id="close-search-btn" title="Đóng">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Multi-select toolbar -->
+                    <div id="multi-select-toolbar" style="display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 24px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div style="font-size: 15px; font-weight: 500;">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <span id="selected-count" style="font-weight: 700; font-size: 18px;">0</span> 
+                                <span style="opacity: 0.95;">tin nhắn đã chọn</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-light me-2" id="cancel-multi-select-btn" style="border-radius: 8px; padding: 8px 16px; font-weight: 500; border: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                    <i class="fas fa-times"></i> Hủy
+                                </button>
+                                <button class="btn btn-sm btn-danger" id="delete-selected-btn" style="border-radius: 8px; padding: 8px 16px; font-weight: 500; border: none; box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);">
+                                    <i class="fas fa-trash-alt"></i> Xóa đã chọn
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="card-body" style="flex: 1; overflow-y: auto; background: #f8f9fa;" id="chat-messages">
+                    <div class="text-center p-5" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px;">
+                        <div style="position: relative; animation: float 3s ease-in-out infinite;">
+                            <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);">
+                                <i class="fas fa-comments" style="font-size: 60px; color: white;"></i>
+                            </div>
+                            <div style="position: absolute; top: 0; right: 0; width: 35px; height: 35px; background: #10b981; border-radius: 50%; border: 4px solid #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-check" style="font-size: 16px; color: white;"></i>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <h4 style="color: #1f2937; font-weight: 600; margin-bottom: 10px; font-size: 1.5rem;">Hỗ trợ khách hàng 24/7</h4>
+                            <p style="color: #6b7280; font-size: 1rem; margin-bottom: 8px;">Chọn một hội thoại bên trái để bắt đầu</p>
+                            <p style="color: #9ca3af; font-size: 0.9rem;">
+                                <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> 
+                                Sử dụng Quick Replies để trả lời nhanh hơn
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 15px; margin-top: 10px;">
+                            <div style="text-align: center; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                <i class="fas fa-bolt" style="font-size: 24px; color: #667eea; margin-bottom: 8px;"></i>
+                                <p style="font-size: 0.85rem; color: #4b5563; margin: 0; font-weight: 500;">Phản hồi nhanh</p>
+                            </div>
+                            <div style="text-align: center; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                <i class="fas fa-link" style="font-size: 24px; color: #10b981; margin-bottom: 8px;"></i>
+                                <p style="font-size: 0.85rem; color: #4b5563; margin: 0; font-weight: 500;">Gửi đính kèm</p>
+                            </div>
+                            <div style="text-align: center; padding: 15px 20px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                                <i class="fas fa-tags" style="font-size: 24px; color: #f59e0b; margin-bottom: 8px;"></i>
+                                <p style="font-size: 0.85rem; color: #4b5563; margin: 0; font-weight: 500;">Phân loại chat</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="px-3 py-2 bg-light" id="typing-indicator" style="display: none;">
+                    <small class="text-muted">
+                        <i class="fas fa-circle-notch fa-spin"></i> Khách hàng đang gõ...
+                    </small>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="card-footer bg-white" id="chat-input-area" style="display: none;">
+                    <!-- Quick Replies -->
+                    <div id="quick-replies-section" class="mb-2" style="display: none;">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Xin chào bạn! 🌸 Cảm ơn bạn đã liên hệ với Bloomie. Mình là nhân viên tư vấn, rất vui được hỗ trợ bạn hôm nay. Bạn đang quan tâm đến sản phẩm nào hoặc cần tư vấn gì về hoa của chúng mình ạ?">
+                                👋 Chào hỏi
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Dạ, cảm ơn bạn rất nhiều đã tin tưởng và lựa chọn Bloomie! 🌹 Chúng mình luôn cố gắng mang đến những sản phẩm hoa tươi đẹp nhất và dịch vụ tốt nhất cho khách hàng. Nếu có bất kỳ thắc mắc gì, đừng ngại nhắn tin cho mình bất cứ lúc nào nhé! 💐">
+                                🙏 Cảm ơn
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Mình đã nhận được đơn hàng của bạn rồi ạ! 📦 Hiện tại đơn hàng đang trong quá trình được chuẩn bị cẩn thận bởi florist chuyên nghiệp của chúng mình. Chúng mình sẽ chọn những bông hoa tươi đẹp nhất và cắm theo đúng mẫu bạn đã chọn. Dự kiến trong vòng 2-4 giờ nữa đơn hàng sẽ sẵn sàng để giao đến tay bạn nhé! 🌸">
+                                📦 Đang xử lý đơn
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Tin vui cho bạn nhé! 🚚 Đơn hàng của bạn đã được chúng mình giao cho đơn vị vận chuyển và đang trên đường đến địa chỉ bạn đã cung cấp rồi ạ. Bạn vui lòng để ý điện thoại để nhận cuộc gọi từ shipper nhé. Nếu có bất kỳ vấn đề gì về giao hàng, bạn nhắn tin cho mình ngay để được hỗ trợ kịp thời! 📞">
+                                🚚 Đã giao vận chuyển
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Mình thành thật xin lỗi bạn về sự bất tiện này! 😔 Đây là lỗi từ phía chúng mình và mình hoàn toàn hiểu được cảm xúc của bạn. Mình sẽ kiểm tra kỹ tình huống này và báo cáo lên quản lý để tìm phương án giải quyết tốt nhất cho bạn ngay. Bloomie sẽ chịu trách nhiệm và đảm bảo quyền lợi của bạn được đảm bảo. Xin bạn cho chúng mình một cơ hội để khắc phục nhé! 🙏">
+                                😔 Xin lỗi
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Dạ, sản phẩm này hiện đang còn hàng ạ! ✅ Và hoa của chúng mình đều là hoa tươi mới nhập trong ngày nên chất lượng rất đảm bảo luôn. Bạn có thể yên tâm đặt hàng ngay trên website hoặc để mình hỗ trợ bạn đặt hàng qua chat này cũng được nhé! 🌹 Nếu cần tư vấn thêm về màu sắc, kích thước hay lời nhắn kèm theo, cứ hỏi mình nhé!">
+                                ✅ Còn hàng
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Rất tiếc là sản phẩm này hiện tại đã hết hàng rồi ạ 😢 Do sản phẩm rất được ưa chuộng nên đã bán hết trong đợt vừa rồi. Tuy nhiên, chúng mình sẽ nhập hàng lại sớm nhất có thể (dự kiến 1-2 ngày nữa). Hoặc bạn có thể xem qua một số mẫu hoa tương tự cũng rất đẹp mà mình muốn giới thiệu cho bạn. Mình gửi link cho bạn xem nhé! 🌸 Bạn thích mẫu nào cứ nhắn mình!">
+                                ❌ Hết hàng
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Về phương thức thanh toán, Bloomie hỗ trợ rất linh hoạt cho bạn ạ: 💳
+
+1️⃣ Tiền mặt khi nhận hàng (COD) - Bạn thanh toán trực tiếp cho shipper
+2️⃣ Chuyển khoản ngân hàng - Mình sẽ gửi thông tin tài khoản để bạn chuyển khoản
+3️⃣ Ví điện tử VNPay - Thanh toán nhanh chóng qua cổng VNPay ngay trên website
+
+Bạn chọn hình thức nào tiện nhất cho mình nhé! Nếu cần hướng dẫn chi tiết, cứ nhắn mình! 😊">
+                                💳 Thanh toán
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary quick-reply-btn" data-message="Cảm ơn bạn rất nhiều đã dành thời gian trao đổi với mình! 🌸 Mình rất vui được hỗ trợ bạn hôm nay. Nếu có bất kỳ thắc mắc nào về sản phẩm, đơn hàng hay cần tư vấn thêm, bạn cứ thoải mái nhắn tin cho Bloomie bất cứ lúc nào nhé! Chúc bạn một ngày thật tuyệt vời! 💐✨">
+                                ✨ Kết thúc
+                            </button>
+                            <button class="btn btn-sm btn-outline-info quick-reply-btn" data-message="Về vấn đề này, mình xin phép được kiểm tra kỹ và trao đổi với bộ phận liên quan để đưa ra câu trả lời chính xác nhất cho bạn nhé! ⏱️ Bạn vui lòng cho mình khoảng 5-10 phút để xác nhận. Mình sẽ phản hồi lại ngay cho bạn. Cảm ơn bạn đã kiên nhẫn! 🙏">
+                                ⏱️ Cần kiểm tra
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning quick-reply-btn" data-message="Về chương trình khuyến mãi hiện tại của Bloomie: 🎁
+
+✨ Giảm 10% cho đơn hàng từ 500.000đ
+✨ Miễn phí giao hàng trong bán kính 5km
+✨ Tặng thiệp chúc mừng đẹp hoàn toàn miễn phí
+✨ Tích điểm đổi quà cho khách hàng thân thiết
+
+Ngoài ra còn nhiều ưu đãi khác nữa ạ! Bạn có thể xem chi tiết tại mục Khuyến Mãi trên website nhé! 🌟">
+                                🎁 Khuyến mãi
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger quick-reply-btn" data-message="Về chính sách đổi trả hàng của Bloomie, mình xin tóm tắt cho bạn như sau: 🔄
+
+📋 Điều kiện đổi/trả:
+✅ Sản phẩm bị lỗi, hư hỏng do vận chuyển
+✅ Sản phẩm không đúng mô tả (màu sắc, kích thước, loại hoa)
+✅ Hoa không tươi khi nhận hàng
+
+⏰ Thời gian đổi/trả:
+• Báo ngay trong vòng 2 giờ sau khi nhận hàng
+• Gửi hình ảnh sản phẩm lỗi cho chúng mình
+
+🔄 Quy trình:
+1️⃣ Liên hệ qua chat này hoặc hotline
+2️⃣ Cung cấp mã đơn hàng + hình ảnh sản phẩm
+3️⃣ Chúng mình sẽ đổi hoa mới MIỄN PHÍ hoặc hoàn tiền 100%
+
+Lưu ý: Do hoa là sản phẩm tươi sống nên chúng mình không nhận đổi/trả nếu lý do chủ quan (không thích, đổi ý...) ạ. Nếu bạn có vấn đề gì về đơn hàng, cứ liên hệ mình ngay nhé! 💐">
+                                🔄 Đổi/Trả hàng
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary quick-reply-btn" data-message="Chào bạn! 🌸 Mình rất vui được tư vấn cho bạn hôm nay!
+
+Để hỗ trợ bạn tốt nhất, bạn có thể cho mình biết bạn đang quan tâm đến:
+
+[QUICK_ACTIONS]
+🌺 Sản phẩm hoa|Tôi muốn xem sản phẩm hoa
+💐 Dịch vụ đặt hoa|Tôi muốn tư vấn về dịch vụ đặt hoa
+🎁 Khuyến mãi|Cho tôi xem các chương trình khuyến mãi
+📦 Đơn hàng|Tôi muốn kiểm tra đơn hàng của mình
+💳 Thanh toán|Hướng dẫn tôi cách thanh toán
+[/QUICK_ACTIONS]
+
+Bạn cứ thoải mái chia sẻ nhu cầu của mình, mình sẽ hỗ trợ bạn ngay nhé! 😊">
+                                💬 Tư vấn
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <button class="btn btn-outline-secondary rounded-0 border-end-0" id="quick-replies-toggle-btn" title="Câu trả lời nhanh">
+                            <i class="fas fa-bolt"></i>
+                        </button>
+                        
+                        <!-- Dropdown cho ảnh -->
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary rounded-0 border-end-0 dropdown-toggle" type="button" id="imageDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Gửi ảnh">
+                                <i class="fas fa-image"></i>
+                            </button>
+                            <ul class="dropdown-menu shadow-sm" aria-labelledby="imageDropdown" style="min-width: 200px;">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="#" id="choose-image-btn">
+                                        <i class="fas fa-folder-open me-2" style="color: #6c757d; width: 20px;"></i>
+                                        <span>Chọn từ thư viện</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="#" id="capture-image-btn">
+                                        <i class="fas fa-camera me-2" style="color: #007bff; width: 20px;"></i>
+                                        <span>Chụp ảnh</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <input type="file" id="admin-image-input" accept="image/*" style="display: none;">
+                        
+                        <!-- Dropdown cho attachments -->
+                        <div class="btn-group">
+                            <button class="btn btn-outline-secondary rounded-0 dropdown-toggle" type="button" id="attachmentDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Gửi kèm">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="attachmentDropdown" style="min-width: 200px;">
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="#" id="send-product-btn">
+                                        <i class="fas fa-box me-2" style="color: #28a745; width: 20px;"></i>
+                                        <span>Gửi sản phẩm</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="#" id="send-order-btn">
+                                        <i class="fas fa-shopping-bag me-2" style="color: #17a2b8; width: 20px;"></i>
+                                        <span>Gửi đơn hàng</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center py-2" href="#" id="send-blog-btn">
+                                        <i class="fas fa-newspaper me-2" style="color: #ffc107; width: 20px;"></i>
+                                        <span>Gửi bài viết</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <textarea 
+                               class="form-control" 
+                               id="message-input" 
+                               placeholder="Nhập tin nhắn..."
+                               maxlength="1000"
+                               rows="1"
+                               style="resize: none; overflow-y: hidden; min-height: 38px; max-height: 150px;"></textarea>
+                        <button class="btn btn-primary" id="send-message-btn">
+                            <i class="fas fa-paper-plane"></i> Gửi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Lightbox Modal -->
+        <div id="admin-image-lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; align-items: center; justify-content: center;">
+            <button onclick="document.getElementById('admin-image-lightbox').style.display='none'" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 30px; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; transition: all 0.3s;">
+                &times;
+            </button>
+            <img id="admin-lightbox-image" src="" alt="Preview" style="max-width: 90vw; max-height: 90vh; border-radius: 8px; object-fit: contain; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+        </div>
+
+        <!-- Preview Modal -->
+        <div id="preview-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; backdrop-filter: blur(4px);">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 1200px; height: 90vh; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column;">
+                <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0; font-weight: 600;">
+                        <i class="fas fa-external-link-alt text-primary"></i> Chi Tiết
+                    </h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary me-2" id="open-new-tab-btn">
+                            <i class="fas fa-external-link-alt"></i> Mở tab mới
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="close-modal-btn">
+                            <i class="fas fa-times"></i> Đóng
+                        </button>
+                    </div>
+                </div>
+                <div style="flex: 1; overflow: hidden;">
+                    <iframe id="preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Modal -->
+        <div class="modal fade" id="cameraModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="background: #1a1a1a; border: none; border-radius: 16px; overflow: hidden;">
+                    <div class="modal-header border-0" style="background: #1a1a1a; padding: 15px 20px;">
+                        <h5 class="modal-title text-white" style="font-size: 16px;"><i class="fas fa-camera me-2"></i> Chụp ảnh</h5>
+                        <button type="button" class="btn-close btn-close-white" id="close-camera-btn"></button>
+                    </div>
+                    <div class="modal-body text-center p-0" style="background: #000; position: relative;">
+                        <video id="camera-video" autoplay playsinline style="width: 100%; height: 450px; object-fit: cover;"></video>
+                        <canvas id="camera-canvas" style="display: none;"></canvas>
+                        <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">
+                            <button type="button" class="btn btn-light" id="capture-photo-btn" 
+                                style="width: 65px; height: 65px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5); transition: all 0.2s;">
+                                <i class="fas fa-circle" style="font-size: 32px; color: #dc3545;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center" style="background: #1a1a1a; padding: 12px 20px;">
+                        <button type="button" class="btn btn-outline-light btn-sm" id="cancel-camera-btn">
+                            <i class="fas fa-times me-1"></i> Hủy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Preview Modal -->
+        <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Xem trước ảnh</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="preview-image" src="" alt="Preview" class="img-fluid rounded" style="max-height: 500px;">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirm-send-image-btn">
+                            <i class="fas fa-paper-plane"></i> Gửi ảnh
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Search Modal -->
+        <div class="modal fade" id="productSearchModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-search"></i> Tìm Sản Phẩm Để Gửi</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="product-search-input" placeholder="Nhập tên sản phẩm...">
+                        </div>
+                        <div id="product-search-results" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p>Nhập tên sản phẩm để tìm kiếm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Search Modal -->
+        <div class="modal fade" id="orderSearchModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-search"></i> Tìm Đơn Hàng Để Gửi</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="order-search-input" placeholder="Nhập mã đơn hàng hoặc tên khách...">
+                        </div>
+                        <div id="order-search-results" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p>Nhập mã đơn hàng để tìm kiếm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Blog Search Modal -->
+        <div class="modal fade" id="blogSearchModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title"><i class="fas fa-search"></i> Tìm Bài Viết Để Gửi</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="blog-search-input" placeholder="Nhập tiêu đề bài viết...">
+                        </div>
+                        <div id="blog-search-results" style="max-height: 400px; overflow-y: auto;">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p>Nhập tiêu đề để tìm kiếm</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transfer Chat Modal -->
+        <div class="modal fade" id="transferChatModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-exchange-alt"></i> Chuyển Chat Cho Staff Khác</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Chuyển conversation này cho staff khác xử lý
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Chọn Staff <span class="text-danger">*</span></label>
+                            <select class="form-select" id="transfer-staff-select">
+                                <option value="">-- Chọn staff --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Lý do chuyển</label>
+                            <textarea class="form-control" id="transfer-reason" rows="3" placeholder="VD: Khách hàng cần tư vấn chuyên sâu về hoa cưới..."></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="transfer-notify" checked>
+                            <label class="form-check-label" for="transfer-notify">
+                                Gửi thông báo cho staff nhận
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="confirm-transfer-btn">
+                            <i class="fas fa-paper-plane"></i> Xác Nhận Chuyển
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics moved to separate page: /Admin/Chat/Analytics -->
+    </div>
+</div>
+
+<style>
+
+    /* Cards */
+    .conversation-card, .chat-window-card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .conversation-list-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border: none;
+    }
+
+    .conversation-list-header h5 {
+        font-weight: 600;
+    }
+
+    .btn-filter {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        font-size: 12px;
+        padding: 6px 12px;
+        transition: all 0.3s;
+    }
+
+    .btn-filter:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+    }
+
+    .btn-filter.active {
+        background: white;
+        color: #667eea;
+        font-weight: 600;
+    }
+
+    .badge-counter {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-window-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border: none;
+    }
+
+    .chat-window-header h5 {
+        color: white !important;
+        font-weight: 600;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-window-header small {
+        color: rgba(255, 255, 255, 0.95) !important;
+        font-size: 13px;
+    }
+
+    .chat-window-header .text-success {
+        color: #86efac !important;
+        font-weight: 500;
+    }
+
+    .chat-window-header .text-warning {
+        color: #fde047 !important;
+        font-weight: 500;
+    }
+
+    .chat-window-header .text-info {
+        color: #bae6fd !important;
+        font-weight: 500;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .conversation-item-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .conversation-item {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+        padding: 18px !important;
+        border-bottom: none !important;
+        position: relative;
+        z-index: 2;
+        background: white !important;
+        width: 100%;
+    }
+
+    .conversation-item:hover {
+        background: linear-gradient(to right, #f0f4ff, #ffffff) !important;
+        border-left-color: #667eea;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .conversation-delete-btn {
+        position: absolute;
+        right: -80px;
+        top: 0;
+        width: 80px;
+        height: 100%;
+        background: #ef4444;
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 1;
+        transition: right 0.3s ease;
+    }
+
+    .conversation-delete-btn:hover {
+        background: #dc2626;
+    }
+
+    .conversation-item-wrapper.swiped .conversation-item {
+        transform: translateX(-80px);
+    }
+
+    .conversation-item-wrapper.swiped .conversation-delete-btn {
+        right: 0;
+    }
+
+    .conversation-item.active {
+        background: linear-gradient(135deg, #e7f1ff 0%, #f0f4ff 100%) !important;
+        border-left-color: #667eea;
+        border-left-width: 5px;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+        transform: translateX(6px);
+    }
+
+    .conversation-item .flex-grow-1 {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        padding-right: 8px;
+    }
+
+    .conversation-item h6 {
+        color: #1f2937 !important;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .conversation-item .mb-1.small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: block;
+        color: #4b5563;
+        font-size: 14px;
+        max-width: 100%;
+    }
+
+    .conversation-item .text-muted {
+        color: #9ca3af !important;
+        font-size: 12px;
+    }
+
+    .conversation-item.unread {
+        background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%) !important;
+        border-left-color: #f59e0b;
+        border-left-width: 5px;
+    }
+    
+    .conversation-item.unread:hover {
+        background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%) !important;
+        border-left-color: #f59e0b;
+    }
+
+    .unread-badge {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 11px;
+        font-weight: 700;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .chat-avatar-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .chat-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+
+    .chat-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .chat-avatar-wrapper .customer-status-dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: #10b981;
+        border-radius: 50%;
+        border: 2px solid #667eea;
+        display: block;
+    }
+
+    @@keyframes pulse-green {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
+    }
+
+    .message-bubble {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 18px;
+        margin-bottom: 10px;
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .message-from-customer {
+        background: white;
+        margin-right: auto;
+        border-bottom-left-radius: 4px;
+        border: 1px solid #f3f4f6;
+    }
+
+    .message-from-staff {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: auto;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message-time {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.75);
+        margin-top: 4px;
+    }
+
+    .message-bubble .message-time {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
+    .message-from-customer .message-time {
+        color: #6c757d;
+    }
+
+    .message-status {
+        font-size: 12px;
+        margin-left: 8px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .message-status.sent {
+        color: rgba(255, 255, 255, 0.75);
+    }
+
+    .message-status.delivered {
+        color: #6b7280;
+        font-weight: 600;
+    }
+
+    .message-status.read {
+        color: #3b82f6;;
+        font-weight: 700;
+    }
+
+    .message-status i {
+        font-size: 13px;
+        margin-right: 4px;
+    }
+
+    /* Status for attachment messages (visible on light background) */
+    .message-status.attachment-status.sent {
+        color: #9ca3af;
+    }
+
+    .message-status.attachment-status.delivered {
+        color: #6b7280;
+    }
+
+    .message-status.attachment-status.read {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+
+    /* Message Options Menu */
+    .message-options {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .message-options-btn {
+        background: #f3f4f6;
+        border: none;
+        color: #6b7280;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px;
+        opacity: 0;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+    }
+
+    .d-flex:hover .message-options-btn {
+        opacity: 1;
+    }
+
+    .message-options-btn:hover {
+        background: #e5e7eb;
+        color: #374151;
+        transform: scale(1.05);
+    }
+
+    .message-options-btn:active {
+        transform: scale(0.95);
+    }
+
+    .message-options-menu {
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.05);
+        min-width: 200px;
+        z-index: 1000;
+        display: none;
+        overflow: hidden;
+        animation: slideDown 0.2s ease;
+    }
+
+    /* Menu cho tin nhắn customer (bên phải màn hình) - mở về phía trái để không bị che */
+    .message-options.customer-message .message-options-menu {
+        left: auto;
+        right: calc(100% + 4px);
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-options-menu.show {
+        display: block;
+    }
+
+    .message-options-menu button.menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.15s ease;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .message-options-menu button.menu-item:last-child {
+        border-bottom: none;
+    }
+
+    .message-options-menu button.menu-item i {
+        width: 18px;
+        font-size: 14px;
+        color: #6b7280;
+        transition: color 0.15s ease;
+    }
+
+    .message-options-menu button.menu-item:hover {
+        background: #f9fafb;
+    }
+
+    .message-options-menu button.menu-item:hover i {
+        color: #374151;
+    }
+
+    .message-options-menu button.delete-btn:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .message-options-menu button.delete-btn:hover i {
+        color: #dc2626;
+    }
+
+    .message-options-menu button i {
+        width: 16px;
+        text-align: center;
+    }
+
+    /* Multi-select mode */
+    .message-checkbox {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.3s ease;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 2px solid #d1d5db;
+        border-radius: 6px;
+        background: white;
+    }
+
+    /* Checkbox cho tin nhắn bên trái (customer) - đặt bên phải */
+    .message-checkbox-left {
+        right: -45px;
+        left: auto;
+    }
+
+    /* Checkbox cho tin nhắn bên phải (staff) - đặt bên phải */
+    .message-checkbox-right {
+        right: -45px;
+        left: auto;
+    }
+
+    /* Khi ở multi-select mode, đưa checkbox vào gần hơn */
+    .multi-select-mode .message-checkbox-left,
+    .multi-select-mode .message-checkbox-right {
+        right: 10px;
+    }
+
+    .message-checkbox:checked {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
+    }
+
+    .message-checkbox:checked::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        color: white;
+        font-size: 12px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .multi-select-mode .message-checkbox {
+        opacity: 1;
+    }
+
+    /* Thêm padding cho container khi ở multi-select mode */
+    #chat-messages.multi-select-mode {
+        padding-right: 50px !important;
+        transition: padding-right 0.3s ease;
+    }
+
+    .multi-select-mode .d-flex.mb-3 {
+        padding-right: 0;
+        position: relative;
+        transition: padding-right 0.3s ease;
+    }
+
+    #chat-messages::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #chat-messages::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    #chat-messages::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Quick Replies */
+    #quick-replies-section {
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        animation: slideDown 0.3s ease;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .quick-reply-btn {
+        font-size: 13px;
+        padding: 8px 16px;
+        border-radius: 24px;
+        transition: all 0.3s;
+        white-space: nowrap;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        font-weight: 500;
+    }
+
+    .quick-reply-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+    }
+
+    .gap-2 {
+        gap: 8px;
+    }
+
+    /* Fullscreen mode */
+    .chat-window-card.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999;
+        margin: 0;
+        border-radius: 0;
+        max-width: none;
+    }
+
+    .chat-window-card.fullscreen .card-body {
+        height: calc(100vh - 160px) !important;
+    }
+
+    /* Đảm bảo Bootstrap modals hiển thị trên fullscreen */
+    .modal {
+        z-index: 10002 !important;
+    }
+
+    .modal-backdrop {
+        z-index: 10001 !important;
+    }
+
+    /* Attachment & Image Dropdown Styling */
+    #attachmentDropdown, #imageDropdown {
+        transition: all 0.3s ease;
+    }
+
+    #attachmentDropdown:hover, #imageDropdown:hover {
+        background-color: #f8f9fa;
+        border-color: #6c757d;
+        transform: translateY(-2px);
+    }
+    
+    /* Camera Modal */
+    #cameraModal .modal-lg {
+        max-width: 700px;
+    }
+    
+    #cameraModal .modal-content {
+        overflow: hidden;
+    }
+    
+    #cameraModal .modal-body {
+        transition: opacity 0.1s ease;
+    }
+    
+    #camera-video {
+        display: block;
+        margin: 0 auto;
+        background: #000;
+    }
+    
+    /* Responsive Camera Modal */
+    @@media (max-width: 768px) {
+        #cameraModal .modal-lg {
+            max-width: 95%;
+            margin: 0.5rem;
+        }
+        
+        #camera-video {
+            height: 350px !important;
+        }
+        
+        #capture-photo-btn {
+            width: 55px !important;
+            height: 55px !important;
+        }
+        
+        #capture-photo-btn i {
+            font-size: 26px !important;
+        }
+    }
+    
+    #capture-photo-btn {
+        transition: all 0.2s ease;
+        position: relative;
+    }
+    
+    #capture-photo-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 30px rgba(255,255,255,0.4) !important;
+    }
+    
+    #capture-photo-btn:active {
+        transform: scale(0.95);
+    }
+    
+    #capture-photo-btn i {
+        color: #dc3545;
+    }
+    
+    /* Image Preview Modal */
+    #imagePreviewModal .modal-body {
+        background: #f8f9fa;
+        padding: 20px;
+    }
+    
+    #imagePreviewModal img {
+        border: 3px solid #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .dropdown-menu {
+        border: none;
+        border-radius: 12px;
+        padding: 8px;
+        animation: dropdownSlide 0.2s ease-out;
+    }
+
+    @@keyframes dropdownSlide {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .dropdown-item:hover {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        transform: translateX(5px);
+        padding-left: 16px;
+    }
+
+    .dropdown-item i {
+        transition: transform 0.2s ease;
+    }
+
+    .dropdown-item:hover i {
+        transform: scale(1.2);
+    }
+
+    .dropdown-divider {
+        border-color: #e9ecef;
+    }
+
+    /* Toast Animations */
+    @@keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes slideOutRight {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
+
+    /* Tag Badge Styles */
+    .conversation-tag-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+        border-radius: 4px;
+    }
+
+    /* Working Hours Badge for Admin */
+    .working-hours-admin-badge {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #0ea5e9;
+        border-radius: 20px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0c4a6e;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .working-hours-admin-badge:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    }
+
+    .working-hours-admin-badge i {
+        font-size: 16px;
+        color: #0ea5e9;
+    }
+
+    .working-hours-admin-badge.closed {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        border-color: #ef4444;
+        color: #991b1b;
+    }
+
+    .working-hours-admin-badge.closed i {
+        color: #ef4444;
+    }
+
+    /* Empty State Animation */
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+    }
+
+    /* Search Highlight */
+    .search-highlight {
+        background-color: #fbbf24 !important;
+        color: #000000 !important;
+        font-weight: 700 !important;
+        padding: 3px 6px !important;
+        border-radius: 4px !important;
+        box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.6) !important;
+        display: inline !important;
+        position: relative !important;
+        z-index: 10 !important;
+    }
+
+    .search-highlight.current {
+        background-color: #f59e0b !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.8) !important;
+        animation: pulse 1s ease-in-out infinite;
+        z-index: 20 !important;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5);
+        }
+        50% {
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.3);
+        }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
+<script>
+    let chatConnection = null;
+    let currentConversationId = null;
+    let currentUserId = null; // User ID của conversation hiện tại
+    let typingTimeout = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initAdminChat();
+    });
+
+    async function initAdminChat() {
+        console.log('🚀 Bắt đầu initAdminChat()');
+        // Connect to SignalR
+        await connectSignalR();
+        console.log('🚀 Sau khi connectSignalR - chatConnection:', chatConnection);
+
+        // Load conversations
+        await loadConversations();
+
+        // Setup event listeners
+        setupEventListeners();
+
+        // Check if conversationId is in URL and open it
+        const urlParams = new URLSearchParams(window.location.search);
+        const conversationIdParam = urlParams.get('conversationId');
+        if (conversationIdParam) {
+            const conversationId = parseInt(conversationIdParam);
+            // Wait a bit for conversations to load, then open
+            setTimeout(() => {
+                const conversationElement = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+                if (conversationElement) {
+                    conversationElement.click();
+                } else {
+                    console.warn('Conversation not found:', conversationId);
+                }
+            }, 500);
+        }
+
+        // Load working hours
+        loadAdminWorkingHours();
+        setInterval(loadAdminWorkingHours, 60000); // Update every minute
+
+        // Refresh conversations every 30 seconds
+        setInterval(loadConversations, 30000);
+    }
+
+    async function loadAdminWorkingHours() {
+        try {
+            const response = await fetch('/api/supportchat/working-hours');
+            if (!response.ok) throw new Error('Failed to load working hours');
+
+            const data = await response.json();
+            
+            const badge = document.getElementById('admin-working-hours');
+            const text = document.getElementById('admin-working-hours-text');
+            
+            if (data.isOpen) {
+                text.textContent = `${data.workingHours} • ${data.nextAvailable}`;
+                badge.classList.remove('closed');
+            } else {
+                text.textContent = `Ngoài giờ • ${data.nextAvailable}`;
+                badge.classList.add('closed');
+            }
+            
+        } catch (error) {
+            console.error('Error loading working hours:', error);
+        }
+    }
+
+    async function connectSignalR() {
+        console.log('🔌 Đang kết nối ChatHub...');
+        chatConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+        console.log('🔌 ChatConnection đã khởi tạo:', chatConnection);
+
+        // Receive message
+        chatConnection.on("ReceiveMessage", function(data) {
+            if (data.conversationId === currentConversationId) {
+                displayMessage(data);
+                scrollToBottom();
+                
+                // Mark as read
+                chatConnection.invoke('MarkAsRead', currentConversationId).catch(err => console.error(err));
+                
+                // Cập nhật last message trong conversation list
+                updateConversationLastMessage(currentConversationId, data.message, data.imageUrl, data.senderName, data.isFromStaff);
+            } else {
+                // Tin nhắn từ conversation khác
+                // Reload toàn bộ conversation list để đảm bảo luôn cập nhật
+                loadConversations();
+            }
+        });
+
+        // Typing indicator
+        chatConnection.on("UserTyping", function(data) {
+            if (data.conversationId === currentConversationId && !data.isStaff) {
+                document.getElementById('typing-indicator').style.display = 'block';
+            }
+        });
+
+        chatConnection.on("UserStoppedTyping", function(data) {
+            if (data.conversationId === currentConversationId) {
+                document.getElementById('typing-indicator').style.display = 'none';
+            }
+        });
+
+        // Handle errors from server
+        chatConnection.on("Error", function(message) {
+            alert(message);
+        });
+
+        // Messages read - Update status icons
+        chatConnection.on("MessagesRead", function(data) {
+            if (data.conversationId === currentConversationId && data.readBy === 'customer') {
+                // Update all staff messages to show "read" status
+                const staffMessages = document.querySelectorAll('#chat-messages .justify-content-end');
+                staffMessages.forEach(msgDiv => {
+                    const statusSpan = msgDiv.querySelector('.message-status');
+                    if (statusSpan) {
+                        statusSpan.className = 'message-status read';
+                        statusSpan.innerHTML = '<i class="fas fa-check-double"></i> Đã xem';
+                    }
+                });
+            }
+        });
+
+        // User online/offline status changed
+        chatConnection.on("UserStatusChanged", function(userId, isOnline, lastSeenAt) {
+            // Nếu đang xem conversation của user này, cập nhật status
+            if (currentConversationId) {
+                const response = fetch(`/api/supportchat/conversation/${currentConversationId}`)
+                    .then(res => res.json())
+                    .then(conv => {
+                        if (conv.customerId === userId) {
+                            // Cập nhật status text
+                            const onlineStatusHtml = getOnlineStatusHtml(isOnline, lastSeenAt);
+                            const statusElement = document.getElementById('chat-customer-status');
+                            const currentHtml = statusElement.innerHTML;
+                            
+                            // Giữ nguyên phần sau dấu • và chỉ thay đổi phần status
+                            const parts = currentHtml.split('•');
+                            if (parts.length > 1) {
+                                statusElement.innerHTML = `${onlineStatusHtml} •${parts[1]}`;
+                            }
+                            
+                            // Cập nhật hiển thị chấm xanh
+                            const statusDot = document.querySelector('.chat-avatar-wrapper .customer-status-dot');
+                            if (statusDot) {
+                                statusDot.style.display = isOnline ? 'block' : 'none';
+                            }
+                        }
+                    });
+            }
+        });
+
+        // Listen for message recall events
+        // Spam block notification for admin
+        chatConnection.on("SpamBlockNotification", function(data) {
+            console.log('User auto-blocked for spam:', data);
+            
+            // Show notification toast
+            showSpamBlockNotification(data);
+            
+            // Refresh conversation list to update UI
+            loadConversations();
+        });
+
+        chatConnection.on("MessageRecalled", function(data) {
+            console.log('Message recalled:', data);
+            
+            // Tìm và cập nhật tin nhắn trong UI
+            const messageElements = document.querySelectorAll('.message');
+            messageElements.forEach(msgEl => {
+                if (msgEl.dataset.messageId == data.messageId) {
+                    const contentDiv = msgEl.querySelector('.message-content');
+                    if (contentDiv) {
+                        const bubbleOrContent = contentDiv.querySelector('.message-bubble') || contentDiv;
+                        bubbleOrContent.innerHTML = `
+                            <div style="font-style: italic; color: #9ca3af;">
+                                <i class="fas fa-ban"></i> Tin nhắn đã được thu hồi
+                            </div>
+                        `;
+                        
+                        // Remove status if exists
+                        const statusSpan = msgEl.querySelector('.message-status');
+                        if (statusSpan) {
+                            statusSpan.remove();
+                        }
+                    }
+                }
+            });
+            
+            // Cập nhật last message trong conversation list
+            const convItems = document.querySelectorAll('.conversation-item');
+            convItems.forEach(item => {
+                if (parseInt(item.dataset.conversationId) === data.conversationId) {
+                    const lastMessageP = item.querySelector('p.mb-1.small');
+                    if (lastMessageP) {
+                        lastMessageP.innerHTML = '<i class="fas fa-ban"></i> Tin nhắn đã được thu hồi';
+                        lastMessageP.style.color = '#9ca3af';
+                        lastMessageP.style.fontStyle = 'italic';
+                    }
+                }
+            });
+        });
+
+        try {
+            await chatConnection.start();
+            console.log('✅ Admin chat connected - chatConnection:', chatConnection);
+        } catch (error) {
+            console.error('❌ SignalR connection error:', error);
+            chatConnection = null;
+        }
+    }
+
+    let currentFilter = 'all';
+
+    function setupEventListeners() {
+        const sendBtn = document.getElementById('send-message-btn');
+        const messageInput = document.getElementById('message-input');
+        const assignBtn = document.getElementById('assign-to-me-btn');
+        const closeBtn = document.getElementById('close-conversation-btn');
+
+        // Filter buttons
+        document.querySelectorAll('.btn-filter').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                loadConversations();
+            });
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Quick replies toggle
+        const quickRepliesToggle = document.getElementById('quick-replies-toggle-btn');
+        const quickRepliesSection = document.getElementById('quick-replies-section');
+        
+        quickRepliesToggle.addEventListener('click', function() {
+            if (quickRepliesSection.style.display === 'none') {
+                quickRepliesSection.style.display = 'block';
+            } else {
+                quickRepliesSection.style.display = 'none';
+            }
+        });
+
+        // Quick reply buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.quick-reply-btn')) {
+                const btn = e.target.closest('.quick-reply-btn');
+                let message = btn.getAttribute('data-message');
+                
+                // Lưu message gốc để gửi sau này
+                messageInput.setAttribute('data-original-message', message);
+                
+                // Nếu có QUICK_ACTIONS, format đẹp để hiển thị
+                if (message.includes('[QUICK_ACTIONS]') && message.includes('[/QUICK_ACTIONS]')) {
+                    const startIndex = message.indexOf('[QUICK_ACTIONS]') + 15;
+                    const endIndex = message.indexOf('[/QUICK_ACTIONS]');
+                    const mainMessage = message.substring(0, message.indexOf('[QUICK_ACTIONS]')).trim();
+                    const actionsText = message.substring(startIndex, endIndex).trim();
+                    const actions = actionsText.split('\n').filter(line => line.trim() && line.includes('|'));
+                    
+                    // Tạo message hiển thị đẹp
+                    let displayMessage = mainMessage + '\n\n';
+                    actions.forEach(action => {
+                        const [label] = action.split('|').map(s => s.trim());
+                        displayMessage += label + '\n';
+                    });
+                    
+                    messageInput.value = displayMessage.trim();
+                } else {
+                    messageInput.value = message;
+                }
+                
+                // Trigger auto-resize
+                messageInput.style.height = 'auto';
+                messageInput.style.height = Math.min(messageInput.scrollHeight, 150) + 'px';
+                
+                messageInput.focus();
+                quickRepliesSection.style.display = 'none';
+            }
+        });
+
+        // Image upload handlers
+        let currentImageFile = null;
+        let imagePreviewModal = null;
+
+        // Choose image from library
+        const chooseImageBtn = document.getElementById('choose-image-btn');
+        const imageInput = document.getElementById('admin-image-input');
+        
+        chooseImageBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            imageInput.click();
+        });
+
+        // Camera functionality
+        let cameraStream = null;
+        let cameraModal = null;
+        const captureImageBtn = document.getElementById('capture-image-btn');
+        const cameraVideo = document.getElementById('camera-video');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const capturePhotoBtn = document.getElementById('capture-photo-btn');
+        const closeCameraBtn = document.getElementById('close-camera-btn');
+        const cancelCameraBtn = document.getElementById('cancel-camera-btn');
+        
+        // Open camera
+        captureImageBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            try {
+                // Request camera access
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } // Use back camera on mobile
+                });
+                
+                cameraVideo.srcObject = cameraStream;
+                
+                if (!cameraModal) {
+                    cameraModal = new bootstrap.Modal(document.getElementById('cameraModal'));
+                }
+                cameraModal.show();
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                alert('Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập camera của trình duyệt.');
+            }
+        });
+        
+        // Stop camera function
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+                cameraVideo.srcObject = null;
+            }
+        }
+        
+        // Close camera
+        closeCameraBtn.addEventListener('click', function() {
+            stopCamera();
+            if (cameraModal) {
+                cameraModal.hide();
+            }
+        });
+        
+        cancelCameraBtn.addEventListener('click', function() {
+            stopCamera();
+            if (cameraModal) {
+                cameraModal.hide();
+            }
+        });
+        
+        // Capture photo
+        capturePhotoBtn.addEventListener('click', function() {
+            // Flash effect
+            const modalBody = document.querySelector('#cameraModal .modal-body');
+            modalBody.style.opacity = '0.3';
+            setTimeout(() => { modalBody.style.opacity = '1'; }, 100);
+            
+            // Play camera shutter sound (optional)
+            // const audio = new Audio('/sounds/camera-shutter.mp3');
+            // audio.play().catch(e => console.log('Audio play failed:', e));
+            
+            // Set canvas size to match video
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
+            
+            // Draw video frame to canvas
+            const context = cameraCanvas.getContext('2d');
+            context.drawImage(cameraVideo, 0, 0);
+            
+            // Convert to blob
+            cameraCanvas.toBlob(function(blob) {
+                if (!blob) {
+                    alert('Lỗi khi chụp ảnh. Vui lòng thử lại.');
+                    return;
+                }
+                
+                // Create file from blob
+                const file = new File([blob], 'camera-photo-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+                
+                // Stop camera
+                stopCamera();
+                if (cameraModal) {
+                    cameraModal.hide();
+                }
+                
+                // Show preview
+                handleImageSelection(file);
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Handle image selection (from library or camera)
+        function handleImageSelection(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('Vui lòng chọn file ảnh hợp lệ');
+                return;
+            }
+
+            currentImageFile = file;
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-image').src = e.target.result;
+                if (!imagePreviewModal) {
+                    imagePreviewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+                }
+                imagePreviewModal.show();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        imageInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                handleImageSelection(this.files[0]);
+            }
+            this.value = ''; // Reset input
+        });
+
+        // Confirm send image
+        document.getElementById('confirm-send-image-btn').addEventListener('click', async function() {
+            if (!currentImageFile) {
+                alert('Không có ảnh để gửi');
+                return;
+            }
+            
+            if (!currentConversationId) {
+                alert('Vui lòng chọn một cuộc hội thoại trước');
+                return;
+            }
+
+            // Disable button while sending
+            const sendBtn = this;
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+
+            const formData = new FormData();
+            formData.append('image', currentImageFile);
+            formData.append('conversationId', currentConversationId);
+
+            try {
+                const response = await fetch('/api/supportchat/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Send message with image via SignalR
+                    await chatConnection.invoke("SendMessage", 
+                        currentConversationId, 
+                        '[Đã gửi ảnh]', // Message text for image
+                        result.imageUrl // Attachment URL
+                    );
+
+                    // Close modal and reset
+                    imagePreviewModal.hide();
+                    currentImageFile = null;
+                    
+                    // Show success (optional)
+                    console.log('Image sent successfully');
+                } else {
+                    const errorData = await response.text();
+                    console.error('Upload failed:', errorData);
+                    alert('Lỗi khi tải ảnh lên: ' + (errorData || 'Vui lòng thử lại'));
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Lỗi khi gửi ảnh: ' + error.message);
+            } finally {
+                // Re-enable button
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi ảnh';
+            }
+        });
+
+        // Send product button (dropdown item)
+        const sendProductBtn = document.getElementById('send-product-btn');
+        sendProductBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!currentConversationId) {
+                alert('Vui lòng chọn một cuộc hội thoại trước');
+                return;
+            }
+            openProductSearchModal();
+        });
+
+        // Send order button (dropdown item)
+        const sendOrderBtn = document.getElementById('send-order-btn');
+        sendOrderBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!currentConversationId) {
+                alert('Vui lòng chọn một cuộc hội thoại trước');
+                return;
+            }
+            openOrderSearchModal();
+        });
+
+        // Send blog button (dropdown item)
+        const sendBlogBtn = document.getElementById('send-blog-btn');
+        sendBlogBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!currentConversationId) {
+                alert('Vui lòng chọn một cuộc hội thoại trước');
+                return;
+            }
+            openBlogSearchModal();
+        });
+
+        imageInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('Vui lòng chọn file ảnh');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Kích thước ảnh không được vượt quá 5MB');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const uploadResponse = await fetch('/api/supportchat/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) throw new Error('Upload failed');
+
+                const uploadResult = await uploadResponse.json();
+                const imageUrl = uploadResult.imageUrl;
+
+                const message = `[IMAGE:${imageUrl}]`;
+                await chatConnection.invoke('SendMessage', currentConversationId, message, null);
+
+                imageInput.value = '';
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Không thể gửi ảnh. Vui lòng thử lại.');
+            }
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            // Reset height to auto to get the correct scrollHeight
+            this.style.height = 'auto';
+            // Set height to scrollHeight (content height)
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+            
+            // Typing indicator - CHỈ gọi khi có nội dung
+            if (chatConnection && currentConversationId && this.value.trim().length > 0) {
+                chatConnection.invoke('Typing', currentConversationId).catch(err => console.error(err));
+                
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    chatConnection.invoke('StopTyping', currentConversationId).catch(err => console.error(err));
+                }, 1000);
+            } else if (chatConnection && currentConversationId) {
+                // Nếu xóa hết text thì stop typing ngay
+                chatConnection.invoke('StopTyping', currentConversationId).catch(err => console.error(err));
+            }
+        });
+
+        assignBtn.addEventListener('click', assignToMe);
+        closeBtn.addEventListener('click', closeConversation);
+
+        // Block/Unblock user
+        const blockBtn = document.getElementById('block-user-btn');
+        blockBtn.addEventListener('click', handleBlockUser);
+
+        // Fullscreen toggle
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // Search in chat
+        setupSearchInChat();
+    }
+
+    // Global filter state
+    let currentSearchText = '';
+    let currentTagFilter = '';
+    let currentPriorityFilter = '';
+    let currentStaffFilter = '';
+
+    // Search in chat state
+    let searchInChatResults = [];
+    let currentSearchIndex = -1;
+
+    async function loadConversations() {
+        try {
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (currentSearchText) params.append('searchText', currentSearchText);
+            if (currentTagFilter) params.append('tag', currentTagFilter);
+            if (currentPriorityFilter) params.append('priority', currentPriorityFilter);
+            if (currentStaffFilter && currentStaffFilter !== 'unassigned') {
+                params.append('staffId', currentStaffFilter);
+            }
+
+            const url = '/api/supportchat/conversations' + (params.toString() ? '?' + params.toString() : '');
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to load conversations');
+
+            let conversations = await response.json();
+
+            // Client-side filter for "unassigned"
+            if (currentStaffFilter === 'unassigned') {
+                conversations = conversations.filter(c => !c.staffId);
+            }
+
+            displayConversations(conversations);
+            updateActiveFiltersDisplay();
+        } catch (error) {
+            console.error('Error loading conversations:', error);
+        }
+    }
+
+    function displayConversations(conversations) {
+        const listContainer = document.getElementById('conversation-list');
+        const totalBadge = document.getElementById('total-conversations');
+
+        // Filter conversations based on current filter
+        let filteredConversations = conversations;
+        if (currentFilter === 'unread') {
+            filteredConversations = conversations.filter(conv => conv.unreadByStaff > 0);
+        } else if (currentFilter === 'closed') {
+            filteredConversations = conversations.filter(conv => conv.isClosed);
+        }
+
+        if (filteredConversations.length === 0) {
+            listContainer.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>${conversations.length === 0 ? 'Chưa có hội thoại nào' : 'Không có hội thoại phù hợp'}</p>
+                </div>`;
+            totalBadge.textContent = conversations.length;
+            return;
+        }
+
+        totalBadge.textContent = conversations.length;
+
+        listContainer.innerHTML = filteredConversations.map(conv => {
+            // Determine message prefix
+            const currentUserId = '@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+            let messagePrefix = '';
+            
+            if (conv.lastMessage && conv.lastMessageSenderId) {
+                if (conv.lastMessageSenderId === currentUserId) {
+                    // Current admin is sender - màu xanh
+                    messagePrefix = '<span style="color: #6366f1; font-weight: 500;">Bạn: </span>';
+                } else {
+                    // Customer is sender - màu xám đậm
+                    messagePrefix = '<span style="color: #374151; font-weight: 500;">' + conv.customerName + ': </span>';
+                }
+            }
+            
+            // Parse last message để hiển thị đẹp hơn
+            let lastMessageDisplay = conv.lastMessage || 'Chưa có tin nhắn';
+            
+            if (conv.lastMessage && conv.lastMessage.startsWith('[IMAGE:')) {
+                lastMessageDisplay = messagePrefix + 'Đã gửi ảnh';
+            } else if (conv.lastMessage && conv.lastMessage.startsWith('[Đã gửi ảnh]')) {
+                lastMessageDisplay = messagePrefix + 'Đã gửi ảnh';
+            } else if (conv.lastMessage && conv.lastMessage.startsWith('[ATTACHMENT:')) {
+                try {
+                    // Tìm vị trí đóng ngoặc cuối cùng
+                    const lastBracket = conv.lastMessage.lastIndexOf(']');
+                    let jsonStr;
+                    
+                    if (lastBracket === -1) {
+                        // Message bị cắt - cần xử lý cẩn thận
+                        jsonStr = conv.lastMessage.substring(12);
+                        
+                        // Đếm số lượng dấu " để xem có string đang mở không
+                        const quoteCount = (jsonStr.match(/"/g) || []).length;
+                        const isStringOpen = quoteCount % 2 === 1; // Lẻ = có string chưa đóng
+                        
+                        if (isStringOpen) {
+                            // Có string đang mở - cắt từ dấu : cuối cùng trước vị trí hiện tại
+                            const lastColon = jsonStr.lastIndexOf(':');
+                            if (lastColon > 0) {
+                                // Cắt đến trước field bị lỗi
+                                const beforeColon = jsonStr.substring(0, lastColon);
+                                const lastComma = beforeColon.lastIndexOf(',');
+                                if (lastComma > 0) {
+                                    jsonStr = jsonStr.substring(0, lastComma);
+                                } else {
+                                    // Không có comma nào, chỉ có 1 field hoàn chỉnh
+                                    const firstColon = jsonStr.indexOf(':');
+                                    const firstComma = jsonStr.indexOf(',');
+                                    if (firstComma > firstColon && firstComma > 0) {
+                                        jsonStr = jsonStr.substring(0, firstComma);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Đảm bảo đóng ngoặc nhọn
+                        if (!jsonStr.endsWith('}')) jsonStr += '}';
+                    } else {
+                        jsonStr = conv.lastMessage.substring(12, lastBracket);
+                    }
+                    
+                    const attachment = JSON.parse(jsonStr);
+                    
+                    if (attachment.type === 'product') {
+                        let productName = attachment.productName || 'Sản phẩm';
+                        // Trim và đảm bảo có nội dung
+                        productName = productName.trim();
+                        if (!productName || productName.length === 0) {
+                            productName = 'Sản phẩm';
+                        }
+                        productName = productName.substring(0, 30);
+                        lastMessageDisplay = messagePrefix + '🌸 ' + productName;
+                    } else if (attachment.type === 'order') {
+                        lastMessageDisplay = messagePrefix + '📦 Đơn hàng #' + (attachment.orderId || '');
+                    } else if (attachment.type === 'blog') {
+                        const blogTitle = (attachment.title || 'Bài viết').substring(0, 35);
+                        lastMessageDisplay = messagePrefix + '📰 ' + blogTitle;
+                    } else {
+                        // Fallback cho type không xác định
+                        lastMessageDisplay = messagePrefix + '📎 Đính kèm';
+                    }
+                } catch (e) {
+                    // Nếu parse fail hoàn toàn, fallback
+                    lastMessageDisplay = messagePrefix + '📎 Đính kèm';
+                }
+            } else if (conv.lastMessage) {
+                // Normal text message
+                lastMessageDisplay = messagePrefix + lastMessageDisplay;
+            }
+            
+            return `
+                <div class="conversation-item-wrapper">
+                    <button class="conversation-delete-btn" data-delete-id="${conv.id}" title="Xóa hội thoại">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <a href="#" class="list-group-item list-group-item-action conversation-item ${conv.unreadByStaff > 0 ? 'unread' : ''} ${conv.id === currentConversationId ? 'active' : ''}" 
+                       data-conversation-id="${conv.id}">
+                        <div class="d-flex w-100 align-items-start gap-2">
+                            <div style="flex-shrink: 0; width: 40px; height: 40px;">
+                                ${conv.customerAvatar ? 
+                                    `<img src="${conv.customerAvatar}" alt="${conv.customerName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #667eea;">` : 
+                                    `<i class="fas fa-user-circle text-primary" style="font-size: 40px;"></i>`
+                                }
+                            </div>
+                            <div style="flex: 1; min-width: 0; overflow: hidden;">
+                                <h6 class="mb-1 fw-bold" style="color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${conv.customerName}
+                                </h6>
+                                <p class="mb-1 small" style="color: ${lastMessageDisplay.includes('📦') || lastMessageDisplay.includes('🌸') || lastMessageDisplay.includes('📎') ? '#667eea' : '#6c757d'}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    ${lastMessageDisplay}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center" style="gap: 8px;">
+                                    <small class="text-muted" style="flex-shrink: 0;">
+                                        <i class="far fa-clock"></i> ${conv.lastMessageAt ? formatTime(conv.lastMessageAt) : ''}
+                                    </small>
+                                    ${conv.staffName ? `<small class="text-success" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><i class="fas fa-user-check"></i> ${conv.staffName}</small>` : ''}
+                                </div>
+                            </div>
+                            <div style="flex-shrink: 0; text-align: right; min-width: 50px;">
+                                ${conv.unreadByStaff > 0 ? `<span class="unread-badge">${conv.unreadByStaff}</span>` : ''}
+                                ${conv.isClosed ? `<br><span class="badge bg-secondary" style="font-size: 10px;">Đã đóng</span>` : ''}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        }).join('');
+
+        // Add click listeners for conversation items
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            const wrapper = item.closest('.conversation-item-wrapper');
+            let startX = 0;
+            let isDragging = false;
+            let hasDragged = false;
+
+            // Click to open conversation (only if not dragged)
+            item.addEventListener('click', function(e) {
+                if (!hasDragged) {
+                    e.preventDefault();
+                    const convId = parseInt(this.dataset.conversationId);
+                    openConversation(convId);
+                }
+                hasDragged = false;
+            });
+
+            // Touch events (mobile)
+            item.addEventListener('touchstart', function(e) {
+                startX = e.touches[0].clientX;
+                isDragging = true;
+                hasDragged = false;
+            });
+
+            item.addEventListener('touchmove', function(e) {
+                if (!isDragging) return;
+                const currentX = e.touches[0].clientX;
+                const diff = startX - currentX;
+                
+                if (Math.abs(diff) > 10) {
+                    hasDragged = true;
+                }
+                
+                if (diff > 50) { // Swipe left
+                    wrapper.classList.add('swiped');
+                } else if (diff < -20) { // Swipe right
+                    wrapper.classList.remove('swiped');
+                }
+            });
+
+            item.addEventListener('touchend', function() {
+                isDragging = false;
+            });
+
+            // Mouse events (desktop drag)
+            item.addEventListener('mousedown', function(e) {
+                startX = e.clientX;
+                isDragging = true;
+                hasDragged = false;
+                e.preventDefault(); // Prevent text selection
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                const currentX = e.clientX;
+                const diff = startX - currentX;
+                
+                if (Math.abs(diff) > 10) {
+                    hasDragged = true;
+                }
+                
+                if (diff > 50) { // Drag left
+                    wrapper.classList.add('swiped');
+                } else if (diff < -20) { // Drag right
+                    wrapper.classList.remove('swiped');
+                }
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    setTimeout(() => {
+                        hasDragged = false;
+                    }, 100);
+                }
+            });
+        });
+
+        // Add click listeners for delete buttons
+        document.querySelectorAll('.conversation-delete-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                const convId = parseInt(this.dataset.deleteId);
+                await deleteConversation(convId);
+            });
+        });
+    }
+
+    async function deleteConversation(conversationId) {
+        if (!confirm('Bạn có chắc muốn XÓA VĨNH VIỄN hội thoại này?\n\nToàn bộ tin nhắn sẽ bị xóa và không thể khôi phục!')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/supportchat/conversation/${conversationId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Failed to delete');
+
+            const result = await response.json();
+            alert(result.message || 'Đã xóa hội thoại thành công');
+
+            // Close chat if current conversation was deleted
+            if (currentConversationId === conversationId) {
+                currentConversationId = null;
+                document.getElementById('chat-header').style.display = 'none';
+                document.getElementById('chat-input-area').style.display = 'none';
+                document.getElementById('chat-messages').innerHTML = `
+                    <div class="text-center p-5 text-muted">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>Chọn một hội thoại để bắt đầu chat</p>
+                    </div>`;
+            }
+
+            loadConversations();
+        } catch (error) {
+            console.error('Error deleting conversation:', error);
+            alert('Không thể xóa hội thoại. Vui lòng thử lại.');
+        }
+    }
+
+    async function openConversation(conversationId) {
+        currentConversationId = conversationId;
+
+        // Update UI
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.classList.remove('active');
+            if (parseInt(item.dataset.conversationId) === conversationId) {
+                item.classList.add('active');
+            }
+        });
+
+        // Show chat UI
+        document.getElementById('chat-header').style.display = 'block';
+
+        // Load conversation details
+        try {
+            const response = await fetch(`/api/supportchat/conversation/${conversationId}`);
+            if (!response.ok) throw new Error('Failed to load conversation');
+
+            const conv = await response.json();
+            
+            // LƯU USER ID của conversation hiện tại (API trả về customerId)
+            currentUserId = conv.customerId;
+            
+            // Lấy ID của user đang đăng nhập
+            const loggedInUserId = '@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+            
+            document.getElementById('chat-customer-name').textContent = conv.customerName;
+            
+            // Cập nhật avatar người dùng ở header
+            const avatarElement = document.getElementById('chat-customer-avatar');
+            if (conv.customerAvatar) {
+                avatarElement.innerHTML = `<img src="${conv.customerAvatar}" alt="${conv.customerName}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                avatarElement.innerHTML = '<i class="fas fa-user-circle fa-2x"></i>';
+            }
+            
+            // Hiển thị/ẩn chấm xanh dựa vào online status
+            const statusDot = document.querySelector('.chat-avatar-wrapper .customer-status-dot');
+            if (statusDot) {
+                statusDot.style.display = conv.isCustomerOnline ? 'block' : 'none';
+            }
+            
+            const assignBtn = document.getElementById('assign-to-me-btn');
+            const inputArea = document.getElementById('chat-input-area');
+            const statusElement = document.getElementById('chat-customer-status');
+            
+            // Hiển thị trạng thái online/offline
+            const onlineStatusHtml = getOnlineStatusHtml(conv.isCustomerOnline, conv.customerLastSeenAt);
+            
+            // Kiểm tra role của user hiện tại
+            const isAdmin = '@User.IsInRole("Admin")' === 'True';
+            
+            // Kiểm tra quyền gửi tin nhắn
+            if (!conv.staffId) {
+                // Chưa có staff - hiện nút Nhận
+                statusElement.innerHTML = `${onlineStatusHtml} • <span class="text-warning"><i class="fas fa-exclamation-circle"></i> Chưa có nhân viên hỗ trợ - Nhấn "Nhận" để tư vấn</span>`;
+                assignBtn.style.display = 'inline-block';
+                // Admin vẫn có thể chat ngay cả khi chưa có staff
+                inputArea.style.display = isAdmin ? 'block' : 'none';
+            } else if (conv.staffId === loggedInUserId) {
+                // Staff hiện tại đang phụ trách - cho phép chat
+                statusElement.innerHTML = `${onlineStatusHtml} • <span class="text-success"><i class="fas fa-check-circle"></i> Bạn đang hỗ trợ khách hàng này</span>`;
+                assignBtn.style.display = 'none';
+                inputArea.style.display = 'block';
+            } else {
+                // Staff khác đang phụ trách
+                statusElement.innerHTML = `${onlineStatusHtml} • <span class="text-info"><i class="fas fa-user-check"></i> ${conv.staffName} đang hỗ trợ</span>`;
+                assignBtn.style.display = 'none';
+                // Admin có thể can thiệp, Manager/Staff không được
+                inputArea.style.display = isAdmin ? 'block' : 'none';
+            }
+
+            // Update tag display
+            updateTagDisplay(conv.tag, conv.priority);
+
+            // Show/hide block button based on user role and blocked status
+            const blockBtn = document.getElementById('block-user-btn');
+            if (isAdmin || '@User.IsInRole("Manager")' === 'True') {
+                blockBtn.style.display = 'inline-block';
+                if (conv.isBlockedFromChat) {
+                    blockBtn.className = 'btn btn-sm btn-success';
+                    blockBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    blockBtn.title = 'Mở chặn người dùng';
+                } else {
+                    blockBtn.className = 'btn btn-sm btn-warning';
+                    blockBtn.innerHTML = '<i class="fas fa-ban"></i>';
+                    blockBtn.title = 'Chặn người dùng';
+                }
+            } else {
+                blockBtn.style.display = 'none';
+            }
+
+            // Join conversation
+            if (chatConnection) {
+                await chatConnection.invoke('JoinConversation', conversationId);
+            }
+
+            // Load messages
+            await loadMessages(conversationId);
+
+            // Mark as read
+            if (chatConnection) {
+                await chatConnection.invoke('MarkAsRead', conversationId);
+            }
+
+            // Refresh conversation list to update unread count
+            setTimeout(loadConversations, 500);
+            
+            // Update badge count on notification icon (in layout)
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/supportchat/unread-count');
+                    if (response.ok) {
+                        const data = await response.json();
+                        const badge = window.parent.document.getElementById('messageCount') || document.getElementById('messageCount');
+                        if (badge) {
+                            if (data.unreadCount > 0) {
+                                badge.textContent = data.unreadCount > 99 ? '99+' : data.unreadCount;
+                                badge.style.display = 'inline-block';
+                            } else {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error updating badge:', e);
+                }
+            }, 600);
+
+        } catch (error) {
+            console.error('Error opening conversation:', error);
+        }
+    }
+
+    async function loadMessages(conversationId) {
+        try {
+            const response = await fetch(`/api/supportchat/conversation/${conversationId}/messages?pageSize=100`);
+            if (!response.ok) throw new Error('Failed to load messages');
+
+            const messages = await response.json();
+            const messagesContainer = document.getElementById('chat-messages');
+            messagesContainer.innerHTML = '';
+
+            if (messages.length === 0) {
+                messagesContainer.innerHTML = `
+                    <div class="text-center p-5 text-muted">
+                        <i class="fas fa-comments fa-3x mb-3"></i>
+                        <p>Chưa có tin nhắn. Hãy bắt đầu trò chuyện!</p>
+                    </div>`;
+            } else {
+                messages.forEach(msg => displayMessage(msg));
+            }
+
+            scrollToBottom();
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
+
+    function displayMessage(data) {
+        const messagesContainer = document.getElementById('chat-messages');
+        const emptyMsg = messagesContainer.querySelector('.text-center');
+        if (emptyMsg) emptyMsg.remove();
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `d-flex ${data.isFromStaff ? 'justify-content-end' : 'justify-content-start'} mb-3`;
+
+        const time = new Date(data.sentAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+
+        let messageContent = '';
+        
+        // Check if message has attachment (image)
+        if (data.attachmentUrl) {
+            messageContent = `
+                <div style="max-width: 250px;">
+                    <img src="${data.attachmentUrl}" alt="Sent image" onclick="openAdminImageLightbox('${data.attachmentUrl}')" 
+                         style="width: 100%; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>`;
+        }
+        // Check if message is image (old format)
+        else if (data.message.startsWith('[IMAGE:')) {
+            const imageUrl = data.message.substring(7, data.message.length - 1);
+            messageContent = `
+                <div style="max-width: 250px;">
+                    <img src="${imageUrl}" alt="Sent image" onclick="openAdminImageLightbox('${imageUrl}')" 
+                         style="width: 100%; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>`;
+        } else if (data.message.startsWith('[ATTACHMENT:')) {
+            try {
+                const jsonStr = data.message.substring(12, data.message.length - 1);
+                const attachment = JSON.parse(jsonStr);
+                
+                if (attachment.type === 'product') {
+                    // Chuyển URL sang admin product details
+                    const productId = attachment.productId || attachment.id;
+                    const adminUrl = `/Admin/AdminProduct/Details/${productId}`;
+                    const headerText = data.isFromStaff ? 'Bạn đã giới thiệu sản phẩm' : 'Khách hàng đang hỏi về sản phẩm';
+                    messageContent = `
+                        <div class="attachment-card" data-preview-url="${adminUrl}" style="cursor: pointer; max-width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                            <div style="background: #f9fafb; padding: 10px 15px; font-size: 13px; font-weight: 600; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+                                ${headerText}
+                            </div>
+                            <div style="display: flex; gap: 12px; padding: 15px;">
+                                <img src="${attachment.imageUrl}" alt="${attachment.productName}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h6 style="font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 6px  0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${attachment.productName}</h6>
+                                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                                        <span style="font-size: 16px; font-weight: 700; color: #ef4444;">${attachment.discountPrice && attachment.discountPrice < attachment.price ? attachment.discountPrice.toLocaleString('vi-VN') : attachment.price.toLocaleString('vi-VN')}đ</span>
+                                        ${attachment.discountPrice && attachment.discountPrice < attachment.price ? `<span style="font-size: 12px; color: #9ca3af; text-decoration: line-through;">${attachment.price.toLocaleString('vi-VN')}đ</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="background: #f9fafb; padding: 8px 15px; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+                                <i class="fas fa-external-link-alt"></i> Click để xem chi tiết trong Admin
+                            </div>
+                        </div>`;
+                } else if (attachment.type === 'order') {
+                    // Chuyển URL sang admin order details
+                    const orderId = attachment.id;
+                    const adminUrl = `/Admin/AdminOrder/Details/${orderId}`;
+                    const statusColors = {
+                        'Chờ xác nhận': '#fbbf24',
+                        'Đã xác nhận': '#3b82f6',
+                        'Đang giao': '#8b5cf6',
+                        'Đã giao': '#10b981',
+                        'Hoàn thành': '#10b981',
+                        'Đã hủy': '#ef4444'
+                    };
+                    const statusColor = statusColors[attachment.status] || '#6b7280';
+                    const headerText = data.isFromStaff ? 'Bạn đã gửi thông tin đơn hàng' : 'Khách hàng đang hỏi về đơn hàng';
+                    
+                    messageContent = `
+                        <div class="attachment-card" data-preview-url="${adminUrl}" style="cursor: pointer; max-width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                            <div style="background: #f9fafb; padding: 10px 15px; font-size: 13px; font-weight: 600; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+                                ${headerText}
+                            </div>
+                            <div style="display: flex; gap: 12px; padding: 15px;">
+                                <img src="${attachment.imageUrl}" alt="Order" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h6 style="font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 4px 0;">${attachment.orderId}</h6>
+                                    <p style="font-size: 12px; color: #6b7280; margin: 0 0 8px 0;">Tổng: ${attachment.totalAmount.toLocaleString('vi-VN')}đ</p>
+                                    <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background-color: ${statusColor}20; color: ${statusColor};">${attachment.status}</span>
+                                </div>
+                            </div>
+                            <div style="background: #f9fafb; padding: 8px 15px; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                                <span>Mã: ${attachment.orderId}</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </div>
+                        </div>`;
+                } else if (attachment.type === 'blog') {
+                    const blogUrl = attachment.url || `/Blog/Details/${attachment.blogId}`;
+                    const headerText = data.isFromStaff ? '<i class="fas fa-newspaper"></i> Bạn đã gửi bài viết hữu ích' : '<i class="fas fa-newspaper"></i> Khách hàng chia sẻ bài viết';
+                    messageContent = `
+                        <div class="attachment-card" data-preview-url="${blogUrl}" style="cursor: pointer; max-width: 320px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                            <div style="background: #f9fafb; padding: 10px 15px; font-size: 13px; font-weight: 600; color: #6b7280; border-bottom: 1px solid #e5e7eb;">
+                                ${headerText}
+                            </div>
+                            <div style="display: flex; gap: 12px; padding: 15px;">
+                                <img src="${attachment.imageUrl || '/images/blog-placeholder.png'}" alt="${attachment.title}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h6 style="font-size: 14px; font-weight: 600; color: #111827; margin: 0 0 6px 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${attachment.title}</h6>
+                                    <p style="font-size: 12px; color: #6b7280; margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${attachment.summary || ''}</p>
+                                </div>
+                            </div>
+                            <div style="background: #f9fafb; padding: 8px 15px; font-size: 11px; color: #6b7280; border-top: 1px solid #e5e7eb;">
+                                <i class="fas fa-external-link-alt"></i> Click để đọc bài viết
+                            </div>
+                        </div>`;
+                }
+            } catch (e) {
+                messageContent = `<div>${escapeHtml(data.message)}</div>`;
+            }
+        } else {
+            // Kiểm tra xem có quick actions không
+            if (data.message.includes('[QUICK_ACTIONS]') && data.message.includes('[/QUICK_ACTIONS]')) {
+                // Parse message và actions
+                const startIndex = data.message.indexOf('[QUICK_ACTIONS]') + 15;
+                const endIndex = data.message.indexOf('[/QUICK_ACTIONS]');
+                const mainMessage = data.message.substring(0, data.message.indexOf('[QUICK_ACTIONS]')).trim();
+                const actionsText = data.message.substring(startIndex, endIndex).trim();
+                const actions = actionsText.split('\n').filter(line => line.trim() && line.includes('|'));
+                
+                // Format message chính
+                let formattedMessage = escapeHtml(mainMessage).replace(/\n/g, '<br>');
+                
+                // Thêm các options dưới dạng list đẹp
+                formattedMessage += '<br><br>';
+                actions.forEach(action => {
+                    const [label] = action.split('|').map(s => s.trim());
+                    formattedMessage += `${label}<br>`;
+                });
+                
+                messageContent = `<div>${formattedMessage}</div>`;
+            } else {
+                // Format line breaks for normal text messages
+                const formattedMessage = escapeHtml(data.message).replace(/\n/g, '<br>');
+                messageContent = `<div>${formattedMessage}</div>`;
+            }
+        }
+
+        // Determine message status text and icon
+        let statusText = '';
+        if (data.isFromStaff) {
+            // Only show status for staff messages
+            if (data.readAt) {
+                // Đã xem (có ReadAt timestamp)
+                statusText = '<span class="message-status read"><i class="fas fa-check-double"></i> Đã xem</span>';
+            } else if (data.isRead) {
+                // Đã nhận (IsRead = true nhưng chưa có ReadAt)
+                statusText = '<span class="message-status delivered"><i class="fas fa-check-double"></i> Đã nhận</span>';
+            } else if (data.id) {
+                // Đã gửi (có ID nghĩa là đã lưu vào DB)
+                statusText = '<span class="message-status sent"><i class="fas fa-check"></i> Đã gửi</span>';
+            }
+        }
+
+        // Nếu là attachment card hoặc image, không bọc trong message-bubble
+        if (data.attachmentUrl || data.message.startsWith('[ATTACHMENT:')) {
+            // For attachments, override status color to be visible on light background
+            const attachmentStatusText = statusText.replace('message-status', 'message-status attachment-status');
+            
+            messageDiv.innerHTML = `
+                ${!data.isFromStaff ? `
+                    <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; margin-right: 12px;">
+                        ${data.senderAvatar ? `<img src="${data.senderAvatar}" alt="${data.senderName}" style="width: 100%; height: 100%; object-fit: cover;">` : '<i class="fas fa-user-circle" style="font-size: 40px; color: #667eea;"></i>'}
+                    </div>
+                ` : ''}
+                <div style="max-width: 70%;">
+                    ${messageContent}
+                    <div class="message-time" style="font-size: 11px; color: #6c757d; margin-top: 4px; text-align: ${data.isFromStaff ? 'right' : 'left'}; display: flex; align-items: center; gap: 6px; ${data.isFromStaff ? 'justify-content: flex-end;' : ''}">
+                        <span>${time}</span>
+                        ${attachmentStatusText}
+                    </div>
+                </div>
+                ${!data.isFromStaff ? `
+                    <div class="message-options customer-message" style="margin-left: 8px;">
+                        <button class="message-options-btn" data-message-id="${data.id}">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="message-options-menu">
+                            <button class="menu-item" onclick="enterMultiSelectMode()">
+                                <i class="fas fa-check-square"></i> Chọn nhiều
+                            </button>
+                            <button class="menu-item delete-btn" onclick="deleteSingleMessage(${data.id})">
+                                <i class="fas fa-trash"></i> Xóa tin nhắn
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+                ${data.isFromStaff ? `
+                    <div class="message-options" style="margin-left: 8px;">
+                        <button class="message-options-btn" data-message-id="${data.id}">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="message-options-menu">
+                            <button class="menu-item" onclick="enterMultiSelectMode()">
+                                <i class="fas fa-check-square"></i> Chọn nhiều
+                            </button>
+                            <button class="menu-item delete-btn" onclick="deleteSingleMessage(${data.id})">
+                                <i class="fas fa-trash"></i> Xóa tin nhắn
+                            </button>
+                        </div>
+                    </div>
+                    <input type="checkbox" class="message-checkbox message-checkbox-right" data-message-id="${data.id}">
+                ` : `
+                    <input type="checkbox" class="message-checkbox message-checkbox-left" data-message-id="${data.id}">
+                `}
+            `;
+        } else {
+            // Tin nhắn text bình thường - dùng bubble với avatar
+            messageDiv.innerHTML = `
+                ${!data.isFromStaff ? `
+                    <div style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; margin-right: 12px;">
+                        ${data.senderAvatar ? `<img src="${data.senderAvatar}" alt="${data.senderName}" style="width: 100%; height: 100%; object-fit: cover;">` : '<i class="fas fa-user-circle" style="font-size: 40px; color: #667eea;"></i>'}
+                    </div>
+                ` : ''}
+                <div class="message-bubble ${data.isFromStaff ? 'message-from-staff' : 'message-from-customer'}">
+                    ${messageContent}
+                    <div class="message-time text-end">${time} ${statusText}</div>
+                </div>
+                ${!data.isFromStaff ? `
+                    <div class="message-options customer-message" style="margin-left: 8px;">
+                        <button class="message-options-btn" data-message-id="${data.id}">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="message-options-menu">
+                            <button class="menu-item" onclick="enterMultiSelectMode()">
+                                <i class="fas fa-check-square"></i> Chọn nhiều
+                            </button>
+                            <button class="menu-item delete-btn" onclick="deleteSingleMessage(${data.id})">
+                                <i class="fas fa-trash"></i> Xóa tin nhắn
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+                ${data.isFromStaff ? `
+                    <div class="message-options" style="margin-left: 8px;">
+                        <button class="message-options-btn" data-message-id="${data.id}">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="message-options-menu">
+                            <button class="menu-item" onclick="enterMultiSelectMode()">
+                                <i class="fas fa-check-square"></i> Chọn nhiều
+                            </button>
+                            <button class="menu-item delete-btn" onclick="deleteSingleMessage(${data.id})">
+                                <i class="fas fa-trash"></i> Xóa tin nhắn
+                            </button>
+                        </div>
+                    </div>
+                    <input type="checkbox" class="message-checkbox message-checkbox-right" data-message-id="${data.id}">
+                ` : `
+                    <input type="checkbox" class="message-checkbox message-checkbox-left" data-message-id="${data.id}">
+                `}
+            `;
+        }
+
+        messagesContainer.appendChild(messageDiv);
+        
+        // Add click listener for attachment cards to open in sidebar
+        const attachmentCards = messageDiv.querySelectorAll('.attachment-card');
+        attachmentCards.forEach(card => {
+            card.addEventListener('click', function() {
+                const url = this.getAttribute('data-preview-url');
+                if (url) {
+                    openPreviewSidebar(url);
+                }
+            });
+        });
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('message-input');
+        let message = input.value.trim();
+
+        if (!message || !chatConnection || !currentConversationId) return;
+
+        try {
+            // Kiểm tra xem có message gốc (có QUICK_ACTIONS) không
+            const originalMessage = input.getAttribute('data-original-message');
+            if (originalMessage) {
+                // Gửi message gốc (có tag) để customer thấy nút
+                await chatConnection.invoke('SendMessage', currentConversationId, originalMessage, null);
+                // Xóa attribute sau khi gửi
+                input.removeAttribute('data-original-message');
+            } else {
+                // Gửi message bình thường
+                await chatConnection.invoke('SendMessage', currentConversationId, message, null);
+            }
+            
+            input.value = '';
+            
+            // Reset textarea height về kích thước ban đầu
+            input.style.height = 'auto';
+            
+            // Stop typing
+            await chatConnection.invoke('StopTyping', currentConversationId);
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Không thể gửi tin nhắn. Vui lòng thử lại.');
+        }
+    }
+
+    function updateConversationLastMessage(conversationId, message, imageUrl, senderName, isFromStaff) {
+        const conversationItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+        if (!conversationItem) return;
+        
+        const lastMessageP = conversationItem.querySelector('p.mb-1.small');
+        if (!lastMessageP) return;
+        
+        let displayMessage = '';
+        const currentUserId = '@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+        
+        // Xác định prefix dựa vào người gửi
+        let messagePrefix;
+        if (isFromStaff) {
+            // Staff/Admin gửi - màu xanh
+            messagePrefix = '<span style="color: #6366f1; font-weight: 500;">Bạn: </span>';
+        } else {
+            // Customer gửi - màu xám với tên
+            messagePrefix = '<span style="color: #374151; font-weight: 500;">' + (senderName || 'Khách') + ': </span>';
+        }
+        
+        // Parse message để hiển thị đẹp
+        if (message.startsWith('[IMAGE:')) {
+            displayMessage = messagePrefix + '📷 Đã gửi ảnh';
+        } else if (message.startsWith('[Đã gửi ảnh]')) {
+            displayMessage = messagePrefix + '📷 Đã gửi ảnh';
+        } else if (message.startsWith('[ATTACHMENT:')) {
+            try {
+                const lastBracket = message.lastIndexOf(']');
+                const jsonStr = message.substring(12, lastBracket);
+                const attachment = JSON.parse(jsonStr);
+                
+                if (attachment.type === 'product') {
+                    displayMessage = messagePrefix + '🌸 ' + (attachment.productName || 'Sản phẩm').substring(0, 30);
+                } else if (attachment.type === 'order') {
+                    displayMessage = messagePrefix + '📦 Đơn hàng #' + (attachment.orderId || '');
+                } else if (attachment.type === 'blog') {
+                    displayMessage = messagePrefix + '📰 ' + (attachment.title || 'Bài viết').substring(0, 35);
+                } else {
+                    displayMessage = messagePrefix + '📎 Đính kèm';
+                }
+            } catch (e) {
+                displayMessage = messagePrefix + '📎 Đính kèm';
+            }
+        } else {
+            displayMessage = messagePrefix + message.substring(0, 50);
+        }
+        
+        lastMessageP.innerHTML = displayMessage;
+        
+        // Move conversation to top
+        const conversationsList = document.getElementById('conversations-list');
+        conversationsList.prepend(conversationItem);
+    }
+
+    async function assignToMe() {
+        if (!currentConversationId) return;
+
+        try {
+            const userId = '@User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value';
+            const response = await fetch(`/api/supportchat/conversation/${currentConversationId}/assign`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ staffId: userId })
+            });
+
+            if (!response.ok) throw new Error('Failed to assign');
+
+            // Reload conversation to update UI with new assignment
+            await openConversation(currentConversationId);
+            loadConversations();
+        } catch (error) {
+            console.error('Error assigning conversation:', error);
+            alert('Không thể nhận hỗ trợ. Vui lòng thử lại.');
+        }
+    }
+
+    async function closeConversation() {
+        if (!currentConversationId) return;
+
+        if (!confirm('Bạn có chắc muốn đóng hội thoại này?')) return;
+
+        try {
+            const response = await fetch(`/api/supportchat/conversation/${currentConversationId}/close`, {
+                method: 'PUT'
+            });
+
+            if (!response.ok) throw new Error('Failed to close');
+
+            alert('Đã đóng hội thoại');
+            currentConversationId = null;
+            document.getElementById('chat-header').style.display = 'none';
+            document.getElementById('chat-input-area').style.display = 'none';
+            document.getElementById('chat-messages').innerHTML = `
+                <div class="text-center p-5 text-muted">
+                    <i class="fas fa-comments fa-3x mb-3"></i>
+                    <p>Chọn một hội thoại để bắt đầu chat</p>
+                </div>`;
+            loadConversations();
+        } catch (error) {
+            console.error('Error closing conversation:', error);
+            alert('Không thể đóng hội thoại. Vui lòng thử lại.');
+        }
+    }
+
+    async function handleBlockUser() {
+        if (!currentConversationId || !currentUserId) return;
+
+        const blockBtn = document.getElementById('block-user-btn');
+        const isCurrentlyBlocked = blockBtn.className.includes('btn-success');
+
+        if (isCurrentlyBlocked) {
+            // Unblock user
+            if (!confirm('Bạn có chắc muốn mở khóa người dùng này?')) return;
+
+            try {
+                const response = await fetch('/api/supportchat/unblock-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUserId })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to unblock user');
+                }
+
+                // Update UI immediately
+                blockBtn.className = 'btn btn-sm btn-warning';
+                blockBtn.innerHTML = '<i class="fas fa-ban"></i>';
+                blockBtn.title = 'Chặn người dùng';
+                
+                // Show success toast
+                showSuccessToast('✅ Đã mở khóa người dùng. Họ có thể gửi tin nhắn trở lại.');
+            } catch (error) {
+                console.error('Error unblocking user:', error);
+                alert(error.message || 'Không thể mở khóa người dùng. Vui lòng thử lại.');
+            }
+        } else {
+            // Block user
+            const reason = prompt('Nhập lý do chặn người dùng này (tùy chọn):');
+            if (reason === null) return; // User cancelled
+
+            try {
+                const response = await fetch('/api/supportchat/block-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: currentUserId,
+                        reason: reason || 'Spam hoặc vi phạm quy định'
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to block user');
+                }
+
+                // Update UI immediately
+                blockBtn.className = 'btn btn-sm btn-success';
+                blockBtn.innerHTML = '<i class="fas fa-check-circle"></i>';
+                blockBtn.title = 'Mở chặn người dùng';
+                
+                // Show success toast
+                showSuccessToast('🚫 Đã chặn người dùng. Họ không thể gửi tin nhắn cho đến khi được mở khóa.');
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                alert(error.message || 'Không thể chặn người dùng. Vui lòng thử lại.');
+            }
+        }
+    }
+
+    function scrollToBottom() {
+        const container = document.getElementById('chat-messages');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000); // seconds
+
+        if (diff < 60) return 'Vừa xong';
+        if (diff < 3600) return Math.floor(diff / 60) + ' phút trước';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' giờ trước';
+        return date.toLocaleDateString('vi-VN');
+    }
+
+    function showSpamBlockNotification(data) {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #ef4444;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+            z-index: 9999;
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <i class="fas fa-shield-alt" style="font-size: 32px; color: #ef4444; flex-shrink: 0;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 16px; color: #7f1d1d; margin-bottom: 8px;">
+                        🚨 User bị chặn tự động
+                    </div>
+                    <div style="font-size: 14px; color: #991b1b; margin-bottom: 8px;">
+                        <strong>${data.userName}</strong> đã bị hệ thống chặn do spam
+                    </div>
+                    <div style="font-size: 13px; color: #7f1d1d; margin-bottom: 12px;">
+                        Lý do: ${data.reason}
+                    </div>
+                    <button onclick="window.openConversation(${data.conversationId}); this.closest('div[style*=\"position: fixed\"]').remove();" 
+                            style="width: 100%; padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-eye"></i> Xem cuộc hội thoại
+                    </button>
+                </div>
+                <button onclick="this.closest('div[style*=\"position: fixed\"]').remove();" 
+                        style="background: none; border: none; color: #7f1d1d; font-size: 20px; cursor: pointer; padding: 0; line-height: 1;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 15 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 15000);
+    }
+
+    function showSuccessToast(message) {
+        // Create toast notification
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 16px 20px;
+            max-width: 400px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+            z-index: 9999;
+            animation: slideInRight 0.3s ease-out;
+            font-size: 14px;
+            font-weight: 600;
+            color: #064e3b;
+        `;
+        
+        toast.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-check-circle" style="font-size: 24px; color: #10b981;"></i>
+                <div style="flex: 1;">${message}</div>
+                <button onclick="this.closest('div').remove();" 
+                        style="background: none; border: none; color: #064e3b; font-size: 18px; cursor: pointer; padding: 0;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            toast.style.transition = 'all 0.3s ease-out';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
+    }
+
+    function getOnlineStatusHtml(isOnline, lastSeenAt) {
+        if (isOnline) {
+            return '<span style="color: #10b981;">Đang hoạt động</span>';
+        }
+        
+        if (!lastSeenAt) {
+            return '<span style="opacity: 0.7;">Không rõ</span>';
+        }
+        
+        const date = new Date(lastSeenAt);
+        const now = new Date();
+        const diffMinutes = Math.floor((now - date) / 1000 / 60);
+        
+        if (diffMinutes < 1) return '<span style="opacity: 0.7;">Hoạt động vừa xong</span>';
+        if (diffMinutes < 60) return `<span style="opacity: 0.7;">Hoạt động ${diffMinutes} phút trước</span>`;
+        
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) return `<span style="opacity: 0.7;">Hoạt động ${diffHours} giờ trước</span>`;
+        
+        const diffDays = Math.floor(diffHours / 24);
+        return `<span style="opacity: 0.7;">Hoạt động ${diffDays} ngày trước</span>`;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Tag & Priority Functions
+    async function setConversationTag(tag, priority) {
+        if (!currentConversationId) {
+            alert('Vui lòng chọn một hội thoại trước');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/supportchat/conversation/${currentConversationId}/tag`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tag, priority })
+            });
+
+            if (!response.ok) throw new Error('Failed to update tag');
+
+            const result = await response.json();
+            
+            // Update UI
+            updateTagDisplay(result.tag, result.priority);
+            
+            // Update conversation list item
+            const conversationItem = document.querySelector(`[data-conversation-id="${currentConversationId}"]`);
+            if (conversationItem) {
+                updateConversationTagBadge(conversationItem, result.tag, result.priority);
+            }
+
+            // Show success message
+            showToast('✅ Đã cập nhật phân loại', 'success');
+        } catch (error) {
+            console.error('Error updating tag:', error);
+            alert('Không thể cập nhật phân loại. Vui lòng thử lại.');
+        }
+    }
+
+    function updateTagDisplay(tag, priority) {
+        const tagBadge = document.getElementById('current-tag-badge');
+        const tagText = document.getElementById('current-tag-text');
+        const priorityBadge = document.getElementById('current-priority-badge');
+        const priorityText = document.getElementById('current-priority-text');
+
+        if (tag) {
+            tagText.textContent = tag;
+            tagBadge.style.display = 'inline-block';
+            
+            // Set badge color based on tag
+            tagBadge.className = 'badge me-2';
+            if (tag === 'VIP') tagBadge.classList.add('bg-warning');
+            else if (tag === 'Khiếu nại') tagBadge.classList.add('bg-danger');
+            else if (tag === 'Tư vấn') tagBadge.classList.add('bg-info');
+            else if (tag === 'Đặt hàng') tagBadge.classList.add('bg-success');
+            else tagBadge.classList.add('bg-secondary');
+        } else {
+            tagBadge.style.display = 'none';
+        }
+
+        if (priority > 0) {
+            const priorityNames = ['Normal', 'Cao', 'Khẩn cấp'];
+            priorityText.textContent = priorityNames[priority] || 'Normal';
+            priorityBadge.style.display = 'inline-block';
+        } else {
+            priorityBadge.style.display = 'none';
+        }
+    }
+
+    function updateConversationTagBadge(conversationItem, tag, priority) {
+        let tagBadge = conversationItem.querySelector('.conversation-tag-badge');
+        
+        if (!tagBadge) {
+            tagBadge = document.createElement('span');
+            tagBadge.className = 'conversation-tag-badge badge ms-2';
+            const nameElement = conversationItem.querySelector('h6');
+            if (nameElement) {
+                nameElement.appendChild(tagBadge);
+            }
+        }
+
+        if (tag) {
+            tagBadge.textContent = tag;
+            tagBadge.style.display = 'inline-block';
+            
+            // Set color
+            tagBadge.className = 'conversation-tag-badge badge ms-2';
+            if (tag === 'VIP') tagBadge.classList.add('bg-warning');
+            else if (tag === 'Khiếu nại') tagBadge.classList.add('bg-danger');
+            else if (tag === 'Tư vấn') tagBadge.classList.add('bg-info');
+            else if (tag === 'Đặt hàng') tagBadge.classList.add('bg-success');
+            else tagBadge.classList.add('bg-secondary');
+        } else {
+            tagBadge.style.display = 'none';
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        // Simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 99999; min-width: 250px; animation: slideInRight 0.3s;';
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Preview Modal Functions
+    let currentPreviewUrl = '';
+    
+    function openPreviewSidebar(url) {
+        // Thêm ?modal=true vào URL để load view không có layout
+        const modalUrl = url + (url.includes('?') ? '&' : '?') + 'modal=true';
+        currentPreviewUrl = url; // Giữ URL gốc cho nút "Mở tab mới"
+        
+        const modal = document.getElementById('preview-modal');
+        const frame = document.getElementById('preview-frame');
+        
+        frame.src = modalUrl;
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scroll
+    }
+
+    function closePreviewModal() {
+        const modal = document.getElementById('preview-modal');
+        const frame = document.getElementById('preview-frame');
+        
+        modal.style.display = 'none';
+        frame.src = '';
+        currentPreviewUrl = '';
+        document.body.style.overflow = 'auto';
+    }
+
+    function openInNewTab() {
+        if (currentPreviewUrl) {
+            window.open(currentPreviewUrl, '_blank');
+        }
+    }
+
+    function openAdminImageLightbox(imageUrl) {
+        const lightbox = document.getElementById('admin-image-lightbox');
+        const lightboxImage = document.getElementById('admin-lightbox-image');
+        lightboxImage.src = imageUrl;
+        lightbox.style.display = 'flex';
+    }
+
+    function toggleFullscreen() {
+        const chatWindow = document.querySelector('.chat-window-card');
+        const conversationList = document.querySelector('.col-md-4');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const icon = fullscreenBtn.querySelector('i');
+        
+        if (chatWindow.classList.contains('fullscreen')) {
+            // Exit fullscreen
+            chatWindow.classList.remove('fullscreen');
+            conversationList.style.display = 'block';
+            icon.className = 'fas fa-expand';
+            fullscreenBtn.title = 'Mở rộng';
+        } else {
+            // Enter fullscreen
+            chatWindow.classList.add('fullscreen');
+            conversationList.style.display = 'none';
+            icon.className = 'fas fa-compress';
+            fullscreenBtn.title = 'Thu nhỏ';
+        }
+    }
+
+    // Setup modal buttons and click outside to close
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeBtn = document.getElementById('close-modal-btn');
+        const openTabBtn = document.getElementById('open-new-tab-btn');
+        const modal = document.getElementById('preview-modal');
+        
+        if (closeBtn) closeBtn.addEventListener('click', closePreviewModal);
+        if (openTabBtn) openTabBtn.addEventListener('click', openInNewTab);
+        
+        // Close on click outside
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closePreviewModal();
+                }
+            });
+        }
+        
+        // Close on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                closePreviewModal();
+            }
+        });
+
+        // ===== SETUP SEARCH & FILTER LISTENERS =====
+        setupSearchAndFilters();
+        loadStaffList();
+    });
+
+    // Search & Filter Functions
+    function setupSearchAndFilters() {
+        const searchInput = document.getElementById('search-conversations');
+        const clearSearchBtn = document.getElementById('clear-search-btn');
+        const filterTag = document.getElementById('filter-tag');
+        const filterPriority = document.getElementById('filter-priority');
+        const filterStaff = document.getElementById('filter-staff');
+        const clearFiltersBtn = document.getElementById('clear-filters-btn');
+
+        let searchTimeout;
+
+        // Search with debounce
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const value = this.value.trim();
+            
+            clearSearchBtn.style.display = value ? 'block' : 'none';
+            
+            searchTimeout = setTimeout(() => {
+                currentSearchText = value;
+                loadConversations();
+            }, 500);
+        });
+
+        // Clear search
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            currentSearchText = '';
+            this.style.display = 'none';
+            loadConversations();
+        });
+
+        // Tag filter
+        filterTag.addEventListener('change', function() {
+            currentTagFilter = this.value;
+            loadConversations();
+        });
+
+        // Priority filter
+        filterPriority.addEventListener('change', function() {
+            currentPriorityFilter = this.value;
+            loadConversations();
+        });
+
+        // Staff filter
+        filterStaff.addEventListener('change', function() {
+            currentStaffFilter = this.value;
+            loadConversations();
+        });
+
+        // Clear all filters
+        clearFiltersBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            filterTag.value = '';
+            filterPriority.value = '';
+            filterStaff.value = '';
+            
+            currentSearchText = '';
+            currentTagFilter = '';
+            currentPriorityFilter = '';
+            currentStaffFilter = '';
+            
+            loadConversations();
+        });
+    }
+
+    function updateActiveFiltersDisplay() {
+        const activeFiltersDiv = document.getElementById('active-filters');
+        const badgesDiv = document.getElementById('active-filters-badges');
+        const badges = [];
+
+        if (currentSearchText) {
+            badges.push(`<span class="badge bg-primary me-1"><i class="fas fa-search"></i> "${currentSearchText}"</span>`);
+        }
+        if (currentTagFilter) {
+            badges.push(`<span class="badge bg-info me-1"><i class="fas fa-tag"></i> ${currentTagFilter}</span>`);
+        }
+        if (currentPriorityFilter) {
+            const priorityText = currentPriorityFilter === '0' ? 'Bình thường' : (currentPriorityFilter === '1' ? 'Cao' : 'Khẩn cấp');
+            badges.push(`<span class="badge bg-warning me-1"><i class="fas fa-exclamation-circle"></i> ${priorityText}</span>`);
+        }
+        if (currentStaffFilter) {
+            const staffText = currentStaffFilter === 'unassigned' ? 'Chưa nhận' : 'Đã lọc staff';
+            badges.push(`<span class="badge bg-secondary me-1"><i class="fas fa-user"></i> ${staffText}</span>`);
+        }
+
+        if (badges.length > 0) {
+            badgesDiv.innerHTML = badges.join('');
+            activeFiltersDiv.style.display = 'block';
+        } else {
+            activeFiltersDiv.style.display = 'none';
+        }
+    }
+
+    async function loadStaffList() {
+        try {
+            // Get all conversations to extract staff who are actually handling chats
+            const convResponse = await fetch('/api/supportchat/conversations');
+            if (!convResponse.ok) return;
+            const conversations = await convResponse.json();
+            
+            // Get unique staff from conversations
+            const staffMap = new Map();
+            conversations.forEach(conv => {
+                if (conv.staffId && conv.staffName) {
+                    staffMap.set(conv.staffId, conv.staffName);
+                }
+            });
+
+            // Also get all available staff (Admin/Manager/Staff) for complete list
+            const staffResponse = await fetch('/api/supportchat/staff-list');
+            let allStaff = [];
+            if (staffResponse.ok) {
+                allStaff = await staffResponse.json();
+            }
+
+            const filterStaff = document.getElementById('filter-staff');
+            const currentValue = filterStaff.value;
+            
+            // Keep existing options (empty and unassigned)
+            const existingOptions = filterStaff.querySelectorAll('option:not([value="unassigned"]):not([value=""])');
+            existingOptions.forEach(opt => opt.remove());
+
+            // Add all staff options with name and role
+            allStaff.forEach(staff => {
+                const option = document.createElement('option');
+                option.value = staff.id;
+                
+                // Format: "Nguyễn Văn A (Admin)"
+                option.textContent = `${staff.name} (${staff.role})`;
+                filterStaff.appendChild(option);
+            });
+
+            filterStaff.value = currentValue;
+        } catch (error) {
+            console.error('Error loading staff list:', error);
+        }
+    }
+
+    // ===== SEARCH IN CHAT FUNCTIONS =====
+    function setupSearchInChat() {
+        const searchBtn = document.getElementById('search-in-chat-btn');
+        const searchToolbar = document.getElementById('search-in-chat-toolbar');
+        const searchInput = document.getElementById('search-in-chat-input');
+        const closeSearchBtn = document.getElementById('close-search-btn');
+        const searchPrevBtn = document.getElementById('search-prev-btn');
+        const searchNextBtn = document.getElementById('search-next-btn');
+
+        searchBtn.addEventListener('click', () => {
+            searchToolbar.style.display = 'block';
+            searchInput.focus();
+        });
+
+        closeSearchBtn.addEventListener('click', () => {
+            searchToolbar.style.display = 'none';
+            clearSearchHighlights();
+        });
+
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const searchText = this.value.trim();
+            
+            // If empty, clear immediately
+            if (!searchText) {
+                clearSearchHighlights();
+                return;
+            }
+            
+            // Otherwise debounce the search
+            searchTimeout = setTimeout(() => {
+                performSearchInChat(searchText);
+            }, 300);
+        });
+
+        searchPrevBtn.addEventListener('click', () => navigateSearchResults('prev'));
+        searchNextBtn.addEventListener('click', () => navigateSearchResults('next'));
+
+        // ESC to close
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                searchToolbar.style.display = 'none';
+                clearSearchHighlights();
+            }
+        });
+    }
+
+    function performSearchInChat(searchText) {
+        searchInChatResults = [];
+        currentSearchIndex = -1;
+
+        if (!searchText || searchText.length < 2) {
+            updateSearchResultsCount();
+            return;
+        }
+
+        const chatMessages = document.getElementById('chat-messages');
+        if (!chatMessages) return;
+
+        const messageElements = chatMessages.querySelectorAll('.message-bubble');
+        if (messageElements.length === 0) return;
+
+        messageElements.forEach((element) => {
+            const originalText = element.textContent || '';
+            
+            if (originalText.toLowerCase().includes(searchText.toLowerCase())) {
+                const html = element.innerHTML;
+                const regex = new RegExp(`(${escapeRegex(searchText)})`, 'gi');
+                const newHTML = html.replace(regex, '<mark class="search-highlight" style="background-color: yellow !important; color: black !important; padding: 2px; font-weight: bold;">$1</mark>');
+                
+                if (newHTML !== html) {
+                    element.innerHTML = newHTML;
+                    const highlights = element.querySelectorAll('mark.search-highlight');
+                    highlights.forEach(h => searchInChatResults.push(h));
+                }
+            }
+        });
+
+        if (searchInChatResults.length > 0) {
+            currentSearchIndex = 0;
+            navigateToSearchResult(0);
+        }
+
+        updateSearchResultsCount();
+    }
+
+    function navigateSearchResults(direction) {
+        if (searchInChatResults.length === 0) return;
+
+        if (direction === 'next') {
+            currentSearchIndex = (currentSearchIndex + 1) % searchInChatResults.length;
+        } else {
+            currentSearchIndex = (currentSearchIndex - 1 + searchInChatResults.length) % searchInChatResults.length;
+        }
+
+        navigateToSearchResult(currentSearchIndex);
+    }
+
+    function navigateToSearchResult(index) {
+        // Remove current class from all
+        searchInChatResults.forEach(el => el.classList.remove('current'));
+
+        // Add current class to selected
+        const currentElement = searchInChatResults[index];
+        currentElement.classList.add('current');
+
+        // Scroll into view
+        currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        updateSearchResultsCount();
+    }
+
+    function updateSearchResultsCount() {
+        const countElement = document.getElementById('search-results-count');
+        if (searchInChatResults.length === 0) {
+            countElement.textContent = '0/0';
+        } else {
+            countElement.textContent = `${currentSearchIndex + 1}/${searchInChatResults.length}`;
+        }
+    }
+
+    function highlightTextInNode(node, searchText) {
+        const regex = new RegExp(`(${escapeRegex(searchText)})`, 'gi');
+        
+        function walk(node) {
+            if (node.nodeType === 3) { // Text node
+                const text = node.nodeValue;
+                if (regex.test(text)) {
+                    const span = document.createElement('span');
+                    const highlightedHTML = text.replace(regex, '<span class="search-highlight">$1</span>');
+                    span.innerHTML = highlightedHTML;
+                    node.parentNode.replaceChild(span, node);
+                }
+            } else if (node.nodeType === 1 && node.nodeName !== 'SCRIPT' && node.nodeName !== 'STYLE') {
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    walk(node.childNodes[i]);
+                }
+            }
+        }
+        
+        walk(node);
+    }
+
+    function clearSearchHighlights() {
+        const chatMessages = document.getElementById('chat-messages');
+        if (!chatMessages) return;
+
+        const marks = chatMessages.querySelectorAll('mark.search-highlight');
+        marks.forEach(mark => {
+            const parent = mark.parentNode;
+            const textNode = document.createTextNode(mark.textContent);
+            parent.replaceChild(textNode, mark);
+        });
+
+        const messageBubbles = chatMessages.querySelectorAll('.message-bubble');
+        messageBubbles.forEach(bubble => bubble.normalize());
+
+        searchInChatResults = [];
+        currentSearchIndex = -1;
+        updateSearchResultsCount();
+    }
+
+    function escapeRegex(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // ===== PRODUCT SEARCH MODAL =====
+    let productSearchTimeout = null;
+    let cachedProducts = []; // Cache để tránh gọi API lại
+
+    function openProductSearchModal() {
+        // CLEAR kết quả cũ trước khi mở
+        const resultsDiv = document.getElementById('product-search-results');
+        resultsDiv.innerHTML = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('productSearchModal'));
+        modal.show();
+        
+        const searchInput = document.getElementById('product-search-input');
+        searchInput.value = '';
+        
+        // Load all products initially
+        searchProducts('');
+        
+        searchInput.focus();
+        
+        // Remove old listener để tránh duplicate
+        const newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        
+        // Search on input
+        newInput.addEventListener('input', function() {
+            clearTimeout(productSearchTimeout);
+            const query = this.value.trim();
+            
+            productSearchTimeout = setTimeout(() => searchProducts(query), 300);
+        });
+    }
+
+    async function searchProducts(query) {
+        const resultsDiv = document.getElementById('product-search-results');
+        resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        
+        try {
+            // Dùng CÙNG API với customer widget
+            const response = await fetch(`/api/productapi/products?${query ? 'search=' + encodeURIComponent(query) + '&' : ''}pageSize=20`);
+            const result = await response.json();
+            const products = result.data || result || [];
+            cachedProducts = products; // Cache lại để dùng khi select
+            
+            if (products.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>Không tìm thấy sản phẩm nào</p>
+                    </div>`;
+                return;
+            }
+            
+            resultsDiv.innerHTML = products.map((p, index) => {
+                const productImage = p.imageUrl || (p.images && p.images[0]) || '/images/no-image.png';
+                const discountPrice = p.discountedPrice || p.discountPrice || null;
+                const hasDiscount = discountPrice && discountPrice < p.price && p.hasDiscount;
+                
+                return `
+                <div class="card mb-2 product-search-item" style="cursor: pointer;" onclick="selectProductFromCache(${index})">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <img src="${productImage}" alt="${p.name}" onerror="this.src='/images/no-image.png'" class="img-fluid rounded" style="width: 100%; height: 80px; object-fit: cover;">
+                            </div>
+                            <div class="col-9">
+                                <h6 class="mb-1">${p.name}</h6>
+                                <p class="text-muted mb-1 small">${p.categoryName || ''}</p>
+                                <div style="display: flex; flex-direction: column; gap: 2px;">
+                                    ${hasDiscount ? `
+                                        <span class="fw-bold" style="color: #ef4444; font-size: 16px;">${discountPrice.toLocaleString('vi-VN')}đ</span>
+                                        <span class="text-muted" style="font-size: 12px; text-decoration: line-through;">${p.price.toLocaleString('vi-VN')}đ</span>
+                                    ` : `
+                                        <span class="fw-bold" style="color: #ef4444; font-size: 16px;">${p.price.toLocaleString('vi-VN')}đ</span>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        } catch (error) {
+            resultsDiv.innerHTML = `
+                <div class="text-center text-danger py-4">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <p>Lỗi khi tìm kiếm sản phẩm</p>
+                </div>`;
+        }
+    }
+
+    async function selectProductFromCache(index) {
+        try {
+            console.log('🔍 Debug - chatConnection:', chatConnection);
+            console.log('🔍 Debug - currentConversationId:', currentConversationId);
+            
+            const product = cachedProducts[index];
+            if (!product) {
+                alert('Không tìm thấy sản phẩm');
+                return;
+            }
+            
+            if (!chatConnection) {
+                alert('Chưa kết nối chat. Vui lòng thử lại!');
+                return;
+            }
+            
+            if (!currentConversationId) {
+                alert('Vui lòng chọn một cuộc hội thoại trước!');
+                return;
+            }
+            
+            const productImage = product.imageUrl || (product.images && product.images[0]) || '/images/no-image.png';
+            const discountPrice = product.discountedPrice || product.discountPrice || null;
+            // Chỉ gửi discountPrice nếu thực sự có giảm giá
+            const finalDiscountPrice = (discountPrice && discountPrice < product.price) ? discountPrice : null;
+            
+            const attachment = {
+                type: 'product',
+                productId: product.id,
+                productName: product.name,
+                price: product.price,
+                discountPrice: finalDiscountPrice,
+                imageUrl: productImage,
+                url: `/Product/Details/${product.id}`
+            };
+            
+            const message = `[ATTACHMENT:${JSON.stringify(attachment)}]`;
+            await chatConnection.invoke('SendMessage', currentConversationId, message, null);
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('productSearchModal')).hide();
+        } catch (error) {
+            console.error('Lỗi gửi sản phẩm:', error);
+            alert('Lỗi khi gửi sản phẩm: ' + (error.message || error));
+        }
+    }
+
+    // ===== ORDER SEARCH MODAL =====
+    let orderSearchTimeout = null;
+
+    function openOrderSearchModal() {
+        // CLEAR kết quả cũ trước khi mở
+        const resultsDiv = document.getElementById('order-search-results');
+        resultsDiv.innerHTML = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('orderSearchModal'));
+        modal.show();
+        
+        const searchInput = document.getElementById('order-search-input');
+        searchInput.value = '';
+        
+        // QUAN TRỌNG: Load lại orders của user HIỆN TẠI
+        searchOrders('');
+        
+        searchInput.focus();
+        
+        // Remove old listener để tránh duplicate
+        const newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        
+        newInput.addEventListener('input', function() {
+            clearTimeout(orderSearchTimeout);
+            const query = this.value.trim();
+            
+            orderSearchTimeout = setTimeout(() => searchOrders(query), 300);
+        });
+    }
+
+    async function searchOrders(query) {
+        const resultsDiv = document.getElementById('order-search-results');
+        resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        
+        try {
+            // QUAN TRỌNG: Truyền userId để chỉ hiển thị đơn hàng của user hiện tại
+            const url = `/api/OrderApi/search?q=${encodeURIComponent(query)}${currentUserId ? `&userId=${encodeURIComponent(currentUserId)}` : ''}`;
+            const response = await fetch(url);
+            const orders = await response.json();
+            
+            if (orders.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>Không tìm thấy đơn hàng nào</p>
+                    </div>`;
+                return;
+            }
+            
+            resultsDiv.innerHTML = orders.map(o => `
+                <div class="card mb-2 order-search-item" style="cursor: pointer;" data-order-id="${o.id}" data-order-display-id="${o.orderId}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Đơn hàng #${o.orderId}</h6>
+                                <p class="text-muted mb-1 small"><i class="fas fa-user"></i> ${o.customerName}</p>
+                                <p class="text-muted mb-1 small"><i class="fas fa-clock"></i> ${new Date(o.orderDate).toLocaleDateString('vi-VN')}</p>
+                            </div>
+                            <div class="text-end">
+                                <p class="text-primary fw-bold mb-1">${o.totalAmount.toLocaleString('vi-VN')}đ</p>
+                                <span class="badge bg-${getOrderStatusColor(o.orderStatus)}">${o.orderStatus}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add click handlers - dùng ID (int) để gọi API
+            document.querySelectorAll('.order-search-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const orderId = parseInt(this.dataset.orderId);  // ID thực (int)
+                    selectOrder(orderId);
+                });
+            });
+        } catch (error) {
+            resultsDiv.innerHTML = `
+                <div class="text-center text-danger py-4">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <p>Lỗi khi tìm kiếm đơn hàng</p>
+                </div>`;
+        }
+    }
+
+    function getOrderStatusColor(status) {
+        const colors = {
+            'Chờ xác nhận': 'warning',
+            'Đã xác nhận': 'info',
+            'Đang giao': 'primary',
+            'Đã giao': 'success',
+            'Đã hủy': 'danger'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    async function selectOrder(orderId) {
+        try {
+            const response = await fetch(`/api/OrderApi/chat/${orderId}`);
+            const order = await response.json();
+            
+            const attachment = {
+                type: 'order',
+                id: orderId,  // ID (int) để admin xem trong admin panel
+                orderId: order.orderId,  // OrderId (string) để hiển thị
+                orderDate: order.orderDate,
+                totalAmount: order.totalAmount,
+                status: order.orderStatus,
+                imageUrl: order.imageUrl || 'https://via.placeholder.com/80x80/8B5CF6/FFFFFF?text=📦',
+                url: `/Order/Details/${orderId}`  // URL cho customer xem
+            };
+            
+            const message = `[ATTACHMENT:${JSON.stringify(attachment)}]`;
+            await chatConnection.invoke('SendMessage', currentConversationId, message, null);
+            
+            bootstrap.Modal.getInstance(document.getElementById('orderSearchModal')).hide();
+        } catch (error) {
+            console.error('Lỗi gửi đơn hàng:', error);
+            alert('Lỗi khi gửi đơn hàng: ' + (error.message || error));
+        }
+    }
+
+    // ===== BLOG SEARCH MODAL =====
+    let blogSearchTimeout = null;
+
+    function openBlogSearchModal() {
+        // CLEAR kết quả cũ trước khi mở
+        const resultsDiv = document.getElementById('blog-search-results');
+        resultsDiv.innerHTML = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('blogSearchModal'));
+        modal.show();
+        
+        const searchInput = document.getElementById('blog-search-input');
+        searchInput.value = '';
+        
+        // Load all blogs initially
+        searchBlogs('');
+        
+        searchInput.focus();
+        
+        // Remove old listener để tránh duplicate
+        const newInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newInput, searchInput);
+        
+        newInput.addEventListener('input', function() {
+            clearTimeout(blogSearchTimeout);
+            const query = this.value.trim();
+            
+            blogSearchTimeout = setTimeout(() => searchBlogs(query), 300);
+        });
+    }
+
+    async function searchBlogs(query) {
+        const resultsDiv = document.getElementById('blog-search-results');
+        resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+        
+        try {
+            const response = await fetch(`/api/BlogApi/search?q=${encodeURIComponent(query)}`);
+            const blogs = await response.json();
+            
+            if (blogs.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>Không tìm thấy bài viết nào</p>
+                    </div>`;
+                return;
+            }
+            
+            resultsDiv.innerHTML = blogs.map(b => `
+                <div class="card mb-2 blog-search-item" style="cursor: pointer;" onclick="selectBlog(${b.blogId})">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <img src="${b.imageUrl || '/images/blog-placeholder.png'}" class="img-fluid rounded" alt="${b.title}">
+                            </div>
+                            <div class="col-9">
+                                <h6 class="mb-1">${b.title}</h6>
+                                <p class="text-muted mb-1 small">${b.summary || ''}</p>
+                                <p class="text-muted mb-0 small"><i class="fas fa-calendar"></i> ${new Date(b.publishDate).toLocaleDateString('vi-VN')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (error) {
+            resultsDiv.innerHTML = `
+                <div class="text-center text-danger py-4">
+                    <i class="fas fa-exclamation-circle fa-2x mb-2"></i>
+                    <p>Lỗi khi tìm kiếm bài viết</p>
+                </div>`;
+        }
+    }
+
+    async function selectBlog(blogId) {
+        try {
+            const response = await fetch(`/api/BlogApi/${blogId}`);
+            const blog = await response.json();
+            
+            const attachment = {
+                type: 'blog',
+                blogId: blog.blogId,
+                title: blog.title,
+                summary: blog.summary,
+                imageUrl: blog.imageUrl,
+                url: `/Blog/Details/${blog.blogId}`
+            };
+            
+            const message = `[ATTACHMENT:${JSON.stringify(attachment)}]`;
+            await chatConnection.invoke('SendMessage', currentConversationId, message, null);
+            
+            bootstrap.Modal.getInstance(document.getElementById('blogSearchModal')).hide();
+        } catch (error) {
+            console.error('Lỗi gửi bài viết:', error);
+            alert('Lỗi khi gửi bài viết: ' + (error.message || error));
+        }
+    }
+
+    // ===== MESSAGE OPTIONS MENU =====
+    let isMultiSelectMode = false;
+    let selectedMessages = new Set();
+
+    // Toggle options menu when clicking 3-dot button
+    document.addEventListener('click', function(e) {
+        const optionsBtn = e.target.closest('.message-options-btn');
+        
+        if (optionsBtn) {
+            e.stopPropagation();
+            
+            // Close all other menus
+            document.querySelectorAll('.message-options-menu').forEach(menu => {
+                if (menu !== optionsBtn.nextElementSibling) {
+                    menu.classList.remove('show');
+                }
+            });
+            
+            // Toggle current menu
+            const menu = optionsBtn.nextElementSibling;
+            menu.classList.toggle('show');
+        } else {
+            // Close all menus if clicking outside
+            document.querySelectorAll('.message-options-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+
+    function enterMultiSelectMode() {
+        isMultiSelectMode = true;
+        const messagesContainer = document.getElementById('chat-messages');
+        messagesContainer.classList.add('multi-select-mode');
+        
+        // Show multi-select toolbar
+        document.getElementById('multi-select-toolbar').style.display = 'block';
+        
+        // Hide all options menus
+        document.querySelectorAll('.message-options-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+
+    function exitMultiSelectMode() {
+        isMultiSelectMode = false;
+        const messagesContainer = document.getElementById('chat-messages');
+        messagesContainer.classList.remove('multi-select-mode');
+        
+        // Hide multi-select toolbar
+        document.getElementById('multi-select-toolbar').style.display = 'none';
+        
+        // Clear selections
+        selectedMessages.clear();
+        document.querySelectorAll('.message-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        updateSelectedCount();
+    }
+
+    // Handle checkbox changes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('message-checkbox')) {
+            const messageId = parseInt(e.target.getAttribute('data-message-id'));
+            
+            if (e.target.checked) {
+                selectedMessages.add(messageId);
+            } else {
+                selectedMessages.delete(messageId);
+            }
+            
+            updateSelectedCount();
+        }
+    });
+
+    function updateSelectedCount() {
+        document.getElementById('selected-count').textContent = selectedMessages.size;
+    }
+
+    // Cancel multi-select mode
+    document.getElementById('cancel-multi-select-btn').addEventListener('click', exitMultiSelectMode);
+
+    // Delete selected messages
+    document.getElementById('delete-selected-btn').addEventListener('click', async function() {
+        if (selectedMessages.size === 0) {
+            alert('Vui lòng chọn ít nhất một tin nhắn để xóa');
+            return;
+        }
+        
+        if (!confirm(`Bạn có chắc chắn muốn xóa ${selectedMessages.size} tin nhắn đã chọn?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/supportchat/messages', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Array.from(selectedMessages))
+            });
+            
+            if (response.ok) {
+                // Remove messages from UI
+                selectedMessages.forEach(id => {
+                    const checkbox = document.querySelector(`.message-checkbox[data-message-id="${id}"]`);
+                    if (checkbox) {
+                        checkbox.closest('.d-flex').remove();
+                    }
+                });
+                
+                exitMultiSelectMode();
+                alert('Đã xóa tin nhắn thành công');
+            } else {
+                alert('Không thể xóa tin nhắn. Vui lòng thử lại.');
+            }
+        } catch (error) {
+            console.error('Error deleting messages:', error);
+            alert('Lỗi khi xóa tin nhắn');
+        }
+    });
+
+    // Delete single message
+    async function deleteSingleMessage(messageId) {
+        if (!confirm('Bạn có chắc chắn muốn xóa tin nhắn này?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/supportchat/message/${messageId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                // Remove message from UI
+                const checkbox = document.querySelector(`.message-checkbox[data-message-id="${messageId}"]`);
+                if (checkbox) {
+                    checkbox.closest('.d-flex').remove();
+                }
+                alert('Đã xóa tin nhắn thành công');
+            } else {
+                alert('Không thể xóa tin nhắn. Vui lòng thử lại.');
+            }
+        } catch (error) {
+            console.error('Error deleting message:', error);
+            alert('Lỗi khi xóa tin nhắn');
+        }
+    }
+
+    // ===== CHAT TRANSFER =====
+    async function loadStaffForTransfer() {
+        try {
+            const response = await fetch('/api/supportchat/staff-list');
+            if (response.ok) {
+                const staffList = await response.json();
+                const select = document.getElementById('transfer-staff-select');
+                select.innerHTML = '<option value="">-- Chọn staff --</option>';
+                
+                staffList.forEach(staff => {
+                    const option = document.createElement('option');
+                    option.value = staff.id;
+                    option.textContent = `${staff.name} (${staff.role})`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading staff for transfer:', error);
+        }
+    }
+
+    document.getElementById('transfer-chat-btn')?.addEventListener('click', async function() {
+        if (!currentConversationId) {
+            alert('Vui lòng chọn conversation để chuyển');
+            return;
+        }
+        
+        await loadStaffForTransfer();
+        const modal = new bootstrap.Modal(document.getElementById('transferChatModal'));
+        modal.show();
+    });
+
+    document.getElementById('confirm-transfer-btn')?.addEventListener('click', async function() {
+        const staffId = document.getElementById('transfer-staff-select').value;
+        const reason = document.getElementById('transfer-reason').value;
+        const notify = document.getElementById('transfer-notify').checked;
+
+        if (!staffId) {
+            alert('Vui lòng chọn staff để chuyển');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/supportchat/transfer/${currentConversationId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ staffId, reason, notify })
+            });
+
+            if (response.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('transferChatModal')).hide();
+                showSuccessToast('Đã chuyển conversation thành công!');
+                loadConversations();
+                
+                // Clear form
+                document.getElementById('transfer-staff-select').value = '';
+                document.getElementById('transfer-reason').value = '';
+            } else {
+                alert('Không thể chuyển conversation. Vui lòng thử lại.');
+            }
+        } catch (error) {
+            console.error('Error transferring conversation:', error);
+            alert('Lỗi khi chuyển conversation');
+        }
+    });
+
+    // Analytics moved to separate page: /Admin/Chat/Analytics
+</script>

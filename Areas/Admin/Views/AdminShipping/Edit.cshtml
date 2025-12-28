@@ -1,0 +1,320 @@
+@model Bloomie.Models.Entities.ShippingFee
+@{
+    ViewData["Title"] = "Chỉnh sửa phí giao hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-edit text-warning me-2"></i> Chỉnh sửa phí giao hàng
+                </h2>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="WardCode" />
+                <input type="hidden" asp-for="WardName" />
+                <input type="hidden" asp-for="CreatedAt" />
+                
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-8">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-map-marker-alt text-warning me-2"></i> Thông tin phí ship</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-map"></i> Phường/Xã
+                                    </label>
+                                    <input type="text" class="form-control" value="@Model.WardName" readonly disabled />
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i> Không thể thay đổi phường/xã khi chỉnh sửa
+                                    </small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Fee" class="form-label fw-bold">
+                                        <i class="fas fa-money-bill-wave"></i> Phí giao hàng
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input asp-for="Fee" class="form-control" type="number" min="0" 
+                                               placeholder="Ví dụ: 20000" required />
+                                        <span class="input-group-text">đ</span>
+                                    </div>
+                                    <span asp-validation-for="Fee" class="text-danger"></span>
+                                    <small class="text-muted">Khuyến nghị: 15,000đ - 50,000đ (nhập bội số 1,000đ)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="IsActive" 
+                                               @(Model.IsActive ? "checked" : "") />
+                                        <input type="hidden" name="IsActive" value="false" />
+                                        <label for="IsActive" class="form-check-label fw-bold">
+                                            Kích hoạt
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Nếu bật, phí ship sẽ áp dụng ngay khi khách đặt hàng</small>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label asp-for="Notes" class="form-label fw-bold">Ghi chú (tùy chọn)</label>
+                                    <textarea asp-for="Notes" class="form-control" rows="3" 
+                                              placeholder="Ví dụ: Khu vực xa trung tâm, cần thêm 5k phí cầu"></textarea>
+                                    <span asp-validation-for="Notes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-4">
+                        <div class="card border-info shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Gợi ý phí ship</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="small mb-3 fee-suggestion-list">
+                                    <li>
+                                        <strong>Khu vực trung tâm</strong><br>
+                                        <span class="text-muted">(Bến Nghé, Bến Thành, Nguyễn Thái Bình)</span><br>
+                                        <span class="badge bg-success mt-1">15,000 - 20,000đ</span>
+                                    </li>
+                                    <li>
+                                        <strong>Khu vực gần</strong><br>
+                                        <span class="text-muted">(Tân Thuận Đông, Tân Quy, Tân Phú)</span><br>
+                                        <span class="badge bg-success mt-1">20,000 - 30,000đ</span>
+                                    </li>
+                                    <li>
+                                        <strong>Khu vực xa</strong><br>
+                                        <span class="text-muted">(Long Thạnh Mỹ, Phước Kiển, Trung Chánh)</span><br>
+                                        <span class="badge bg-success mt-1">30,000 - 50,000đ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card border-warning shadow-sm mt-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-history me-2"></i> Thông tin cập nhật</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small mb-2">
+                                    <strong><i class="fas fa-calendar-plus"></i> Tạo lúc:</strong><br>
+                                    <span class="text-muted">@Model.CreatedAt.AddHours(7).ToString("dd/MM/yyyy HH:mm")</span>
+                                </p>
+                                @if (Model.UpdatedAt != null)
+                                {
+                                    <p class="small mb-0">
+                                        <strong><i class="fas fa-calendar-check"></i> Cập nhật lần cuối:</strong><br>
+                                        <span class="text-muted">@Model.UpdatedAt.Value.AddHours(7).ToString("dd/MM/yyyy HH:mm")</span>
+                                    </p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a class="btn btn-secondary" asp-action="Index">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --warning-color: #f59e0b;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+        --success-color: #10b981;
+        --info-color: #3b82f6;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+    }
+
+    .btn-warning, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-warning { 
+        background-color: var(--warning-color); 
+        border-color: var(--warning-color);
+        color: white;
+    }
+    
+    .btn-warning:hover { 
+        background-color: #d97706; 
+        border-color: #d97706; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--warning-color);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        outline: none;
+    }
+
+    .form-control:disabled {
+        background-color: #f3f4f6;
+        color: #6b7280;
+        cursor: not-allowed;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+    }
+
+    .alert-danger {
+        border-radius: 6px;
+        border-left: 4px solid #ef4444;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .input-group-text {
+        background-color: #f9fafb;
+        border-color: #d1d5db;
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .form-check-input {
+        width: 2.5rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        margin-left: 0.5rem;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .fee-suggestion-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .fee-suggestion-list li {
+        padding: 12px;
+        margin-bottom: 12px;
+        background-color: #f9fafb;
+        border-radius: 6px;
+        border-left: 3px solid var(--success-color);
+    }
+
+    .fee-suggestion-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .border-info {
+        border-left: 3px solid var(--info-color) !important;
+    }
+
+    .border-warning {
+        border-left: 3px solid var(--warning-color) !important;
+    }
+
+    .bg-info {
+        background-color: var(--info-color) !important;
+    }
+
+    .bg-warning {
+        background-color: var(--warning-color) !important;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .border-top {
+        border-top: 1px solid #e5e7eb !important;
+    }
+</style>
+}

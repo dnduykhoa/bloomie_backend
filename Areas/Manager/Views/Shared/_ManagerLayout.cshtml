@@ -1,0 +1,1115 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Manager Dashboard</title>
+    <link rel="icon" type="image/png" href="/images/BloomieFavicon.png" sizes="32x32" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/css/multi-select.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0e7490;
+            --secondary-color: #06b6d4;
+            --background-light: #f0fdfa;
+            --sidebar-bg: #0f172a;
+            --text-dark: #164e63;
+            --text-light: #ffffff;
+            --accent-color: #67e8f9;
+            --sidebar-blue: #155e75;
+            --sidebar-hover: #0891b2;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        /* Override Bootstrap primary colors */
+        .btn-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        .btn-primary:hover {
+            background-color: var(--sidebar-hover) !important;
+            border-color: var(--sidebar-hover) !important;
+        }
+        .text-primary {
+            color: var(--primary-color) !important;
+        }
+        .bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-light);
+            color: var(--text-dark);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Page Transition Animation */
+        .page-content {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .page-transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .page-transition-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #sidebar-wrapper {
+            width: 240px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: var(--text-light);
+            position: fixed;
+            padding: 15px 10px;
+            transition: var(--transition);
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+            #sidebar-wrapper::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-thumb {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+                #sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+                    background: transparent;
+                }
+
+            #sidebar-wrapper.collapsed {
+                width: 70px;
+                padding: 15px 5px;
+            }
+
+        .sidebar-heading {
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            padding-right: 40px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-heading {
+            font-size: 0;
+            margin: 0;
+        }
+
+        .navbar-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: var(--transition);
+            position: absolute;
+            top: 15px;
+            right: 10px;
+        }
+
+            .navbar-toggle:hover {
+                color: var(--secondary-color);
+            }
+
+        #sidebar-wrapper.collapsed .navbar-toggle {
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            right: auto;
+        }
+
+        .sidebar-content {
+            margin-top: 50px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-content {
+            margin-top: 50px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            padding: 5px 10px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+            white-space: nowrap;
+            line-height: 1.2;
+            letter-spacing: 1px;
+            word-spacing: 2px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-section-title {
+            font-size: 0.9rem;
+            padding: 2px 0;
+            text-align: center;
+            white-space: normal;
+            line-height: 1.5;
+        }
+
+        .split-line {
+            display: inline;
+        }
+
+        #sidebar-wrapper.collapsed .split-line {
+            display: block;
+        }
+
+        .list-group-item {
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            margin: 3px 0;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .list-group-item:hover {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+            }
+
+            .list-group-item i {
+                font-size: 1.1rem;
+                width: 18px;
+                text-align: center;
+            }
+
+            .list-group-item.active,
+            .submenu-item.active {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+                font-weight: 600;
+            }
+
+        #sidebar-wrapper.collapsed .list-group-item {
+            padding: 8px 6px;
+            justify-content: center;
+        }
+
+            #sidebar-wrapper.collapsed .list-group-item i {
+                font-size: 1rem;
+                width: 16px;
+            }
+
+            #sidebar-wrapper.collapsed .list-group-item span {
+                display: none;
+            }
+
+        #sidebar-wrapper.collapsed .has-submenu .submenu-toggle {
+            display: none;
+        }
+
+        .has-submenu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .submenu-toggle {
+            position: absolute;
+            right: 10px;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+            .submenu-toggle.collapsed {
+                transform: rotate(-90deg);
+            }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            margin-left: 20px;
+            padding-left: 5px;
+            border-left: 1px solid var(--secondary-color);
+            transition: max-height 0.3s ease;
+        }
+
+            .submenu.show {
+                max-height: 200px;
+            }
+
+        .submenu-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            border-radius: 4px;
+            margin: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        #sidebar-wrapper.collapsed .submenu-item {
+            justify-content: center;
+            padding: 8px 6px;
+        }
+
+            #sidebar-wrapper.collapsed .submenu-item span {
+                display: none;
+            }
+
+        .submenu-item i {
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .submenu-item.promotion-item {
+            background: transparent;
+            border-radius: 6px;
+        }
+
+            .submenu-item.promotion-item:hover {
+                background: var(--sidebar-hover);
+            }
+
+        .submenu-item:hover {
+            background: var(--sidebar-hover);
+            color: var(--text-light);
+        }
+
+        #page-content-wrapper {
+            margin-left: 240px;
+            padding: 5px 20px 20px 20px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+            #page-content-wrapper.shifted {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+        .navbar {
+            background: #ffffff;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            z-index: 1000;
+            margin: 0px 1px 10px 1px;
+            display: flex;
+            align-items: center;
+            min-height: 65px;
+        }
+
+        .navbar .container-fluid {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .admin-info {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+            .admin-avatar:hover {
+                border-color: var(--secondary-color);
+                transform: scale(1.1);
+            }
+
+        .admin-info .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: none;
+            min-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .admin-info .dropdown-item {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .admin-info .dropdown-item:hover {
+                background: var(--primary-color);
+                color: var(--text-light);
+            }
+
+        .notification-icon, .message-icon {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+
+            .notification-icon:hover, .message-icon:hover {
+                color: var(--secondary-color);
+            }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+            .user-info:hover {
+                background: var(--background-light);
+                color: var(--secondary-color);
+            }
+
+            .user-info i {
+                font-size: 1.1rem;
+            }
+
+            .user-info .role-name {
+                font-weight: 500;
+                font-style: normal;
+            }
+
+        .badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+
+        /* Căn chỉnh dropdown thông báo */
+        .dropdown-menu-notifications {
+            max-height: 400px; /* Giới hạn chiều cao */
+            overflow: hidden; /* Ẩn thanh cuộn */
+            padding: 15px;
+            position: absolute; /* Đảm bảo vị trí tuyệt đối */
+            left: 50%; /* Căn giữa từ mép trái */
+            transform: translateX(-50%); /* Dịch sang trái 50% của chính nó */
+            margin-right: 20px; /* Tạo khoảng cách từ mép phải */
+            right: auto; /* Loại bỏ right để tránh xung đột */
+            margin-left: 0;
+            max-width: 450px; /* Giới hạn độ rộng */
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tùy chỉnh nội dung thông báo */
+        .notification-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            color: #000000;
+        }
+
+            .notification-item span {
+                display: block;
+                white-space: normal;
+                max-width: 100%;
+                word-break: break-word;
+            }
+
+            .notification-item a {
+                color: #000000;
+                text-decoration: none;
+            }
+
+                .notification-item a:hover {
+                    color: #000000;
+                    text-decoration: none;
+                }
+
+        .notification-time {
+            font-size: 0.6rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+            .notification-actions button {
+                background: none;
+                border: none;
+                color: #dc3545;
+                cursor: pointer;
+                font-size: 0.6rem;
+                padding: 3px 6px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+                .notification-actions button:hover {
+                    color: #ffffff;
+                    background: #dc3545;
+                }
+
+        .dropdown-menu-messages {
+            max-height: 400px; /* Giới hạn chiều cao */
+            overflow: hidden; /* Ẩn thanh cuộn */
+            padding: 15px;
+            position: absolute; /* Đảm bảo vị trí tuyệt đối */
+            left: 50%; /* Căn giữa từ mép trái */
+            transform: translateX(-50%); /* Dịch sang trái 50% của chính nó */
+            margin-right: 20px; /* Tạo khoảng cách từ mép phải */
+            right: auto; /* Loại bỏ right để tránh xung đột */
+            margin-left: 0;
+            max-width: 450px; /* Giới hạn độ rộng */
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+        }
+
+            .message-item span {
+                display: block;
+                white-space: normal;
+                max-width: 100%;
+                word-break: break-word;
+            }
+
+        .message-time {
+            font-size: 0.6rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+            .message-actions button {
+                background: none;
+                border: none;
+                color: #dc3545;
+                cursor: pointer;
+                font-size: 0.6rem;
+                padding: 3px 6px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+                .message-actions button:hover {
+                    color: #ffffff;
+                    background: #dc3545;
+                }
+
+        .notification-item.unread, .message-item.unread {
+            background: #cffafe;
+            font-weight: 500;
+        }
+
+        .notification-item.read, .message-item.read {
+            background: transparent;
+            font-weight: normal;
+        }
+
+        media (max-width: 576px) {
+            .dropdown-menu-notifications, .dropdown-menu-messages
+
+        {
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 90%;
+            width: auto;
+        }
+
+        .notification-item span, .message-item span {
+            font-size: 0.7rem;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">Bloomie</div>
+            <button class="navbar-toggle" id="sidebarToggle" data-bs-toggle="tooltip" data-bs-title="Ẩn/Hiện Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Tổng quan</div>
+                    <a asp-area="Manager" asp-controller="ManagerDashboard" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Trang chủ Manager">
+                        <i class="fas fa-home"></i><span>Trang chủ</span>
+                    </a>
+                    <a asp-area="Manager" asp-controller="ManagerRevenue" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý doanh thu">
+                        <i class="fas fa-chart-line"></i><span>Doanh thu</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Quản lý sản phẩm</div>
+                    <a asp-area="Manager" asp-controller="ManagerProduct" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Danh sách sản phẩm">
+                        <i class="fas fa-box"></i><span>Sản phẩm</span>
+                    </a>
+                    <a asp-area="Manager" asp-controller="ManagerCategory" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Danh mục sản phẩm">
+                        <i class="fas fa-list"></i><span>Danh mục</span>
+                    </a>
+                    <a asp-area="Manager" asp-controller="ManagerPromotion" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Khuyến mãi">
+                        <i class="fas fa-tags"></i><span>Khuyến mãi</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Kho & Nhập hàng</div>
+                    <a asp-area="Manager" asp-controller="ManagerSupplier" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý nhà cung cấp">
+                        <i class="fas fa-handshake"></i><span>Nhà cung cấp</span>
+                    </a>
+                    <a asp-area="Manager" asp-controller="ManagerPurchaseOrder" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Đơn đặt hàng nhập">
+                        <i class="fas fa-file-invoice"></i><span>Đơn nhập hàng</span>
+                    </a>
+                    <div class="list-group-item has-submenu" data-bs-toggle="tooltip" data-bs-title="Nguyên liệu">
+                        <i class="fas fa-warehouse"></i><span>Nguyên liệu</span>
+                        <i class="fas fa-chevron-down submenu-toggle"></i>
+                    </div>
+                    <div class="submenu">
+                        <a asp-area="Manager" asp-controller="ManagerFlowerType" asp-action="Index" class="submenu-item" data-bs-toggle="tooltip" data-bs-title="Loại hoa"><i class="fas fa-seedling"></i><span>Loại hoa</span></a>
+                        <a asp-area="Manager" asp-controller="ManagerFlowerVariant" asp-action="Index" class="submenu-item" data-bs-toggle="tooltip" data-bs-title="Biến thể hoa"><i class="fas fa-leaf"></i><span>Biến thể hoa</span></a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Bán hàng</div>
+                    <a asp-area="Manager" asp-controller="ManagerOrder" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Đơn hàng">
+                        <i class="fas fa-shopping-cart"></i><span>Đơn hàng</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminShipping" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý giao hàng">
+                        <i class="fas fa-truck"></i><span>Giao hàng</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Hỗ trợ khách hàng</div>
+                    <a asp-area="Admin" asp-controller="Chat" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Hỗ trợ chat">
+                        <i class="fas fa-comments"></i><span>Chat hỗ trợ</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="@Url.Action("Index", "Dashboard", new { area = "Manager" })">Manager Panel</a>
+                    <div class="admin-info">
+                        <!-- Notification Icon -->
+                        <div class="dropdown">
+                            <a class="notification-icon" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Thông báo">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge-count" id="notificationCount">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-notifications" aria-labelledby="notificationDropdown">
+                                <li>
+                                    <a class="dropdown-item notification-item" href="#">
+                                        <span id="notificationLoading">Đang tải thông báo...</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item reload-notification" href="#">Tải lại</a></li>
+                                <li><a class="dropdown-item" href="/Admin/Notifications/Index">Xem tất cả</a></li>
+                            </ul>
+                        </div>
+                        <!-- Message Icon -->
+                        <div class="dropdown">
+                            <a class="message-icon" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tin nhắn">
+                                <i class="fas fa-envelope"></i>
+                                <span class="badge-count" id="messageCount">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-messages" aria-labelledby="messageDropdown">
+                                <li>
+                                    <a class="dropdown-item message-item" href="#">
+                                        <span id="messageLoading">Đang tải tin nhắn...</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item reload-message" href="#">Tải lại</a></li>
+                                <li><a class="dropdown-item" href="/Admin/Notifications/Messages">Xem tất cả</a></li>
+                            </ul>
+                        </div>
+                        <!-- User Account with Role -->
+                        <div class="dropdown">
+                            <a class="user-info dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tài khoản">
+                                <i class="fas fa-user"></i>
+                                <span class="role-name">@User.Identity.Name</span>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="UpdateAccount">Cập nhật tài khoản</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="ManagementAccount" asp-action="Logout">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-fluid p-2 page-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Transition Overlay -->
+    <div class="page-transition-overlay" id="pageTransitionOverlay">
+        <div class="page-transition-spinner"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-quicksearch/2.4.0/jquery.quicksearch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/jquery.multi-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Page Transition Effect
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            
+            // Handle all navigation links
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not(.no-transition)').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:') && !this.classList.contains('dropdown-item')) {
+                        if (!this.closest('.dropdown-menu')) {
+                            e.preventDefault();
+                            overlay.classList.add('active');
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            });
+
+            // Hide overlay on page load
+            setTimeout(() => {
+                overlay.classList.remove('active');
+            }, 100);
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar-wrapper');
+            const content = document.getElementById('page-content-wrapper');
+            const toggleButton = document.getElementById('sidebarToggle');
+
+            // Lấy URL hiện tại và chuẩn hóa
+            let currentUrl = window.location.pathname.toLowerCase();
+            if (currentUrl.endsWith('/')) {
+                currentUrl = currentUrl.slice(0, -1);
+            }
+            if (currentUrl === '') {
+                currentUrl = '/';
+            }
+
+            // Chọn tất cả các liên kết trong sidebar
+            const sidebarLinks = document.querySelectorAll('.list-group-item, .submenu-item');
+            sidebarLinks.forEach(link => {
+                let linkUrl = link.getAttribute('href')?.toLowerCase();
+                if (linkUrl && linkUrl.endsWith('/')) {
+                    linkUrl = linkUrl.slice(0, -1);
+                }
+                // So sánh URL, cho phép khớp với controller/action
+                if (linkUrl) {
+                    // Kiểm tra khớp chính xác hoặc khớp với phần controller/action
+                    const linkParts = linkUrl.split('/');
+                    const currentParts = currentUrl.split('/');
+                    const linkControllerAction = linkParts.slice(-2).join('/');
+                    const currentControllerAction = currentParts.slice(-2).join('/');
+                    if (linkUrl === currentUrl || linkControllerAction === currentControllerAction) {
+                        link.classList.add('active');
+                        // Nếu là mục con, mở rộng submenu cha nhưng không thêm .active
+                        const parentSubmenu = link.closest('.submenu');
+                        if (parentSubmenu) {
+                            parentSubmenu.classList.add('show');
+                            const parentMenuItem = parentSubmenu.previousElementSibling;
+                            if (parentMenuItem && parentMenuItem.classList.contains('has-submenu')) {
+                                const toggle = parentMenuItem.querySelector('.submenu-toggle');
+                                if (toggle) toggle.classList.remove('collapsed');
+                            }
+                        }
+                    }
+                }
+            });
+
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                content.classList.add('shifted');
+            }
+
+            toggleButton.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                content.classList.toggle('shifted');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    if (!e.target.closest('.submenu-toggle')) {
+                        const submenu = this.nextElementSibling;
+                        const toggle = this.querySelector('.submenu-toggle');
+                        submenu.classList.toggle('show');
+                        toggle.classList.toggle('collapsed');
+                    }
+                });
+            });
+
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            function handleResize() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.add('collapsed');
+                    content.classList.add('shifted');
+                    localStorage.setItem('sidebarCollapsed', true);
+                } else if (!localStorage.getItem('sidebarCollapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    content.classList.remove('shifted');
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // Tải danh sách thông báo và tin nhắn
+            function loadNotifications() {
+                const notificationLoading = document.getElementById('notificationLoading');
+                notificationLoading.textContent = 'Đang tải thông báo...';
+                fetch('/Admin/AdminNotification/GetNotifications')
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Danh sách thông báo:", data);
+                        const notificationList = document.querySelector('.dropdown-menu-notifications');
+                        notificationList.innerHTML = '';
+                        if (data.length === 0) {
+                            notificationList.innerHTML = '<li><a class="dropdown-item notification-item" href="#"><span>Chưa có thông báo mới</span></a></li>';
+                        } else {
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <div class="dropdown-item notification-item ${item.isRead ? 'read' : 'unread'}" data-id="${item.id}">
+                                        <a href="${item.link || '#'}" onclick="markAsRead(this, 'notification', ${item.id}, event)">
+                                            <span>${item.message}</span>
+                                            <div class="notification-time">${item.createdAt}</div>
+                                        </a>
+                                        <div class="notification-actions">
+                                            <button class="delete-btn" data-id="${item.id}">Xóa</button>
+                                        </div>
+                                    </div>`;
+                                notificationList.appendChild(li);
+                            });
+                            document.querySelectorAll('.delete-btn').forEach(btn => {
+                                btn.addEventListener('click', function (event) {
+                                    const id = this.getAttribute('data-id');
+                                    deleteNotification(this, id, event);
+                                });
+                            });
+                        }
+                        notificationLoading.style.display = 'none';
+                        updateBadgeCount();
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi tải thông báo:', error);
+                        notificationLoading.textContent = 'Lỗi khi tải thông báo';
+                    });
+            }
+
+            function loadMessages() {
+                const messageLoading = document.getElementById('messageLoading');
+                messageLoading.textContent = 'Đang tải tin nhắn...';
+                fetch('/Admin/AdminNotification/GetMessages')
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Danh sách tin nhắn:", data);
+                        const messageList = document.querySelector('.dropdown-menu-messages');
+                        messageList.innerHTML = '';
+                        if (data.length === 0) {
+                            messageList.innerHTML = '<li><a class="dropdown-item message-item" href="#"><span>Chưa có tin nhắn mới</span></a></li>';
+                        } else {
+                            data.forEach(item => {
+                                const li = document.createElement('li');
+                                li.innerHTML = `
+                                    <div class="dropdown-item message-item ${item.isRead ? 'read' : 'unread'}" data-id="${item.id}">
+                                        <a href="#" onclick="markAsRead(this, 'message', ${item.id}, event)">
+                                            <span>${item.senderName}: ${item.content}</span>
+                                            <div class="message-time">${item.createdAt}</div>
+                                        </a>
+                                        <div class="message-actions">
+                                            <button class="delete-btn" data-id="${item.id}">Xóa</button>
+                                        </div>
+                                    </div>`;
+                                messageList.appendChild(li);
+                            });
+                            document.querySelectorAll('.delete-btn').forEach(btn => {
+                                btn.addEventListener('click', function (event) {
+                                    const id = this.getAttribute('data-id');
+                                    deleteMessage(this, id, event);
+                                });
+                            });
+                        }
+                        messageLoading.style.display = 'none';
+                        updateBadgeCount();
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi tải tin nhắn:', error);
+                        messageLoading.textContent = 'Lỗi khi tải tin nhắn';
+                    });
+            }
+
+            function markAsRead(element, type, id, event) {
+                const item = element.closest('.notification-item, .message-item');
+                const url = type === 'notification' ? `/Admin/AdminNotification/MarkAsRead/${id}` : `/Admin/AdminNotification/MarkMessageAsRead/${id}`;
+                event.preventDefault();
+
+                fetch(url, { method: 'POST' })
+                    .then(response => {
+                        if (response.ok) {
+                            item.classList.remove('unread');
+                            item.classList.add('read');
+                            item.querySelector('span').style.fontWeight = 'normal';
+                            updateBadgeCount();
+                        }
+                    })
+                    .catch(error => console.error('Lỗi khi đánh dấu đã đọc:', error));
+            }
+
+            function deleteNotification(button, id, event) {
+                event.stopPropagation();
+                event.preventDefault();
+                const item = button.closest('.notification-item');
+                if (item) {
+                    fetch(`/Admin/AdminNotification/Delete/${id}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (response.ok) {
+                                item.parentElement.remove();
+                                updateBadgeCount();
+                            } else {
+                                console.error('Lỗi khi xóa thông báo:', response.status);
+                                alert('Không thể xóa thông báo. Vui lòng thử lại.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi xóa thông báo:', error);
+                            alert('Lỗi khi xóa thông báo. Vui lòng kiểm tra console.');
+                        });
+                }
+            }
+
+            function deleteMessage(button, id, event) {
+                event.stopPropagation();
+                event.preventDefault();
+                const item = button.closest('.message-item');
+                if (item) {
+                    fetch(`/Admin/AdminNotification/DeleteMessage/${id}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (response.ok) {
+                                item.parentElement.remove();
+                                updateBadgeCount();
+                            } else {
+                                console.error('Lỗi khi xóa tin nhắn:', response.status);
+                                alert('Không thể xóa tin nhắn. Vui lòng thử lại.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Lỗi khi xóa tin nhắn:', error);
+                            alert('Lỗi khi xóa tin nhắn. Vui lòng kiểm tra console.');
+                        });
+                }
+            }
+
+            function updateBadgeCount() {
+                const notificationCount = document.querySelectorAll('.notification-item.unread').length;
+                const messageCount = document.querySelectorAll('.message-item.unread').length;
+                document.getElementById('notificationCount').textContent = notificationCount;
+                document.getElementById('messageCount').textContent = messageCount;
+                if (notificationCount === 0) document.getElementById('notificationCount').style.display = 'none';
+                else document.getElementById('notificationCount').style.display = 'inline';
+                if (messageCount === 0) document.getElementById('messageCount').style.display = 'none';
+                else document.getElementById('messageCount').style.display = 'inline';
+            }
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveNotification", function (data) {
+                console.log("Nhận được thông báo qua SignalR:", data);
+                const notificationList = document.querySelector('.dropdown-menu-notifications');
+                const existingPlaceholder = notificationList.querySelector('.notification-item span')?.textContent === 'Chưa có thông báo mới';
+                if (existingPlaceholder) {
+                    notificationList.innerHTML = '';
+                }
+
+                const newNotification = document.createElement('li');
+                newNotification.innerHTML = `
+                    <div class="dropdown-item notification-item unread" data-id="${data.id}">
+                        <a href="${data.link || '#'}" onclick="markAsRead(this, 'notification', ${data.id}, event)">
+                            <span>${data.message}</span>
+                            <div class="notification-time">${new Date().toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                        </a>
+                        <div class="notification-actions">
+                            <button class="delete-btn" data-id="${data.id}">Xóa</button>
+                        </div>
+                    </div>`;
+                notificationList.insertBefore(newNotification, notificationList.firstChild);
+                const deleteBtn = newNotification.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', function (event) {
+                    deleteNotification(this, data.id, event);
+                });
+                updateBadgeCount();
+
+                const audio = new Audio('https://www.soundjay.com/buttons/beep-01a.mp3');
+                audio.play().catch(error => console.error('Lỗi phát âm thanh:', error));
+            });
+
+            connection.start().then(() => {
+                console.log("Kết nối SignalR thành công");
+            }).catch(function (err) {
+                console.error("Lỗi kết nối SignalR:", err.toString());
+            });
+
+            connection.onclose(() => {
+                console.log("Kết nối SignalR bị ngắt, đang thử kết nối lại...");
+                setTimeout(() => connection.start(), 2000);
+            });
+
+            document.querySelector('.reload-notification').addEventListener('click', function (e) {
+                e.preventDefault();
+                loadNotifications();
+            });
+
+            document.querySelector('.reload-message').addEventListener('click', function (e) {
+                e.preventDefault();
+                loadMessages();
+            });
+
+            loadNotifications();
+            loadMessages();
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

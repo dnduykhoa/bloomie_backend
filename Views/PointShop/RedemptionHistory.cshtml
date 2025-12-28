@@ -1,0 +1,202 @@
+@model List<Bloomie.Models.Entities.PointRedemption>
+@{
+    ViewData["Title"] = "Lịch sử đổi quà";
+}
+
+<style>
+    .history-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .history-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .history-list {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    .history-item {
+        padding: 25px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.3s;
+    }
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    .history-item:hover {
+        background: #f9f9f9;
+    }
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+    .item-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #333;
+    }
+    .item-date {
+        color: #999;
+        font-size: 0.9rem;
+    }
+    .item-points {
+        font-size: 1.2rem;
+        color: #667eea;
+        font-weight: bold;
+    }
+    .item-details {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    .detail-badge {
+        background: #f0f0f0;
+        padding: 5px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    .voucher-code {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: #999;
+    }
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="history-container">
+    <div class="history-header">
+        <h1>📜 Lịch sử đổi quà</h1>
+        <p class="mb-0">Xem lại các phần quà bạn đã đổi</p>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="history-list">
+            @foreach (var item in Model)
+            {
+                <div class="history-item">
+                    <div class="item-header">
+                        <div>
+                            <div class="item-name">
+                                @if (item.PointReward.RewardType == Bloomie.Models.Entities.RewardType.Voucher)
+                                {
+                                    <span>🎟️</span>
+                                }
+                                else
+                                {
+                                    <span>🎁</span>
+                                }
+                                @item.PointReward.Name
+                            </div>
+                            <div class="item-date">@item.RedeemedDate.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="text-end">
+                            <div class="item-points">-@item.PointsSpent điểm</div>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(item.PointReward.Description))
+                    {
+                        <p class="text-muted mb-3">@item.PointReward.Description</p>
+                    }
+                    
+                    <div class="item-details">
+                        @if (item.PointReward.RewardType == Bloomie.Models.Entities.RewardType.Voucher)
+                        {
+                            <span class="detail-badge">
+                                <i class="fas fa-ticket-alt"></i> Voucher
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="detail-badge">
+                                <i class="fas fa-gift"></i> Quà tặng
+                            </span>
+                        }
+                        
+                        @if (item.UserVoucher != null)
+                        {
+                            @if (item.UserVoucher.IsUsed)
+                            {
+                                <span class="detail-badge" style="background: #e0e0e0;">
+                                    <i class="fas fa-check"></i> Đã sử dụng
+                                </span>
+                            }
+                            else if (item.UserVoucher.ExpiryDate < DateTime.Now)
+                            {
+                                <span class="detail-badge" style="background: #ffcdd2; color: #c62828;">
+                                    <i class="fas fa-times"></i> Đã hết hạn
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="detail-badge" style="background: #c8e6c9; color: #2e7d32;">
+                                    <i class="fas fa-check-circle"></i> Còn hiệu lực
+                                </span>
+                            }
+                        }
+                    </div>
+                    
+                    @if (item.PointReward.PromotionCode != null)
+                    {
+                        <div class="mt-3">
+                            <span class="voucher-code">
+                                @item.PointReward.PromotionCode.Code
+                            </span>
+                            @if (item.UserVoucher != null && !item.UserVoucher.IsUsed && item.UserVoucher.ExpiryDate >= DateTime.Now)
+                            {
+                                <span class="ms-3 text-muted small">
+                                    Có hiệu lực đến: @item.UserVoucher.ExpiryDate.ToString("dd/MM/yyyy")
+                                </span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="history-list">
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>Chưa có lịch sử đổi quà</h3>
+                <p>Hãy tích điểm và đổi những phần quà hấp dẫn nhé!</p>
+                <a href="@Url.Action("Index", "PointShop")" class="btn btn-primary mt-3">
+                    Xem cửa hàng đổi điểm
+                </a>
+            </div>
+        </div>
+    }
+
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index", "PointShop")" class="btn btn-outline-primary me-2">
+            🎁 Cửa hàng đổi điểm
+        </a>
+        <a href="@Url.Action("Index", "CheckIn")" class="btn btn-outline-primary">
+            📅 Điểm danh
+        </a>
+    </div>
+</div>

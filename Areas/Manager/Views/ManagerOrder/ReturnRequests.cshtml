@@ -1,0 +1,456 @@
+@model IEnumerable<Bloomie.Models.Entities.OrderReturn>
+
+@{
+    ViewData["Title"] = "Danh sách yêu cầu đổi trả";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+    DateTime? fromDate = ViewBag.FromDate;
+    DateTime? toDate = ViewBag.ToDate;
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-undo-alt text-primary me-2"></i> Quản lý đổi trả hàng
+                </h2>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Chờ xử lý</div>
+                            <div class="stat-value">@Model.Count(r => r.Status == "Chờ xử lý")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Chấp nhận</div>
+                            <div class="stat-value">@Model.Count(r => r.Status == "Chấp nhận")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Từ chối</div>
+                            <div class="stat-value">@Model.Count(r => r.Status == "Từ chối")</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đã hoàn tiền</div>
+                            <div class="stat-value">@Model.Count(r => r.Status == "Đã hoàn tiền")</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "ManagerOrder")">
+                        <i class="fas fa-box"></i> Danh sách đơn hàng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="@Url.Action("ReturnRequests", "ManagerOrder")">
+                        <i class="fas fa-undo-alt"></i> Yêu cầu đổi trả
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Alerts -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    @TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    @TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                @{
+                    var selectedStatus = ViewBag.StatusFilter as string;
+                    var selectedType = ViewBag.TypeFilter as string;
+                }
+                <form method="get" class="filter-form">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select name="statusFilter" class="form-select">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="Chờ xử lý" selected="@(selectedStatus == "Chờ xử lý")">Chờ xử lý</option>
+                                <option value="Chấp nhận" selected="@(selectedStatus == "Chấp nhận")">Chấp nhận</option>
+                                <option value="Từ chối" selected="@(selectedStatus == "Từ chối")">Từ chối</option>
+                                <option value="Đã hoàn tiền" selected="@(selectedStatus == "Đã hoàn tiền")">Đã hoàn tiền</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Loại yêu cầu</label>
+                            <select name="typeFilter" class="form-select">
+                                <option value="">Tất cả loại</option>
+                                <option value="Hoàn tiền" selected="@(selectedType == "Hoàn tiền")">Hoàn tiền</option>
+                                <option value="Đổi hàng" selected="@(selectedType == "Đổi hàng")">Đổi hàng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Từ ngày</label>
+                            <input type="date" name="fromDate" class="form-control" value="@(fromDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Đến ngày</label>
+                            <input type="date" name="toDate" class="form-control" value="@(toDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fas fa-filter me-1"></i> Lọc
+                            </button>
+                            <a href="@Url.Action("ReturnRequests", "ManagerOrder")" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-title="Đặt lại">
+                                <i class="fas fa-redo"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Return Requests Table -->
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="col-id">ID</th>
+                                <th class="col-order">Mã đơn hàng</th>
+                                <th class="col-type">Loại yêu cầu</th>
+                                <th class="col-reason">Lý do</th>
+                                <th class="col-date">Ngày yêu cầu</th>
+                                <th class="col-status">Trạng thái</th>
+                                <th class="col-amount">Số tiền hoàn</th>
+                                <th class="col-actions">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="text-center">@item.Id</td>
+                                    <td class="text-center">
+                                        <a href="@Url.Action("Details", "ManagerOrder", new { id = item.OrderId })">
+                                            <strong>#@item.Order?.OrderId</strong>
+                                        </a>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.ReturnType == "Hoàn tiền")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-money-bill-wave"></i> @item.ReturnType</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-primary"><i class="fas fa-sync"></i> @item.ReturnType</span>
+                                        }
+                                    </td>
+                                    <td class="text-left reason-cell">
+                                        <span class="d-inline-block text-truncate" style="max-width: 200px;" title="@item.Reason">
+                                            @item.Reason
+                                        </span>
+                                    </td>
+                                    <td class="text-center">@item.RequestDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center">
+                                        <span class="badge @(
+                                            item.Status == "Chờ xử lý" ? "bg-warning text-dark" :
+                                            item.Status == "Chấp nhận" ? "bg-success" :
+                                            item.Status == "Từ chối" ? "bg-danger" : "bg-info")">
+                                            @item.Status
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.RefundAmount.HasValue)
+                                        {
+                                            <strong>@item.RefundAmount.Value.ToString("#,##0") đ</strong>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center actions-cell">
+                                        <a href="@Url.Action("ReturnDetails", "ManagerOrder", new { id = item.Id })" 
+                                           class="btn btn-info btn-sm" data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-inbox"></i> Chưa có yêu cầu đổi trả nào.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tooltip Bootstrap
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #0e7490;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --background-light: #f0fdfa;
+        }
+        
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            width: 100% !important; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+            background-color: #ffffff; 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+        }
+
+        /* Statistics Cards */
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card:nth-child(1) { border-left-color: var(--warning-color); }
+        .stat-card:nth-child(2) { border-left-color: var(--success-color); }
+        .stat-card:nth-child(3) { border-left-color: var(--danger-color); }
+        .stat-card:nth-child(4) { border-left-color: var(--info-color); }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .stat-icon.bg-warning { background: linear-gradient(135deg, var(--warning-color), #fbbf24); }
+        .stat-icon.bg-success { background: linear-gradient(135deg, var(--success-color), #34d399); }
+        .stat-icon.bg-danger { background: linear-gradient(135deg, var(--danger-color), #f87171); }
+        .stat-icon.bg-info { background: linear-gradient(135deg, var(--info-color), #22d3ee); }
+        
+        .stat-content { flex: 1; }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .filter-form .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .filter-form .form-control,
+        .filter-form .form-select {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary, .btn-success, .btn-secondary, .btn-info {
+            border-radius: 6px; 
+            padding: 6px 12px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: #0891b2; 
+            border-color: #0891b2; 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+
+        .btn-secondary { 
+            background-color: #6b7280; 
+            border-color: #6b7280; 
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #4b5563; 
+            border-color: #4b5563; 
+            transform: translateY(-1px); 
+        }
+
+        .btn-info {
+            padding: 4px 8px; 
+            font-size: 0.8rem; 
+            min-width: 32px;
+        }
+
+        .btn-info:hover {
+            transform: translateY(-1px);
+        }
+
+        .table { 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            table-layout: fixed; 
+            width: 100%; 
+            font-size: 0.9rem; 
+        }
+        
+        .table th, .table td { 
+            border-color: #e5e7eb; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 10px; 
+        }
+        
+        .table th { 
+            background-color: var(--primary-color); 
+            color: var(--text-light); 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+        }
+        
+        .table-hover tbody tr:hover { 
+            background-color: #f1f5f9; 
+        }
+
+        .col-id { width: 6%; min-width: 60px; }
+        .col-order { width: 12%; min-width: 110px; }
+        .col-type { width: 13%; min-width: 120px; }
+        .col-reason { width: 25%; min-width: 200px; }
+        .col-date { width: 13%; min-width: 120px; }
+        .col-status { width: 11%; min-width: 100px; }
+        .col-amount { width: 12%; min-width: 110px; }
+        .col-actions { width: 8%; min-width: 80px; }
+
+        .reason-cell { 
+            text-align: left !important; 
+        }
+
+        .actions-cell { 
+            white-space: nowrap; 
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-dark);
+            border-radius: 6px 6px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--primary-color);
+        }
+
+        .form-select {
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+        }
+    </style>
+}

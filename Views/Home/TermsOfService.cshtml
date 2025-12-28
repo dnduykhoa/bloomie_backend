@@ -1,0 +1,368 @@
+@{
+    ViewData["Title"] = "Điều khoản sử dụng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="terms-section">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-transparent py-2">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span>&gt;</span>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    Điều khoản sử dụng
+                </li>
+            </ol>
+        </nav>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="terms-content">
+                    <h1 class="text-center mb-5">Điều khoản sử dụng</h1>
+                    
+                    <div class="terms-body">
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-info-circle me-2 text-primary"></i>1. Giới thiệu</h3>
+                            <p>Chào mừng bạn đến với <strong>Bloomie</strong> - hệ thống mua sắm trực tuyến chuyên cung cấp các sản phẩm chất lượng cao. Bằng việc truy cập và sử dụng website của chúng tôi, bạn đồng ý tuân thủ các điều khoản và điều kiện được nêu dưới đây.</p>
+                            <p>Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không sử dụng dịch vụ của chúng tôi.</p>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-user-check me-2 text-success"></i>2. Đăng ký tài khoản</h3>
+                            <ul class="terms-list">
+                                <li>Bạn cần cung cấp thông tin chính xác và đầy đủ khi đăng ký tài khoản.</li>
+                                <li>Bạn có trách nhiệm bảo mật thông tin tài khoản và mật khẩu của mình.</li>
+                                <li>Không được chia sẻ thông tin tài khoản cho bên thứ ba.</li>
+                                <li>Thông báo ngay cho chúng tôi nếu phát hiện tài khoản bị sử dụng trái phép.</li>
+                                <li>Mỗi người chỉ được tạo một tài khoản duy nhất.</li>
+                            </ul>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-shopping-cart me-2 text-warning"></i>3. Đặt hàng và thanh toán</h3>
+                            <div class="subsection mb-4">
+                                <h5>3.1. Quy trình đặt hàng</h5>
+                                <ul class="terms-list">
+                                    <li>Kiểm tra kỹ thông tin sản phẩm, số lượng và giá cả trước khi đặt hàng.</li>
+                                    <li>Cung cấp đầy đủ thông tin giao hàng chính xác.</li>
+                                    <li>Xác nhận đơn hàng sau khi kiểm tra toàn bộ thông tin.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="subsection mb-4">
+                                <h5>3.2. Phương thức thanh toán</h5>
+                                <ul class="terms-list">
+                                    <li><strong>COD:</strong> Thanh toán khi nhận hàng bằng tiền mặt.</li>
+                                    <li><strong>Ví điện tử Momo:</strong> Thanh toán trực tuyến qua ứng dụng Momo.</li>
+                                    <li><strong>VNPAY:</strong> Thanh toán qua cổng VNPAY với nhiều ngân hàng.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-truck me-2 text-info"></i>4. Giao hàng</h3>
+                            <ul class="terms-list">
+                                <li>Thời gian giao hàng dự kiến từ 1-3 ngày làm việc trong khu vực TP.HCM.</li>
+                                <li>Phí giao hàng được tính theo khu vực và sẽ được thông báo trước khi đặt hàng.</li>
+                                <li>Khách hàng có trách nhiệm kiểm tra hàng hóa ngay khi nhận được.</li>
+                                <li>Thông báo ngay cho chúng tôi nếu hàng hóa bị hư hại hoặc không đúng như mô tả.</li>
+                            </ul>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-undo-alt me-2 text-danger"></i>5. Đổi trả và hoàn tiền</h3>
+                            <div class="subsection mb-4">
+                                <h5>5.1. Điều kiện đổi trả</h5>
+                                <ul class="terms-list">
+                                    <li>Sản phẩm còn nguyên vẹn, chưa qua sử dụng.</li>
+                                    <li>Có đầy đủ bao bì, nhãn mác gốc.</li>
+                                    <li>Thời hạn đổi trả trong vòng 7 ngày kể từ ngày nhận hàng.</li>
+                                    <li>Có hóa đơn mua hàng hoặc biên lai giao dịch.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="subsection mb-4">
+                                <h5>5.2. Các trường hợp không được đổi trả</h5>
+                                <ul class="terms-list">
+                                    <li>Sản phẩm đã qua sử dụng hoặc bị hư hại do lỗi của khách hàng.</li>
+                                    <li>Sản phẩm không còn đầy đủ phụ kiện, bao bì.</li>
+                                    <li>Sản phẩm thuộc danh mục không được đổi trả (thực phẩm, mỹ phẩm đã mở seal...).</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-coins me-2 text-warning"></i>6. Điểm tích lũy và khuyến mãi</h3>
+                            <ul class="terms-list">
+                                <li>Điểm tích lũy được cộng sau khi đơn hàng hoàn thành thành công.</li>
+                                <li>Tỷ lệ quy đổi: 100 điểm = 100.000 VND.</li>
+                                <li>Điểm tích lũy có thể được sử dụng để giảm giá cho đơn hàng tiếp theo.</li>
+                                <li>Voucher và mã khuyến mãi có thời hạn sử dụng, không được chuyển nhượng.</li>
+                                <li>Mỗi voucher chỉ được sử dụng một lần cho một đơn hàng.</li>
+                            </ul>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-shield-alt me-2 text-success"></i>7. Bảo mật thông tin</h3>
+                            <ul class="terms-list">
+                                <li>Chúng tôi cam kết bảo mật thông tin cá nhân của khách hàng.</li>
+                                <li>Thông tin chỉ được sử dụng để xử lý đơn hàng và cải thiện dịch vụ.</li>
+                                <li>Không chia sẻ thông tin khách hàng cho bên thứ ba trừ khi có yêu cầu pháp lý.</li>
+                                <li>Sử dụng công nghệ mã hóa SSL để bảo vệ giao dịch.</li>
+                            </ul>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-exclamation-triangle me-2 text-warning"></i>8. Trách nhiệm và giới hạn</h3>
+                            <ul class="terms-list">
+                                <li>Bloomie không chịu trách nhiệm cho việc sử dụng sai mục đích sản phẩm.</li>
+                                <li>Không chịu trách nhiệm cho thiệt hại gián tiếp phát sinh từ việc sử dụng dịch vụ.</li>
+                                <li>Khách hàng có trách nhiệm tuân thủ pháp luật khi sử dụng sản phẩm.</li>
+                                <li>Mọi tranh chấp sẽ được giải quyết theo pháp luật Việt Nam.</li>
+                            </ul>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-edit me-2 text-info"></i>9. Thay đổi điều khoản</h3>
+                            <p>Bloomie có quyền cập nhật và thay đổi các điều khoản này mà không cần thông báo trước. Phiên bản mới nhất của điều khoản sẽ được đăng tải trên website và có hiệu lực ngay lập tức.</p>
+                            <p>Việc tiếp tục sử dụng dịch vụ sau khi có thay đổi đồng nghĩa với việc bạn chấp nhận các điều khoản mới.</p>
+                        </div>
+
+                        <div class="section mb-5">
+                            <h3><i class="fas fa-phone me-2 text-primary"></i>10. Thông tin liên hệ</h3>
+                            <p>Nếu bạn có bất kỳ câu hỏi nào về các điều khoản này, vui lòng liên hệ với chúng tôi:</p>
+                            <div class="contact-info">
+                                <p><strong>Công ty TNHH Bloomie</strong></p>
+                                <p><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ: Số 123, Đường ABC, Phường XYZ, Quận 1, TP.HCM</p>
+                                <p><i class="fas fa-phone me-2"></i>Điện thoại: (028) 1234 5678</p>
+                                <p><i class="fas fa-envelope me-2"></i>Email: support@bloomie.vn</p>
+                                <p><i class="fas fa-clock me-2"></i>Giờ làm việc: 8:00 - 18:00 (Thứ 2 - Thứ 7)</p>
+                            </div>
+                        </div>
+
+                        <div class="effective-date text-center mt-5 p-4 bg-light rounded">
+                            <p class="mb-0"><strong>Điều khoản này có hiệu lực từ ngày: @DateTime.Now.ToString("dd/MM/yyyy")</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .terms-section {
+        padding: 40px 0;
+        background-color: #ffffff;
+    }
+
+    .terms-content {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .terms-content h1 {
+        color: #D0021B;
+        font-weight: 700;
+        font-size: 2.5rem;
+        position: relative;
+    }
+
+    .terms-content h1::after {
+        content: '';
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #D0021B, #F5A623);
+        position: absolute;
+        bottom: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .terms-content h3 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .terms-content h5 {
+        color: #555;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .terms-content p {
+        line-height: 1.8;
+        color: #666;
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+
+    .terms-list {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .terms-list li {
+        position: relative;
+        padding-left: 25px;
+        margin-bottom: 10px;
+        line-height: 1.7;
+        color: #666;
+    }
+
+    .terms-list li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #28a745;
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .subsection {
+        padding-left: 20px;
+        border-left: 3px solid #e9ecef;
+    }
+
+    .contact-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 15px;
+    }
+
+    .contact-info p {
+        margin-bottom: 8px;
+    }
+
+    .contact-info i {
+        color: #D0021B;
+        width: 20px;
+    }
+
+    .effective-date {
+        border: 2px solid #D0021B;
+        background: linear-gradient(135deg, #fff5f5, #ffeaea) !important;
+    }
+
+    /* Breadcrumb styling */
+    .breadcrumb {
+        font-size: 1rem;
+        background-color: transparent;
+        padding: 0 15px;
+        margin: 0;
+    }
+
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .breadcrumb-item a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #D0021B;
+    }
+
+    .breadcrumb-item.active {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        display: none;
+    }
+
+    .breadcrumb-item span {
+        color: #999;
+        margin: 0 10px;
+    }
+
+    .breadcrumb-item i {
+        margin-right: 5px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .terms-content {
+            padding: 20px;
+        }
+
+        .terms-content h1 {
+            font-size: 2rem;
+        }
+
+        .terms-content h3 {
+            font-size: 1.3rem;
+        }
+
+        .subsection {
+            padding-left: 10px;
+        }
+    }
+
+    /* Animation */
+    .terms-content {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section {
+        animation: slideInLeft 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    .section:nth-child(even) {
+        animation: slideInRight 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>

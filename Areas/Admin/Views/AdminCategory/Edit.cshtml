@@ -1,0 +1,191 @@
+@model Bloomie.Models.Entities.Category
+@{
+    ViewData["Title"] = "Sửa danh mục";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-edit text-primary me-2"></i> Sửa danh mục
+                </h2>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin danh mục</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label for="Name" class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
+                                    <input asp-for="Name" class="form-control" placeholder="Nhập tên danh mục" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-0">
+                                    <label for="Type" class="form-label fw-bold">Loại danh mục <span class="text-danger">*</span></label>
+                                    <select asp-for="Type" class="form-select">
+                                        <option value="">-- Chọn loại danh mục --</option>
+                                        <option value="0">Chủ đề</option>
+                                        <option value="1">Đối tượng</option>
+                                        <option value="2">Kiểu dáng</option>
+                                        <option value="3">Hoa cưới</option>
+                                    </select>
+                                    <span asp-validation-for="Type" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-align-left text-primary me-2"></i> Mô tả chi tiết</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-0">
+                                    <textarea asp-for="Description" class="form-control" id="Description" rows="10" placeholder="Nhập mô tả cho danh mục"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a class="btn btn-secondary" href="@Url.Action("Index")">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script>
+        ClassicEditor
+            .create(document.querySelector('#Description'))
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #60a5fa;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --background-light: #f8fafc;
+        }
+        
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            border-radius: 8px; 
+            background-color: #ffffff; 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+        }
+
+        .card-header {
+            border-radius: 8px 8px 0 0 !important;
+            padding: 12px 20px;
+        }
+
+        .btn-primary, .btn-secondary {
+            border-radius: 6px; 
+            padding: 8px 16px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: #1d4ed8; 
+            border-color: #1d4ed8; 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+
+        .btn-secondary { 
+            background-color: #6b7280; 
+            border-color: #6b7280; 
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #4b5563; 
+            transform: translateY(-1px); 
+        }
+
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .alert-danger {
+            border-radius: 6px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .ck-editor__editable[role="textbox"] {
+            min-height: 200px;
+            max-height: 400px;
+        }
+    </style>
+}

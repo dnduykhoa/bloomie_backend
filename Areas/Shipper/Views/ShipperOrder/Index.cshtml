@@ -1,0 +1,146 @@
+@model IEnumerable<Bloomie.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Đơn hàng cần giao";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-shipping-fast me-2"></i> Danh sách đơn hàng cần giao</h5>
+        </div>
+        <div class="card-body">
+            <!-- Filter -->
+            <div class="mb-4">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="statusFilter" class="form-select">
+                            <option value="">Tất cả</option>
+                            <option value="Đã xác nhận" selected="@(ViewBag.StatusFilter == "Đã xác nhận")">Đã xác nhận</option>
+                            <option value="Đang giao" selected="@(ViewBag.StatusFilter == "Đang giao")">Đang giao</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-1"></i> Lọc
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Alerts -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle me-1"></i> @TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle me-1"></i> @TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["warning"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show">
+                    <i class="fas fa-exclamation-triangle me-1"></i> @TempData["warning"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Ngày đặt</th>
+                            <th>Địa chỉ giao hàng</th>
+                            <th>SĐT</th>
+                            <th>Tổng tiền</th>
+                            <th>Phương thức TT</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><strong>#@order.OrderId</strong></td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        <small>@order.ShippingAddress</small>
+                                    </td>
+                                    <td>@order.Phone</td>
+                                    <td><strong class="text-danger">@order.TotalAmount.ToString("N0")đ</strong></td>
+                                    <td>
+                                        <span class="badge @(order.PaymentMethod == "COD" ? "bg-warning" : "bg-info")">
+                                            @order.PaymentMethod
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (order.Status == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-success">@order.Status</span>
+                                        }
+                                        else if (order.Status == "Đang giao")
+                                        {
+                                            <span class="badge bg-primary">@order.Status</span>
+                                        }
+                                        <br />
+                                        @* Hiển thị trạng thái xác nhận của shipper *@
+                                        @if (order.ShipperStatus == "Đã phân công")
+                                        {
+                                            <span class="badge bg-warning text-dark mt-1">
+                                                <i class="fas fa-clock"></i> Chờ xác nhận
+                                            </span>
+                                        }
+                                        else if (order.ShipperStatus == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-info mt-1">
+                                                <i class="fas fa-check"></i> Đã nhận đơn
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </a>
+                                        @if (order.ShipperStatus == "Đã phân công")
+                                        {
+                                            <span class="badge bg-danger ms-1">MỚI</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Không có đơn hàng nào cần giao</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table {
+        font-size: 0.9rem;
+    }
+    .table td {
+        vertical-align: middle;
+    }
+</style>

@@ -1,0 +1,1710 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Dashboard</title>
+    <link rel="icon" type="image/png" href="/images/BloomieFavicon.png" sizes="32x32" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/css/multi-select.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #60a5fa;
+            --background-light: #f8fafc;
+            --sidebar-bg: #1e293b;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --accent-color: #93c5fd;
+            --sidebar-blue: #2b6cb0;
+            --sidebar-hover: #3b82f6;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-light);
+            color: var(--text-dark);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Page Transition Animation */
+        .page-content {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .page-transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .page-transition-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #sidebar-wrapper {
+            width: 240px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: var(--text-light);
+            position: fixed;
+            padding: 15px 10px;
+            transition: var(--transition);
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+            #sidebar-wrapper::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-thumb {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+                #sidebar-wrapper::-webkit-scrollbar-thumb:hover {
+                    background: transparent;
+                }
+
+            #sidebar-wrapper.collapsed {
+                width: 70px;
+                padding: 15px 5px;
+            }
+
+        .sidebar-heading {
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            padding-right: 40px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-heading {
+            font-size: 0;
+            margin: 0;
+        }
+
+        .navbar-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: var(--transition);
+            position: absolute;
+            top: 15px;
+            right: 10px;
+        }
+
+            .navbar-toggle:hover {
+                color: var(--secondary-color);
+            }
+
+        #sidebar-wrapper.collapsed .navbar-toggle {
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            right: auto;
+        }
+
+        .sidebar-content {
+            margin-top: 50px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-content {
+            margin-top: 50px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            padding: 5px 10px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+            white-space: nowrap;
+            line-height: 1.2;
+            letter-spacing: 1px;
+            word-spacing: 2px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-section-title {
+            font-size: 0.9rem;
+            padding: 2px 0;
+            text-align: center;
+            white-space: normal;
+            line-height: 1.5;
+        }
+
+        .split-line {
+            display: inline;
+        }
+
+        #sidebar-wrapper.collapsed .split-line {
+            display: block;
+        }
+
+        .list-group-item {
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            margin: 3px 0;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .list-group-item:hover {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+            }
+
+            .list-group-item i {
+                font-size: 1.1rem;
+                width: 18px;
+                text-align: center;
+            }
+
+            .list-group-item.active,
+            .submenu-item.active {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+                font-weight: 600;
+            }
+
+        #sidebar-wrapper.collapsed .list-group-item {
+            padding: 8px 6px;
+            justify-content: center;
+        }
+
+            #sidebar-wrapper.collapsed .list-group-item i {
+                font-size: 1rem;
+                width: 16px;
+            }
+
+            #sidebar-wrapper.collapsed .list-group-item span {
+                display: none;
+            }
+
+        #sidebar-wrapper.collapsed .has-submenu .submenu-toggle {
+            display: none;
+        }
+
+        .has-submenu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .submenu-toggle {
+            position: absolute;
+            right: 10px;
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+            .submenu-toggle.collapsed {
+                transform: rotate(-90deg);
+            }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            margin-left: 20px;
+            padding-left: 5px;
+            border-left: 1px solid var(--secondary-color);
+            transition: max-height 0.3s ease;
+        }
+
+            .submenu.show {
+                max-height: 200px;
+            }
+
+        .submenu-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            border-radius: 4px;
+            margin: 3px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        #sidebar-wrapper.collapsed .submenu-item {
+            justify-content: center;
+            padding: 8px 6px;
+        }
+
+            #sidebar-wrapper.collapsed .submenu-item span {
+                display: none;
+            }
+
+        .submenu-item i {
+            font-size: 0.9rem;
+            width: 16px;
+            text-align: center;
+        }
+
+        .submenu-item.promotion-item {
+            background: transparent;
+            border-radius: 6px;
+        }
+
+            .submenu-item.promotion-item:hover {
+                background: var(--sidebar-hover);
+            }
+
+        .submenu-item:hover {
+            background: var(--sidebar-hover);
+            color: var(--text-light);
+        }
+
+        #page-content-wrapper {
+            margin-left: 240px;
+            padding: 5px 20px 20px 20px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+            #page-content-wrapper.shifted {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+        .navbar {
+            background: #ffffff;
+            padding: 15px 20px;
+            box-shadow: var(--shadow);
+            border-radius: 12px;
+            z-index: 1000;
+            margin: 0px 1px 10px 1px;
+            display: flex;
+            align-items: center;
+            min-height: 65px;
+        }
+
+        .navbar .container-fluid {
+            display: flex;
+            align-items: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .admin-info {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0;
+        }
+
+        .admin-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+            .admin-avatar:hover {
+                border-color: var(--secondary-color);
+                transform: scale(1.1);
+            }
+
+        .admin-info .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: none;
+            min-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .admin-info .dropdown-item {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .admin-info .dropdown-item:hover {
+                background: var(--primary-color);
+                color: var(--text-light);
+            }
+
+        .notification-icon, .message-icon {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+            padding: 4px;
+        }
+
+            .notification-icon:hover, .message-icon:hover {
+                color: var(--secondary-color);
+            }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+            .user-info:hover {
+                background: var(--background-light);
+                color: var(--secondary-color);
+            }
+
+            .user-info i {
+                font-size: 1.1rem;
+            }
+
+            .user-info .role-name {
+                font-weight: 500;
+                font-style: normal;
+            }
+
+        .badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+
+        /* Căn chỉnh dropdown thông báo */
+        .dropdown-menu-notifications {
+            max-height: 400px; /* Giới hạn chiều cao */
+            overflow: hidden; /* Ẩn thanh cuộn */
+            padding: 15px;
+            position: absolute; /* Đảm bảo vị trí tuyệt đối */
+            left: 50%; /* Căn giữa từ mép trái */
+            transform: translateX(-50%); /* Dịch sang trái 50% của chính nó */
+            margin-right: 20px; /* Tạo khoảng cách từ mép phải */
+            right: auto; /* Loại bỏ right để tránh xung đột */
+            margin-left: 0;
+            max-width: 450px; /* Giới hạn độ rộng */
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Tùy chỉnh nội dung thông báo */
+        .notification-item {
+            display: flex;
+            position: relative;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            color: #000000;
+            transition: all 0.2s ease;
+        }
+
+            .notification-item:hover {
+                background-color: #f9fafb;
+                transform: translateX(2px);
+            }
+
+            .notification-item.unread {
+                background-color: #f0f9ff;
+                border-left: 4px solid #0ea5e9;
+            }
+
+            .notification-item.unread:hover {
+                background-color: #e0f2fe;
+            }
+
+            /* Màu viền theo loại thông báo */
+            .notification-item[data-type="success"] {
+                border-left-color: #10b981;
+            }
+
+            .notification-item[data-type="danger"] {
+                border-left-color: #ef4444;
+            }
+
+            .notification-item[data-type="warning"] {
+                border-left-color: #f59e0b;
+            }
+
+            .notification-item[data-type="info"] {
+                border-left-color: #3b82f6;
+            }
+
+        .notification-icon {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+            .notification-icon.success {
+                color: #10b981;
+            }
+
+            .notification-icon.danger {
+                color: #ef4444;
+            }
+
+            .notification-icon.warning {
+                color: #f59e0b;
+            }
+
+            .notification-icon.info {
+                color: #3b82f6;
+            }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+            .notification-content span {
+                display: block;
+                white-space: normal;
+                max-width: 100%;
+                word-break: break-word;
+                line-height: 1.4;
+            }
+
+            .notification-content a {
+                color: #1f2937;
+                text-decoration: none;
+                font-weight: 500;
+            }
+
+                .notification-content a:hover {
+                    color: #4f46e5;
+                }
+
+        /* Notification đã đọc có màu nhạt hơn (nhưng vẫn rõ) */
+        .notification-item:not(.unread) {
+            opacity: 0.92;
+        }
+
+            .notification-item:not(.unread):hover {
+                opacity: 1;
+                background-color: #f3f4f6;
+            }
+
+            .notification-item:not(.unread) .notification-content a {
+                color: #4b5563;
+            }
+
+                .notification-item:not(.unread):hover .notification-content a {
+                    color: #1f2937;
+                }
+
+        .notification-time {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+            .notification-time i {
+                font-size: 0.6rem;
+            }
+
+        .btn-delete-notification {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .notification-item:hover .btn-delete-notification {
+            opacity: 1;
+        }
+
+        .btn-delete-notification:hover {
+            background: #dc3545;
+            color: #ffffff;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+            .notification-actions button {
+                background: none;
+                border: none;
+                color: #dc3545;
+                cursor: pointer;
+                font-size: 0.6rem;
+                padding: 3px 6px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+                .notification-actions button:hover {
+                    color: #ffffff;
+                    background: #dc3545;
+                }
+
+        .dropdown-menu-messages {
+            max-height: 400px; /* Giới hạn chiều cao */
+            overflow: hidden; /* Ẩn thanh cuộn */
+            padding: 15px;
+            position: absolute; /* Đảm bảo vị trí tuyệt đối */
+            left: 50%; /* Căn giữa từ mép trái */
+            transform: translateX(-50%); /* Dịch sang trái 50% của chính nó */
+            margin-right: 20px; /* Tạo khoảng cách từ mép phải */
+            right: auto; /* Loại bỏ right để tránh xung đột */
+            margin-left: 0;
+            max-width: 450px; /* Giới hạn độ rộng */
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+
+        /* Tin nhắn chưa đọc - nền xanh nhạt */
+        .message-item.unread {
+            background-color: #eff6ff;
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Tin nhắn đã đọc - opacity giảm */
+        .message-item:not(.unread) {
+            opacity: 0.75;
+        }
+
+        .message-item:hover {
+            background-color: #f8fafc;
+            opacity: 1;
+        }
+
+        /* Modal Thông Báo */
+        #notificationModal .modal-content {
+            border-radius: 12px;
+        }
+
+        #notificationModal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        #notificationModal .modal-title {
+            font-weight: 600;
+        }
+
+        .notification-actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .notification-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-list .notification-item {
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .notification-list .notification-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .notification-list .notification-item.unread {
+            background-color: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .view-all-notifications {
+            color: #667eea !important;
+            font-weight: 600;
+            padding: 10px;
+        }
+
+        .view-all-notifications:hover {
+            background-color: #f3f4f6 !important;
+        }
+
+            .message-item span {
+                display: block;
+                white-space: normal;
+                max-width: 100%;
+                word-break: break-word;
+            }
+
+        .message-time {
+            font-size: 0.6rem;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+            .message-actions button {
+                background: none;
+                border: none;
+                color: #dc3545;
+                cursor: pointer;
+                font-size: 0.6rem;
+                padding: 3px 6px;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+                .message-actions button:hover {
+                    color: #ffffff;
+                    background: #dc3545;
+                }
+
+        .notification-item.unread, .message-item.unread {
+            background: #f1f5f9;
+            font-weight: 500;
+        }
+
+        .notification-item.read, .message-item.read {
+            background: transparent;
+            font-weight: normal;
+        }
+
+        media (max-width: 576px) {
+            .dropdown-menu-notifications, .dropdown-menu-messages
+
+        {
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 90%;
+            width: auto;
+        }
+
+        .notification-item span, .message-item span {
+            font-size: 0.7rem;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 250px;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">Bloomie</div>
+            <button class="navbar-toggle" id="sidebarToggle" data-bs-toggle="tooltip" data-bs-title="Ẩn/Hiện Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Tổng quan</div>
+                    <a asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Trang chủ Admin">
+                        <i class="fas fa-home"></i><span>Trang chủ</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminRevenue" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý doanh thu">
+                        <i class="fas fa-chart-line"></i><span>Doanh thu</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Quản lý sản phẩm</div>
+                    <a asp-area="Admin" asp-controller="AdminProduct" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Danh sách sản phẩm">
+                        <i class="fas fa-box"></i><span>Sản phẩm</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminCategory" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Danh mục sản phẩm">
+                        <i class="fas fa-list"></i><span>Danh mục</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminPromotion" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Khuyến mãi">
+                        <i class="fas fa-tags"></i><span>Khuyến mãi</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Kho & Nhập hàng</div>
+                    <a asp-area="Admin" asp-controller="AdminSupplier" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý nhà cung cấp">
+                        <i class="fas fa-handshake"></i><span>Nhà cung cấp</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminPurchaseOrder" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Đơn đặt hàng nhập">
+                        <i class="fas fa-file-invoice"></i><span>Đơn nhập hàng</span>
+                    </a>
+                    <div class="list-group-item has-submenu" data-bs-toggle="tooltip" data-bs-title="Nguyên liệu">
+                        <i class="fas fa-warehouse"></i><span>Nguyên liệu</span>
+                        <i class="fas fa-chevron-down submenu-toggle"></i>
+                    </div>
+                    <div class="submenu">
+                        <a asp-area="Admin" asp-controller="AdminFlowerType" asp-action="Index" class="submenu-item" data-bs-toggle="tooltip" data-bs-title="Loại hoa"><i class="fas fa-seedling"></i><span>Loại hoa</span></a>
+                        <a asp-area="Admin" asp-controller="AdminFlowerVariant" asp-action="Index" class="submenu-item" data-bs-toggle="tooltip" data-bs-title="Biến thể hoa"><i class="fas fa-leaf"></i><span>Biến thể hoa</span></a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Bán hàng</div>
+                    <a asp-area="Admin" asp-controller="AdminOrder" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Đơn hàng">
+                        <i class="fas fa-shopping-cart"></i><span>Đơn hàng</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminShipping" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý giao hàng">
+                        <i class="fas fa-truck"></i><span>Giao hàng</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Khách hàng</div>
+                    <a asp-area="Admin" asp-controller="AdminUser" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Quản lý tài khoản">
+                        <i class="fas fa-users"></i><span>Tài khoản</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Chat" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Hỗ trợ chat">
+                        <i class="fas fa-comments"></i><span>Chat hỗ trợ</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="AdminRating" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Đánh giá & phản hồi">
+                        <i class="fas fa-star"></i><span>Đánh giá</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Hệ thống</div>
+                    <a asp-area="Admin" asp-controller="AdminRole" asp-action="Index" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Phân quyền">
+                        <i class="fas fa-shield-alt"></i><span>Phân quyền</span>
+                    </a>
+                    <a asp-area="" asp-controller="AdminSetting" asp-action="Index" class="list-group-item setting-item" data-bs-toggle="tooltip" data-bs-title="Cài đặt">
+                        <i class="fas fa-cog"></i><span>Cài đặt</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="@Url.Action("Index", "AdminDashboard", new { area = "Admin" })">Admin Panel</a>
+                    <div class="admin-info">
+                        <!-- Notification Icon -->
+                        <div class="dropdown">
+                            <a class="notification-icon" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Thông báo">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge-count" id="notificationCount" style="display: none;">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-notifications" aria-labelledby="notificationDropdown">
+                                <li>
+                                    <a class="dropdown-item notification-item" href="#">
+                                        <span>Chưa có thông báo mới</span>
+                                    </a>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-center view-all-notifications" href="#" onclick="openNotificationModal(event)">
+                                        <strong>Xem tất cả</strong>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- Message Icon -->
+                        <div class="dropdown">
+                            <a class="message-icon" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tin nhắn">
+                                <i class="fas fa-envelope"></i>
+                                <span class="badge-count" id="messageCount" style="display: none; background-color: #6b7280;">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-messages" aria-labelledby="messageDropdown">
+                                <li>
+                                    <a class="dropdown-item message-item" href="#">
+                                        <span>Chưa có tin nhắn mới</span>
+                                    </a>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-center view-all-messages" asp-area="Admin" asp-controller="Chat" asp-action="Index">
+                                        <strong>Xem tất cả</strong>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- User Account with Role -->
+                        <div class="dropdown">
+                            <a class="user-info dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tài khoản">
+                                <i class="fas fa-user"></i>
+                                <span class="role-name">@User.Identity.Name</span>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="UpdateAccount">Cập nhật tài khoản</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="ManagementAccount" asp-action="Logout">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-fluid p-2 page-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Transition Overlay -->
+    <div class="page-transition-overlay" id="pageTransitionOverlay">
+        <div class="page-transition-spinner"></div>
+    </div>
+
+    <!-- Modal Xem Tất Cả Thông Báo -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">
+                        <i class="fas fa-bell me-2"></i>Tất cả thông báo
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="notification-actions-bar mb-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="markAllAsReadModal()">
+                            <i class="fas fa-check-double"></i> Đánh dấu tất cả đã đọc
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAllReadModal()">
+                            <i class="fas fa-trash"></i> Xóa tất cả đã đọc
+                        </button>
+                    </div>
+                    <div id="modalNotificationList" class="notification-list">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-quicksearch/2.4.0/jquery.quicksearch.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/jquery.multi-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.0/signalr.min.js"></script>
+    <script>
+        // Page Transition Effect
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            
+            // Handle all navigation links
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not(.no-transition)').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:') && !this.classList.contains('dropdown-item')) {
+                        // Don't interfere with dropdown items
+                        if (!this.closest('.dropdown-menu')) {
+                            e.preventDefault();
+                            overlay.classList.add('active');
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            });
+
+            // Hide overlay on page load
+            setTimeout(() => {
+                overlay.classList.remove('active');
+            }, 100);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar-wrapper');
+            const content = document.getElementById('page-content-wrapper');
+            const toggleButton = document.getElementById('sidebarToggle');
+
+            // Lấy URL hiện tại và chuẩn hóa
+            let currentUrl = window.location.pathname.toLowerCase();
+            if (currentUrl.endsWith('/')) {
+                currentUrl = currentUrl.slice(0, -1);
+            }
+            if (currentUrl === '') {
+                currentUrl = '/';
+            }
+
+            // Chọn tất cả các liên kết trong sidebar
+            const sidebarLinks = document.querySelectorAll('.list-group-item, .submenu-item');
+            sidebarLinks.forEach(link => {
+                let linkUrl = link.getAttribute('href')?.toLowerCase();
+                if (linkUrl && linkUrl.endsWith('/')) {
+                    linkUrl = linkUrl.slice(0, -1);
+                }
+                // So sánh URL, cho phép khớp với controller/action
+                if (linkUrl) {
+                    // Kiểm tra khớp chính xác hoặc khớp với phần controller/action
+                    const linkParts = linkUrl.split('/');
+                    const currentParts = currentUrl.split('/');
+                    const linkControllerAction = linkParts.slice(-2).join('/');
+                    const currentControllerAction = currentParts.slice(-2).join('/');
+                    if (linkUrl === currentUrl || linkControllerAction === currentControllerAction) {
+                        link.classList.add('active');
+                        // Nếu là mục con, mở rộng submenu cha nhưng không thêm .active
+                        const parentSubmenu = link.closest('.submenu');
+                        if (parentSubmenu) {
+                            parentSubmenu.classList.add('show');
+                            const parentMenuItem = parentSubmenu.previousElementSibling;
+                            if (parentMenuItem && parentMenuItem.classList.contains('has-submenu')) {
+                                const toggle = parentMenuItem.querySelector('.submenu-toggle');
+                                if (toggle) toggle.classList.remove('collapsed');
+                            }
+                        }
+                    }
+                }
+            });
+
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                content.classList.add('shifted');
+            }
+
+            toggleButton.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                content.classList.toggle('shifted');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            document.querySelectorAll('.has-submenu').forEach(item => {
+                item.addEventListener('click', function (e) {
+                    if (!e.target.closest('.submenu-toggle')) {
+                        const submenu = this.nextElementSibling;
+                        const toggle = this.querySelector('.submenu-toggle');
+                        submenu.classList.toggle('show');
+                        toggle.classList.toggle('collapsed');
+                    }
+                });
+            });
+
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            function handleResize() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.add('collapsed');
+                    content.classList.add('shifted');
+                    localStorage.setItem('sidebarCollapsed', true);
+                } else if (!localStorage.getItem('sidebarCollapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    content.classList.remove('shifted');
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+
+            // ========== NOTIFICATION SYSTEM ==========
+            
+            // Helper: Lấy icon theo loại thông báo
+            function getNotificationIcon(type, message) {
+                if (message.includes('🛒') || message.includes('Đơn hàng mới')) return '<i class="fas fa-shopping-cart notification-icon success"></i>';
+                if (message.includes('🔄') || message.includes('Đổi hàng') || message.includes('Hoàn tiền')) return '<i class="fas fa-exchange-alt notification-icon danger"></i>';
+                if (message.includes('⭐') || message.includes('đánh giá')) return '<i class="fas fa-star notification-icon info"></i>';
+                if (message.includes('🚨') || message.includes('HẾT HÀNG')) return '<i class="fas fa-exclamation-triangle notification-icon danger"></i>';
+                if (message.includes('⚠️') || message.includes('Cảnh báo')) return '<i class="fas fa-exclamation-circle notification-icon warning"></i>';
+                
+                // Default icons theo type
+                if (type === 'success') return '<i class="fas fa-check-circle notification-icon success"></i>';
+                if (type === 'danger') return '<i class="fas fa-times-circle notification-icon danger"></i>';
+                if (type === 'warning') return '<i class="fas fa-exclamation-circle notification-icon warning"></i>';
+                return '<i class="fas fa-info-circle notification-icon info"></i>';
+            }
+
+            // Helper: Format thời gian dễ đọc
+            function formatTimeAgo(dateString) {
+                if (!dateString) return 'Không rõ';
+                
+                let date;
+                // Try parsing ISO format first (YYYY-MM-DDTHH:mm:ss)
+                if (dateString.includes('T') || dateString.includes('-')) {
+                    date = new Date(dateString);
+                } 
+                // Try dd/MM/yyyy format
+                else if (dateString.includes('/')) {
+                    const parts = dateString.split(/[\/\s:]/);
+                    if (parts.length >= 3) {
+                        const day = parseInt(parts[0]);
+                        const month = parseInt(parts[1]) - 1;
+                        const year = parseInt(parts[2]);
+                        const hour = parts[3] ? parseInt(parts[3]) : 0;
+                        const minute = parts[4] ? parseInt(parts[4]) : 0;
+                        date = new Date(year, month, day, hour, minute);
+                    }
+                }
+                
+                // Check if date is valid
+                if (!date || isNaN(date.getTime())) {
+                    return 'Không rõ';
+                }
+                
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+                
+                if (seconds < 60) return 'Vừa xong';
+                if (seconds < 3600) return Math.floor(seconds / 60) + ' phút trước';
+                if (seconds < 86400) return Math.floor(seconds / 3600) + ' giờ trước';
+                if (seconds < 259200) return Math.floor(seconds / 86400) + ' ngày trước'; // < 3 days (259200 = 3 * 24 * 3600)
+                
+                // Return formatted date for notifications older than 3 days
+                return date.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                });
+            }
+
+            // Load notifications từ database khi page load
+            function loadNotifications() {
+                fetch('/api/NotificationApi/GetNotifications?take=20')
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            const notificationList = document.querySelector('.dropdown-menu-notifications');
+                            notificationList.innerHTML = '';
+
+                            if (result.data.length === 0) {
+                                notificationList.innerHTML = '<li><a class="dropdown-item notification-item" href="#"><span>Chưa có thông báo mới</span></a></li>';
+                            } else {
+                                result.data.forEach(notif => {
+                                    const li = document.createElement('li');
+                                    const icon = getNotificationIcon(notif.type, notif.message);
+                                    const timeAgo = formatTimeAgo(notif.createdAt);
+                                    
+                                    li.innerHTML = `
+                                        <div class="dropdown-item notification-item ${notif.isRead ? '' : 'unread'}" data-id="${notif.id}" data-type="${notif.type}">
+                                            ${icon}
+                                            <div class="notification-content">
+                                                <a href="${notif.link || '#'}" onclick="markAsRead(${notif.id})">
+                                                    <span>${notif.message}</span>
+                                                    <div class="notification-time">
+                                                        <i class="far fa-clock"></i>
+                                                        <span>${timeAgo}</span>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <button class="btn-delete-notification" onclick="deleteNotification(${notif.id}, event)" title="Xóa">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>`;
+                                    notificationList.appendChild(li);
+                                });
+
+                                // Thêm nút "Xem tất cả" ở cuối
+                                const divider = document.createElement('li');
+                                divider.className = 'dropdown-divider';
+                                notificationList.appendChild(divider);
+
+                                const viewAllLi = document.createElement('li');
+                                viewAllLi.innerHTML = '<a class="dropdown-item text-center view-all-notifications" href="#" onclick="openNotificationModal(event)"><strong>Xem tất cả</strong></a>';
+                                notificationList.appendChild(viewAllLi);
+                            }
+
+                            // Update badge
+                            const badge = document.getElementById('notificationCount');
+                            badge.textContent = result.unreadCount;
+                            badge.style.display = result.unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    })
+                    .catch(err => console.error('Lỗi load thông báo:', err));
+            }
+
+            // Đánh dấu đã đọc
+            window.markAsRead = function(notificationId) {
+                fetch(`/api/NotificationApi/MarkAsRead/${notificationId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            const badge = document.getElementById('notificationCount');
+                            badge.textContent = result.unreadCount;
+                            badge.style.display = result.unreadCount > 0 ? 'inline' : 'none';
+                            
+                            const item = document.querySelector(`[data-id="${notificationId}"]`);
+                            if (item) item.classList.remove('unread');
+                        }
+                    });
+            }
+
+            // Xóa thông báo
+            window.deleteNotification = function(notificationId, event) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                if (confirm('Bạn có chắc muốn xóa thông báo này?')) {
+                    fetch(`/api/NotificationApi/Delete/${notificationId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                loadNotifications(); // Reload list
+                            }
+                        });
+                }
+            }
+
+            // Khởi tạo kết nối SignalR
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            // Nhận thông báo realtime qua SignalR (thông báo MỚI)
+            connection.on("ReceiveNotification", function (data) {
+                console.log("🔔 Nhận thông báo mới:", data);
+                
+                // Thêm vào đầu danh sách
+                const notificationList = document.querySelector('.dropdown-menu-notifications');
+                const existingPlaceholder = notificationList.querySelector('.notification-item span')?.textContent === 'Chưa có thông báo mới';
+                if (existingPlaceholder) {
+                    notificationList.innerHTML = '';
+                }
+
+                const icon = getNotificationIcon(data.type, data.message);
+                const newNotification = document.createElement('li');
+                newNotification.innerHTML = `
+                    <div class="dropdown-item notification-item unread" data-id="${data.id}" data-type="${data.type}">
+                        ${icon}
+                        <div class="notification-content">
+                            <a href="${data.link || '#'}" onclick="markAsRead(${data.id})">
+                                <span><strong>${data.message}</strong></span>
+                                <div class="notification-time">
+                                    <i class="far fa-clock"></i>
+                                    <span>Vừa xong</span>
+                                </div>
+                            </a>
+                        </div>
+                        <button class="btn-delete-notification" onclick="deleteNotification(${data.id}, event)" title="Xóa">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>`;
+                notificationList.insertBefore(newNotification, notificationList.firstChild);
+
+                // Cập nhật badge count
+                const badge = document.getElementById('notificationCount');
+                const currentCount = parseInt(badge.textContent) || 0;
+                badge.textContent = currentCount + 1;
+                badge.style.display = 'inline';
+
+                // Phát âm thanh thông báo (tạo âm thanh đẹp bằng Web Audio API)
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    // Tạo âm thanh "ting" (2 nốt nhạc nhanh)
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.1);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (error) {
+                    console.error('Lỗi phát âm thanh:', error);
+                }
+
+                // Hiển thị toast notification
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Thông báo mới',
+                        text: data.message,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                }
+            });
+
+            // Nhận thông báo tin nhắn mới từ customer
+            connection.on("NewChatMessage", function (data) {
+                console.log("💬 Tin nhắn mới từ:", data.customerName);
+                // Cập nhật badge số tin nhắn chưa đọc
+                updateChatBadge(data.unreadCount);
+                // Force reload dropdown immediately
+                loadRecentMessages();
+            });
+
+            // Kết nối SignalR
+            connection.start().then(() => {
+                console.log("✅ Kết nối SignalR thành công!");
+                loadNotifications(); // Load notifications sau khi kết nối thành công
+                loadUnreadChatCount(); // Load unread chat count
+            }).catch(function (err) {
+                console.error("❌ Lỗi kết nối SignalR:", err.toString());
+            });
+
+            // Tự động reconnect khi mất kết nối
+            connection.onclose(() => {
+                console.log("🔄 Kết nối SignalR bị ngắt, đang thử kết nối lại...");
+                setTimeout(() => connection.start(), 2000);
+            });
+
+            // ========== MODAL FUNCTIONS ==========
+            
+            // Mở modal và load tất cả thông báo
+            window.openNotificationModal = function(event) {
+                event.preventDefault();
+                const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                modal.show();
+                loadAllNotificationsForModal();
+            }
+
+            // Load tất cả thông báo vào modal (không giới hạn)
+            function loadAllNotificationsForModal() {
+                const modalList = document.getElementById('modalNotificationList');
+                modalList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+
+                fetch('/api/NotificationApi/GetNotifications?take=100')
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            modalList.innerHTML = '';
+
+                            if (result.data.length === 0) {
+                                modalList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-bell-slash fa-3x mb-3"></i><p>Chưa có thông báo nào</p></div>';
+                            } else {
+                                result.data.forEach(notif => {
+                                    const div = document.createElement('div');
+                                    div.className = `notification-item ${notif.isRead ? '' : 'unread'}`;
+                                    div.setAttribute('data-id', notif.id);
+                                    div.setAttribute('data-type', notif.type);
+                                    
+                                    const icon = getNotificationIcon(notif.type, notif.message);
+                                    const timeAgo = formatTimeAgo(notif.createdAt);
+                                    
+                                    div.innerHTML = `
+                                        ${icon}
+                                        <div class="notification-content flex-grow-1">
+                                            <a href="${notif.link || '#'}" onclick="markAsReadAndClose(${notif.id})" class="text-decoration-none">
+                                                <span class="${notif.isRead ? 'text-muted' : 'fw-bold'}">${notif.message}</span>
+                                                <div class="notification-time">
+                                                    <i class="far fa-clock"></i>
+                                                    <span>${timeAgo}</span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                        <div class="ms-3 d-flex gap-1">
+                                            ${!notif.isRead ? `<button class="btn btn-sm btn-outline-success" onclick="markAsReadInModal(${notif.id})" title="Đánh dấu đã đọc"><i class="fas fa-check"></i></button>` : ''}
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteNotificationInModal(${notif.id})" title="Xóa"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    `;
+                                    modalList.appendChild(div);
+                                });
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Lỗi load thông báo:', err);
+                        modalList.innerHTML = '<div class="alert alert-danger">Lỗi tải thông báo. Vui lòng thử lại!</div>';
+                    });
+            }
+
+            // Đánh dấu đã đọc và đóng modal
+            window.markAsReadAndClose = function(notificationId) {
+                markAsRead(notificationId);
+                bootstrap.Modal.getInstance(document.getElementById('notificationModal')).hide();
+            }
+
+            // Đánh dấu đã đọc trong modal
+            window.markAsReadInModal = function(notificationId) {
+                fetch(`/api/NotificationApi/MarkAsRead/${notificationId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            loadAllNotificationsForModal();
+                            loadNotifications(); // Cập nhật dropdown
+                        }
+                    });
+            }
+
+            // Xóa thông báo trong modal
+            window.deleteNotificationInModal = function(notificationId) {
+                if (confirm('Bạn có chắc muốn xóa thông báo này?')) {
+                    fetch(`/api/NotificationApi/Delete/${notificationId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                loadAllNotificationsForModal();
+                                loadNotifications(); // Cập nhật dropdown
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Đã xóa thông báo',
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                        });
+                }
+            }
+
+            // Đánh dấu tất cả đã đọc
+            window.markAllAsReadModal = function() {
+                if (confirm('Đánh dấu tất cả thông báo là đã đọc?')) {
+                    fetch('/api/NotificationApi/MarkAllAsRead', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                loadAllNotificationsForModal();
+                                loadNotifications(); // Cập nhật dropdown
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: result.message,
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                        });
+                }
+            }
+
+            // Xóa tất cả đã đọc
+            window.deleteAllReadModal = function() {
+                if (confirm('Xóa tất cả thông báo đã đọc? Hành động này không thể hoàn tác!')) {
+                    fetch('/api/NotificationApi/DeleteAll', { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                loadAllNotificationsForModal();
+                                loadNotifications(); // Cập nhật dropdown
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: result.message,
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+                            }
+                        });
+                }
+            }
+
+            // ========== UNREAD CHAT COUNT ==========
+            
+            // Load số lượng tin nhắn chưa đọc
+            async function loadUnreadChatCount() {
+                try {
+                    const response = await fetch('/api/supportchat/unread-count');
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateChatBadge(data.unreadCount || 0);
+                    }
+                } catch (error) {
+                    console.error('Error loading unread chat count:', error);
+                }
+            }
+
+            // Cập nhật badge số tin nhắn chưa đọc (icon message trên navbar)
+            function updateChatBadge(count) {
+                const badge = document.getElementById('messageCount');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count > 99 ? '99+' : count;
+                        badge.style.display = 'inline-block';
+                        badge.style.backgroundColor = '#ef4444'; // Đỏ khi có tin nhắn mới
+                    } else {
+                        badge.style.display = 'none'; // Ẩn badge khi không có tin nhắn
+                    }
+                }
+                // Load lại danh sách tin nhắn trong dropdown
+                loadRecentMessages();
+            }
+
+            // Load danh sách tin nhắn gần đây vào dropdown
+            async function loadRecentMessages() {
+                try {
+                    const response = await fetch('/api/supportchat/recent-messages?limit=5');
+                    if (response.ok) {
+                        const data = await response.json();
+                        displayMessages(data.conversations || []);
+                    }
+                } catch (error) {
+                    console.error('Error loading recent messages:', error);
+                }
+            }
+
+            // Hiển thị tin nhắn trong dropdown
+            function displayMessages(conversations) {
+                const messageList = document.querySelector('.dropdown-menu-messages');
+                if (!messageList) return;
+
+                // Xóa placeholder
+                const existingPlaceholder = messageList.querySelector('.message-item span')?.textContent === 'Chưa có tin nhắn mới';
+                if (existingPlaceholder) {
+                    messageList.innerHTML = '';
+                }
+
+                // Chỉ hiển thị conversation có tin nhắn mới từ khách hàng (unreadByStaff > 0)
+                const unreadConversations = conversations.filter(conv => conv.unreadByStaff > 0);
+
+                if (unreadConversations.length === 0) {
+                    messageList.innerHTML = `
+                        <li>
+                            <a class="dropdown-item message-item" href="#">
+                                <span>Chưa có tin nhắn mới</span>
+                            </a>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-center view-all-messages" href="/Admin/Chat">
+                                <strong>Xem tất cả</strong>
+                            </a>
+                        </li>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                unreadConversations.forEach(conv => {
+                    const unreadClass = conv.unreadByStaff > 0 ? 'unread' : '';
+                    const customerName = conv.customerName || 'Khách hàng';
+                    
+                    // Parse attachment message
+                    let lastMessage = conv.lastMessage || 'Chưa có tin nhắn';
+                    if (conv.lastMessage && conv.lastMessage.startsWith('[IMAGE:')) {
+                        lastMessage = '📷 Đã gửi ảnh';
+                    } else if (conv.lastMessage && conv.lastMessage.startsWith('[Đã gửi ảnh]')) {
+                        lastMessage = '📷 Đã gửi ảnh';
+                    } else if (conv.lastMessage && conv.lastMessage.startsWith('[ATTACHMENT:')) {
+                        try {
+                            const lastBracket = conv.lastMessage.lastIndexOf(']');
+                            let jsonStr = lastBracket === -1 ? conv.lastMessage.substring(12) : conv.lastMessage.substring(12, lastBracket);
+                            
+                            // Handle incomplete JSON
+                            if (lastBracket === -1) {
+                                const quoteCount = (jsonStr.match(/"/g) || []).length;
+                                if (quoteCount % 2 === 1) {
+                                    const lastColon = jsonStr.lastIndexOf(':');
+                                    if (lastColon > 0) {
+                                        const beforeColon = jsonStr.substring(0, lastColon);
+                                        const lastComma = beforeColon.lastIndexOf(',');
+                                        if (lastComma > 0) jsonStr = jsonStr.substring(0, lastComma);
+                                    }
+                                }
+                                if (!jsonStr.endsWith('}')) jsonStr += '}';
+                            }
+                            
+                            const attachment = JSON.parse(jsonStr);
+                            if (attachment.type === 'product') {
+                                const productName = (attachment.productName || 'Sản phẩm').trim().substring(0, 30);
+                                lastMessage = '🌸 ' + (productName || 'Sản phẩm');
+                            } else if (attachment.type === 'order') {
+                                lastMessage = '📦 Đơn hàng #' + (attachment.orderId || '');
+                            } else if (attachment.type === 'blog') {
+                                lastMessage = '📰 ' + (attachment.title || 'Bài viết').substring(0, 35);
+                            } else {
+                                lastMessage = '📎 Đính kèm';
+                            }
+                        } catch (e) {
+                            lastMessage = '📎 Đính kèm';
+                        }
+                    } else {
+                        lastMessage = lastMessage.substring(0, 60) + (lastMessage.length > 60 ? '...' : '');
+                    }
+                    
+                    const timeAgo = formatTimeAgo(conv.lastMessageAt);
+
+                    html += `
+                        <li>
+                            <a class="dropdown-item message-item ${unreadClass}" href="/Admin/Chat?conversationId=${conv.id}" style="display: flex; align-items: start; gap: 12px;">
+                                <div class="message-avatar" style="flex-shrink: 0;">
+                                    <i class="fas fa-user-circle" style="font-size: 2.5rem; color: #6366f1;"></i>
+                                </div>
+                                <div class="message-content" style="flex: 1; min-width: 0;">
+                                    <strong>${customerName}</strong>
+                                    <span>${lastMessage}</span>
+                                    <small class="notification-time">
+                                        <i class="far fa-clock"></i> ${timeAgo}
+                                        ${conv.unreadByStaff > 0 ? `<span style="color: #ef4444; font-weight: 600;"> • ${conv.unreadByStaff} mới</span>` : ''}
+                                    </small>
+                                </div>
+                            </a>
+                        </li>
+                    `;
+                });
+
+                html += `
+                    <li class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-center view-all-messages" href="/Admin/Chat">
+                            <strong>Xem tất cả tin nhắn</strong>
+                        </a>
+                    </li>
+                `;
+
+                messageList.innerHTML = html;
+                
+                // Thêm event listener để đánh dấu đã đọc khi click vào tin nhắn
+                const messageLinks = messageList.querySelectorAll('.message-item[href*="conversationId"]');
+                messageLinks.forEach(link => {
+                    link.addEventListener('click', async function(e) {
+                        // Lấy conversationId từ URL
+                        const url = new URL(this.href);
+                        const conversationId = url.searchParams.get('conversationId');
+                        
+                        if (conversationId) {
+                            try {
+                                // Gọi API đánh dấu đã đọc
+                                await fetch(`/api/supportchat/mark-read/${conversationId}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' }
+                                });
+                                
+                                // Cập nhật badge ngay (trừ số unread của conversation này)
+                                const unreadSpan = this.querySelector('span[style*="color: #ef4444"]');
+                                if (unreadSpan) {
+                                    const badge = document.getElementById('messageCount');
+                                    if (badge && badge.style.display !== 'none') {
+                                        const currentCount = parseInt(badge.textContent) || 0;
+                                        const unreadMatch = unreadSpan.textContent.match(/\d+/);
+                                        const unreadCount = unreadMatch ? parseInt(unreadMatch[0]) : 1;
+                                        const newCount = Math.max(0, currentCount - unreadCount);
+                                        updateChatBadge(newCount);
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Error marking conversation as read:', error);
+                            }
+                        }
+                        // Sau đó link sẽ navigate bình thường
+                    });
+                });
+            }
+
+            // Load lại badge mỗi 30 giây (fallback nếu SignalR không hoạt động)
+            setInterval(loadUnreadChatCount, 30000);
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,812 @@
+﻿@model List<Bloomie.Models.Entities.Rating>
+
+@{
+    Layout = "~/Areas/Staff/Views/Shared/_StaffLayout.cshtml";
+    ViewBag.Title = "Đánh giá và Phản hồi";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var pageSize = ViewBag.PageSize ?? 10;
+    var totalItems = ViewBag.TotalItems ?? 0;
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Tiêu đề chính -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-star text-primary me-2"></i> Đánh giá và Phản hồi
+                </h2>
+                <span class="badge bg-primary text-white p-2">
+                    <i class="fas fa-calendar me-2"></i> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                </span>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Danh sách đánh giá</h4>
+                    @if (Model != null && Model.Any())
+                    {
+                        <table class="table table-bordered table-hover">
+                            <thead class="bg-primary text-white">
+                                <tr>
+                                    <th>Điểm đánh giá</th>
+                                    <th>Nội dung đánh giá</th>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var rating in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rating.Star)
+                                                {
+                                                    <i class="bi bi-star-fill text-warning me-1"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-star text-warning me-1"></i>
+                                                }
+                                            }
+                                        </td>
+                                        <td>
+                                            <p>@rating.Comment</p>
+                                            <p class="text-muted"><strong>@rating.User?.FullName</strong> đánh giá sản phẩm <a href="@Url.Action("Details", "Product", new { id = rating.ProductId, area = "" })" class="text-decoration-none text-blue">@rating.Product?.Name</a></p>
+                                        </td>
+                                        <td>@rating.ReviewDate.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                        <td>
+                                            @if (rating.Reports != null && rating.Reports.Any(r => !r.IsResolved))
+                                            {
+                                                <span class="badge bg-warning view-reports" style="cursor: pointer;" data-rating-id="@rating.Id" data-bs-toggle="modal" data-bs-target="#reportModal">
+                                                    Vi phạm
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge @(rating.IsVisible ? "bg-success" : "bg-danger")">
+                                                    @(rating.IsVisible ? "Hiển thị" : "Ẩn")
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center justify-content-center">
+                                                <button class="btn btn-sm btn-@(rating.IsVisible ? "danger" : "success") toggle-visibility me-2" data-rating-id="@rating.Id">
+                                                    @(rating.IsVisible ? "Ẩn" : "Hiển thị")
+                                                </button>
+                                                <button class="btn btn-sm btn-info reply-toggle me-2" data-rating-id="@rating.Id">Trả lời</button>
+                                                <button class="btn btn-sm btn-danger delete-rating me-2" data-rating-id="@rating.Id">Xóa</button>
+                                                <button class="btn btn-sm btn-warning send-default-reply me-2" data-rating-id="@rating.Id" title="Gửi phản hồi mặc định">
+                                                    <i class="bi bi-star-fill"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- Reply form placed below the row -->
+                                    <tr class="reply-form-row d-none" data-rating-id="@rating.Id">
+                                        <td colspan="5">
+                                            <form class="submit-reply-form" data-rating-id="@rating.Id">
+                                                <div class="input-group reply-form-container">
+                                                    <textarea class="form-control reply-textarea" name="comment" rows="2" placeholder="Nhập phản hồi..." required></textarea>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Gửi</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <!-- Modal để hiển thị báo cáo -->
+                        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="reportModalLabel">Chi tiết Báo cáo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="reportDetails">
+                                            <!-- Nội dung báo cáo sẽ được tải bằng JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phân trang -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@(currentPage == 1 ? "#" : Url.Action("Index", new { page = currentPage - 1, pageSize }))">Trước</a>
+                                </li>
+                                @{
+                                    int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                                    int startPage = Math.Max(1, currentPage - 2);
+                                    int endPage = Math.Min(totalPages, currentPage + 2);
+
+                                    for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == currentPage ? "active" : "")">
+                                            <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize })">@i</a>
+                                        </li>
+                                    }
+                                }
+                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@(currentPage == totalPages ? "#" : Url.Action("Index", new { page = currentPage + 1, pageSize }))">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        <p class="text-center">Trang @currentPage / @totalPages (Tổng số đánh giá: @totalItems)</p>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted">Không có đánh giá nào để hiển thị.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Xử lý ẩn/hiện đánh giá
+        document.querySelectorAll('.toggle-visibility').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const statusElement = this.closest('tr').querySelector('td:nth-child(4) .badge');
+                const actionButton = this;
+
+                if (!statusElement || !actionButton) {
+                    console.error('Không tìm thấy phần tử trạng thái hoặc nút cho ratingId:', ratingId);
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.textContent = 'Đang xử lý...';
+
+                fetch(`/Staff/StaffRating/ToggleRatingVisibility?ratingId=${ratingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.className = `btn btn-sm btn-${data.isVisible ? 'danger' : 'success'} toggle-visibility me-2`;
+                    actionButton.textContent = data.isVisible ? 'Ẩn' : 'Hiển thị';
+
+                    if (data.success) {
+                        fetch(`/Staff/StaffRating/GetReportsByRating?ratingId=${ratingId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(reports => {
+                            if (reports && reports.some(report => !report.isResolved)) {
+                                statusElement.className = 'badge bg-warning view-reports';
+                                statusElement.textContent = 'Vi phạm';
+                                statusElement.style.cursor = 'pointer';
+                                statusElement.setAttribute('data-rating-id', ratingId);
+                                statusElement.setAttribute('data-bs-toggle', 'modal');
+                                statusElement.setAttribute('data-bs-target', '#reportModal');
+                            } else {
+                                statusElement.className = `badge ${data.isVisible ? 'bg-success' : 'bg-danger'}`;
+                                statusElement.textContent = data.isVisible ? 'Hiển thị' : 'Ẩn';
+                                statusElement.style.cursor = '';
+                                statusElement.removeAttribute('data-rating-id');
+                                statusElement.removeAttribute('data-bs-toggle');
+                                statusElement.removeAttribute('data-bs-target');
+                            }
+                            alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi kiểm tra báo cáo:', err);
+                            statusElement.className = `badge ${data.isVisible ? 'bg-success' : 'bg-danger'}`;
+                            statusElement.textContent = data.isVisible ? 'Hiển thị' : 'Ẩn';
+                            alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Ẩn';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý xem chi tiết báo cáo
+        document.querySelectorAll('.view-reports').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = parseInt(this.getAttribute('data-rating-id'));
+                const reportDetails = document.getElementById('reportDetails');
+
+                fetch(`/Staff/StaffRating/GetReportsByRating?ratingId=${ratingId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(reports => {
+                    if (reports && reports.length > 0) {
+                        let html = '<table class="table"><thead><tr><th>Người báo cáo</th><th>Lý do</th><th>Thời gian</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>';
+                        reports.forEach(report => {
+                            html += `<tr>
+                                <td>${report.reporter ? report.reporter.fullName : 'N/A'}</td>
+                                <td>${report.reason}</td>
+                                <td>${new Date(report.reportDate).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                                <td><span class="badge ${report.isResolved ? 'bg-success' : 'bg-danger'}">${report.isResolved ? 'Đã xử lý' : 'Chưa xử lý'}</span></td>
+                                <td>
+                                    ${!report.isResolved ? `
+                                        <button class="btn btn-sm btn-primary resolve-report me-2" data-report-id="${report.id}" data-is-approved="true">Chấp thuận</button>
+                                        <button class="btn btn-sm btn-secondary resolve-report" data-report-id="${report.id}" data-is-approved="false">Từ chối</button>
+                                    ` : ''}
+                                </td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        reportDetails.innerHTML = html;
+
+                        document.querySelectorAll('.resolve-report').forEach(resolveButton => {
+                            resolveButton.addEventListener('click', function () {
+                                const reportId = this.getAttribute('data-report-id');
+                                const isApproved = this.getAttribute('data-is-approved') === 'true';
+                                const actionButton = this;
+                                const row = this.closest('tr');
+                                const statusBadge = row.querySelector('td:nth-child(4) .badge');
+
+                                actionButton.disabled = true;
+                                actionButton.textContent = 'Đang xử lý...';
+
+                                fetch(`/Staff/StaffRating/ResolveReport?reportId=${reportId}&isApproved=${isApproved}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                                    }
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    actionButton.disabled = false;
+                                    actionButton.textContent = isApproved ? 'Chấp thuận' : 'Từ chối';
+
+                                    if (data.success) {
+                                        statusBadge.className = 'badge bg-success';
+                                        statusBadge.textContent = 'Đã xử lý';
+                                        row.querySelector('td:nth-child(5)').innerHTML = '';
+
+                                        if (isApproved) {
+                                            const ratingRow = document.querySelector(`tr td .view-reports[data-rating-id="${ratingId}"]`)?.closest('tr');
+                                            if (ratingRow) {
+                                                const ratingStatus = ratingRow.querySelector('td:nth-child(4) .badge');
+                                                ratingStatus.className = 'badge bg-danger';
+                                                ratingStatus.textContent = 'Ẩn';
+                                                ratingStatus.style.cursor = '';
+                                                ratingStatus.removeAttribute('data-rating-id');
+                                                ratingStatus.removeAttribute('data-bs-toggle');
+                                                ratingStatus.removeAttribute('data-bs-target');
+                                            }
+                                        }
+
+                                        alert(data.message);
+                                    } else {
+                                        alert(data.message);
+                                    }
+                                })
+                                .catch(err => {
+                                    actionButton.disabled = false;
+                                    actionButton.textContent = isApproved ? 'Chấp thuận' : 'Từ chối';
+                                    alert('Có lỗi xảy ra: ' + err.message);
+                                });
+                            });
+                        });
+                    } else {
+                        reportDetails.innerHTML = '<p>Không có báo cáo nào cho đánh giá này.</p>';
+                    }
+                })
+                .catch(err => {
+                    reportDetails.innerHTML = '<p>Có lỗi khi tải báo cáo: ' + err.message + '</p>';
+                });
+            });
+        });
+
+        // Xử lý xóa đánh giá
+        document.querySelectorAll('.delete-rating').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const actionButton = this;
+
+                if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không thể hoàn tác.')) {
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.textContent = 'Đang xóa...';
+
+                fetch(`/Staff/StaffRating/DeleteRating?ratingId=${ratingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Xóa';
+
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Xóa';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý gửi phản hồi mặc định khi nhấn sao
+        document.querySelectorAll('.send-default-reply').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const actionButton = this;
+
+                if (!confirm('Bạn có muốn gửi phản hồi mặc định cho đánh giá này không?')) {
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.innerHTML = '<i class="bi bi-star-fill"></i> Đang gửi...';
+
+                fetch(`/Staff/StaffRating/SubmitReply?ratingId=${ratingId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.innerHTML = '<i class="bi bi-star-fill"></i>';
+
+                    if (data.success) {
+                        alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.innerHTML = '<i class="bi bi-star-fill"></i>';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý gửi phản hồi từ form
+        document.querySelectorAll('.submit-reply-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const ratingId = this.getAttribute('data-rating-id');
+                const comment = this.querySelector('textarea[name="comment"]').value;
+                const submitButton = this.querySelector('button[type="submit"]');
+                const replyToggle = document.querySelector(`.reply-toggle[data-rating-id="${ratingId}"]`);
+                const replyFormRow = this.closest('.reply-form-row');
+
+                const parsedRatingId = parseInt(ratingId);
+                if (!ratingId || isNaN(parsedRatingId) || parsedRatingId <= 0) {
+                    alert('ID đánh giá không hợp lệ. Vui lòng làm mới trang và thử lại.');
+                    if (replyToggle && replyFormRow) {
+                        replyFormRow.classList.add('d-none');
+                        replyToggle.textContent = 'Trả lời';
+                        this.querySelector('textarea').value = '';
+                    }
+                    return;
+                }
+
+                if (!comment.trim() && !confirm('Bạn có muốn gửi phản hồi mặc định không?')) {
+                    alert('Nội dung trả lời không được để trống hoặc xác nhận gửi phản hồi mặc định.');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang gửi...';
+
+                fetch(`/Staff/StaffRating/SubmitReply?ratingId=${parsedRatingId}&comment=${encodeURIComponent(comment || '')}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Gửi';
+                    if (replyToggle && replyFormRow) {
+                        replyFormRow.classList.add('d-none');
+                        replyToggle.textContent = 'Trả lời';
+                        this.querySelector('textarea').value = '';
+                    }
+
+                    if (data.success) {
+                        alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                        if (data.message === 'Không tìm thấy đánh giá.') {
+                            replyFormRow.closest('tr').remove();
+                            replyFormRow.remove();
+                        }
+                    }
+                })
+                .catch(err => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Gửi';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý nút Trả lời để hiển thị form
+        document.querySelectorAll('.reply-toggle').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const replyFormRow = document.querySelector(`.reply-form-row[data-rating-id="${ratingId}"]`);
+                const textarea = replyFormRow?.querySelector('textarea');
+
+                if (replyFormRow.classList.contains('d-none')) {
+                    replyFormRow.classList.remove('d-none');
+                    this.textContent = 'Hủy';
+                    textarea?.focus();
+                } else {
+                    replyFormRow.classList.add('d-none');
+                    this.textContent = 'Trả lời';
+                    if (textarea) textarea.value = '';
+                }
+            });
+        });
+    </script>
+
+    <style>
+    :root {
+        --primary-color: #4b5563; /* Xám đậm */
+        --secondary-color: #9ca3af; /* Xám nhạt */
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+
+    h2, h4, h5 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+    }
+
+    h4 {
+        font-size: 1.25rem;
+    }
+
+    h5 {
+        font-size: 1.1rem;
+    }
+
+    .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: none !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .table {
+        background-color: #ffffff;
+        border-radius: 8px;
+        table-layout: fixed;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+        .table th, .table td {
+            border-color: #e5e7eb;
+            text-align: center;
+            vertical-align: middle;
+            padding: 10px;
+        }
+
+        .table th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+            /* Adjust column widths */
+            .table th:nth-child(1), .table td:nth-child(1) { /* Điểm đánh giá */
+                width: 12%;
+            }
+
+            .table th:nth-child(2), .table td:nth-child(2) { /* Nội dung đánh giá */
+                width: 50%; /* Widest column for comments */
+            }
+
+            .table th:nth-child(3), .table td:nth-child(3) { /* Thời gian */
+                width: 12%;
+            }
+
+            .table th:nth-child(4), .table td:nth-child(4) { /* Trạng thái */
+                width: 8%;
+            }
+
+            .table th:nth-child(5), .table td:nth-child(5) { /* Thao tác */
+                width: 18%;
+            }
+
+        /* Style for product name link */
+        .text-blue {
+            color: #007bff !important;
+        }
+
+            .text-blue:hover {
+                color: #0056b3 !important;
+            }
+
+        /* Style for reply form */
+        .reply-form-row {
+            background-color: #f8fafc;
+        }
+
+        .reply-form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .reply-textarea {
+            resize: vertical;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .text-muted a {
+            color: var(--primary-color);
+            transition: color 0.2s ease;
+        }
+
+            .text-muted a:hover {
+                color: #374151;
+            }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-primary:hover {
+                background-color: #374151;
+                border-color: #374151;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .btn-info {
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-info:hover {
+                background-color: #0bb2d4;
+                border-color: #0bb2d4;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-success:hover {
+                background-color: #218838;
+                border-color: #218838;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-danger:hover {
+                background-color: #c82333;
+                border-color: #c82333;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .btn-warning:hover {
+                background-color: #e0a800;
+                border-color: #e0a800;
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            transition: all 0.2s ease;
+        }
+
+            .btn-secondary:hover {
+                background-color: #6b7280;
+                border-color: #6b7280;
+                color: var(--text-light);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .form-control {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+            .form-control:focus {
+                border-color: var(--primary-color);
+                box-shadow: 0 0 0 3px rgba(75, 85, 99, 0.1);
+                outline: none;
+            }
+
+        .pagination .page-link {
+            color: var(--primary-color);
+            border-color: #e5e7eb;
+            border-radius: 6px;
+            padding: 8px 12px;
+            transition: all 0.2s ease;
+        }
+
+            .pagination .page-link:hover {
+                background-color: var(--primary-color);
+                color: var(--text-light);
+                transform: translateY(-1px);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .modal-content {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .modal-title {
+            font-size: 1.1rem;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+    </style>
+}

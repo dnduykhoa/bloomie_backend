@@ -1,0 +1,538 @@
+@model IEnumerable<Bloomie.Models.Entities.ShippingFee>
+@{
+    ViewData["Title"] = "Quản lý phí giao hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    int totalShipping = ViewBag.TotalShipping ?? 0;
+    int activeShipping = ViewBag.ActiveShipping ?? 0;
+    int inactiveShipping = ViewBag.InactiveShipping ?? 0;
+    decimal avgFee = ViewBag.AverageFee ?? 0;
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header and Buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-shipping-fast text-primary me-2"></i> Quản lý phí giao hàng
+                </h2>
+                <a asp-action="Create" class="btn btn-primary shadow-sm">
+                    <i class="fas fa-plus me-2"></i> Thêm phí giao hàng
+                </a>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Tổng khu vực</div>
+                            <div class="stat-value">@totalShipping</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đang hoạt động</div>
+                            <div class="stat-value">@activeShipping</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-secondary">
+                            <i class="fas fa-pause-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Tạm dừng</div>
+                            <div class="stat-value">@inactiveShipping</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Phí trung bình</div>
+                            <div class="stat-value">@avgFee.ToString("N0")<small class="ms-1">₫</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle"></i> @TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> @TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                <form method="get" asp-action="Index" id="filterForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm theo phường/xã</label>
+                            <input type="text" class="form-control" name="searchString" value="@ViewBag.SearchString" placeholder="Nhập tên phường/xã..." />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="statusFilter">
+                                <option value="">Tất cả</option>
+                                <option value="true" selected="@(ViewBag.StatusFilter == "true")">Đang hoạt động</option>
+                                <option value="false" selected="@(ViewBag.StatusFilter == "false")">Tạm dừng</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Phí từ (₫)</label>
+                            <input type="number" class="form-control" name="minFee" value="@ViewBag.MinFee" placeholder="0" min="0" step="1000" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Phí đến (₫)</label>
+                            <input type="number" class="form-control" name="maxFee" value="@ViewBag.MaxFee" placeholder="100000" min="0" step="1000" />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Chưa có phí ship nào được cấu hình. Nhấn <strong>"Thêm phí giao hàng"</strong> để bắt đầu.
+                </div>
+            }
+            else
+            {
+                <!-- Shipping Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="col-stt">STT</th>
+                                <th class="col-code">Mã phường/xã</th>
+                                <th class="col-name">Tên phường/xã</th>
+                                <th class="col-fee">Phí ship</th>
+                                <th class="col-status">Trạng thái</th>
+                                <th class="col-updated">Cập nhật</th>
+                                <th class="col-actions">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int index = 1;
+                                foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>@index</td>
+                                        <td class="text-center"><span class="badge bg-secondary">@item.WardCode</span></td>
+                                        <td class="text-left ward-name"><strong>@item.WardName</strong></td>
+                                        <td class="text-center">
+                                            <span class="text-success fw-bold">
+                                                @string.Format("{0:N0}đ", item.Fee)
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge @(item.IsActive ? "bg-success" : "bg-secondary")">
+                                                @(item.IsActive ? "Hoạt động" : "Tạm dừng")
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.UpdatedAt != null)
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock"></i> @item.UpdatedAt.Value.AddHours(7).ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock"></i> @item.CreatedAt.AddHours(7).ToString("dd/MM/yyyy HH:mm")
+                                                </small>
+                                            }
+                                        </td>
+                                        <td class="text-center actions-cell">
+                                            <button type="button" class="btn btn-@(item.IsActive ? "secondary" : "success") btn-sm toggle-status" 
+                                                    data-id="@item.Id" 
+                                                    data-active="@item.IsActive.ToString().ToLower()"
+                                                    data-bs-toggle="tooltip" 
+                                                    data-bs-title="@(item.IsActive ? "Tạm dừng" : "Kích hoạt")">
+                                                <i class="fas fa-@(item.IsActive ? "pause" : "play")"></i>
+                                            </button>
+                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display: inline;" 
+                                                  onsubmit="return confirm('Bạn có chắc muốn xóa phí ship @item.WardName?');">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-warning mt-4">
+                    <h6><i class="fas fa-lightbulb"></i> <strong>Lưu ý:</strong></h6>
+                    <ul class="mb-0 small">
+                        <li>Chỉ các phường/xã có trạng thái <span class="badge bg-success">Hoạt động</span> mới được áp dụng khi khách đặt hàng</li>
+                        <li>Nếu khách chọn phường/xã chưa có phí ship hoặc đang tạm dừng → Không thể đặt hàng</li>
+                        <li>Khuyến mãi miễn phí ship sẽ được quản lý ở phần <strong>Khuyến mãi</strong></li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tooltip Bootstrap
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // Toggle Status
+            document.querySelectorAll('.toggle-status').forEach(button => {
+                button.addEventListener('click', function() {
+                    const shippingId = this.getAttribute('data-id');
+                    const isActive = this.getAttribute('data-active') === 'true';
+                    const actionText = isActive ? 'tạm dừng' : 'kích hoạt';
+                    const statusCell = this.closest('tr').querySelectorAll('td')[4]; // Status is the 5th column (index 4)
+                    const statusBadge = statusCell.querySelector('.badge');
+                    
+                    if (!confirm(`Bạn có chắc muốn ${actionText} phí giao hàng này?`)) {
+                        return;
+                    }
+
+                    // Disable button while processing
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    // Get anti-forgery token
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    
+                    const formData = new FormData();
+                    formData.append('__RequestVerificationToken', token);
+
+                    fetch(`/Admin/AdminShipping/ToggleActive/${shippingId}`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Get new status from server response
+                            const newIsActive = data.isActive;
+                            
+                            // Update button
+                            this.setAttribute('data-active', newIsActive.toString().toLowerCase());
+                            this.className = `btn btn-${newIsActive ? 'secondary' : 'success'} btn-sm toggle-status`;
+                            this.innerHTML = `<i class="fas fa-${newIsActive ? 'pause' : 'play'}"></i>`;
+                            this.setAttribute('data-bs-title', newIsActive ? 'Tạm dừng' : 'Kích hoạt');
+                            this.disabled = false;
+                            
+                            // Update status badge
+                            if (statusBadge) {
+                                statusBadge.className = `badge ${newIsActive ? 'bg-success' : 'bg-secondary'}`;
+                                statusBadge.textContent = newIsActive ? 'Hoạt động' : 'Tạm dừng';
+                            }
+
+                            // Reinitialize tooltip
+                            const tooltip = bootstrap.Tooltip.getInstance(this);
+                            if (tooltip) {
+                                tooltip.dispose();
+                            }
+                            new bootstrap.Tooltip(this);
+
+                            // Show success message
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                            alertDiv.innerHTML = `
+                                <i class="fas fa-check-circle"></i> ${data.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            `;
+                            document.querySelector('.card-body').insertBefore(alertDiv, document.querySelector('.card-body').children[1]);
+                            
+                            // Auto dismiss after 3 seconds
+                            setTimeout(() => {
+                                alertDiv.remove();
+                            }, 3000);
+                        } else {
+                            alert('Lỗi: ' + data.message);
+                            this.disabled = false;
+                            this.innerHTML = `<i class="fas fa-${isActive ? 'pause' : 'play'}"></i>`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi cập nhật trạng thái');
+                        this.disabled = false;
+                        this.innerHTML = `<i class="fas fa-${isActive ? 'pause' : 'play'}"></i>`;
+                    });
+                });
+            });
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --secondary-color: #6c757d;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --background-light: #f8fafc;
+        }
+        
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            width: 100% !important; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+            background-color: #ffffff; 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+        }
+
+        .btn-primary, .btn-success, .btn-secondary {
+            border-radius: 6px; 
+            padding: 6px 12px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: #1d4ed8; 
+            border-color: #1d4ed8; 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+
+        .table { 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            table-layout: fixed; 
+            width: 100%; 
+            font-size: 0.9rem; 
+        }
+        
+        .table th, .table td { 
+            border-color: #e5e7eb; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 10px; 
+        }
+        
+        .table th { 
+            background-color: var(--primary-color); 
+            color: var(--text-light); 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+        }
+        
+        .table-hover tbody tr:hover { 
+            background-color: #f1f5f9; 
+        }
+
+        /* Statistics Cards */
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            transition: transform 0.2s;
+            border-left: 4px solid;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .stat-card:nth-child(1) { border-left-color: var(--primary-color); }
+        .stat-card:nth-child(2) { border-left-color: var(--success-color); }
+        .stat-card:nth-child(3) { border-left-color: var(--secondary-color); }
+        .stat-card:nth-child(4) { border-left-color: var(--info-color); }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.bg-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+        .stat-icon.bg-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .stat-icon.bg-secondary { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); }
+        .stat-icon.bg-info { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section .form-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+
+        .col-stt { width: 5%; min-width: 50px; }
+        .col-code { width: 15%; min-width: 110px; }
+        .col-name { width: 25%; min-width: 200px; }
+        .col-fee { width: 15%; min-width: 110px; }
+        .col-status { width: 12%; min-width: 100px; }
+        .col-updated { width: 18%; min-width: 140px; }
+        .col-actions { width: 10%; min-width: 100px; }
+
+        .ward-name { 
+            text-align: left !important; 
+            white-space: normal; 
+            overflow-wrap: break-word; 
+        }
+
+        .actions-cell { 
+            white-space: nowrap; 
+        }
+
+        .btn-warning, .btn-danger {
+            border-radius: 6px; 
+            padding: 4px 8px; 
+            font-size: 0.8rem; 
+            min-width: 32px; 
+            transition: all 0.2s ease; 
+            margin-right: 4px;
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .btn-warning { 
+            background-color: #f59e0b; 
+            border-color: #f59e0b; 
+        }
+        
+        .btn-warning:hover { 
+            background-color: #d97706; 
+            transform: translateY(-1px); 
+        }
+        
+        .btn-danger { 
+            background-color: #ef4444; 
+            border-color: #ef4444; 
+            margin-right: 0; 
+        }
+        
+        .btn-danger:hover { 
+            background-color: #dc2626; 
+            transform: translateY(-1px); 
+        }
+
+        .btn-secondary.btn-sm {
+            background-color: #6b7280;
+            border-color: #6b7280;
+        }
+
+        .btn-secondary.btn-sm:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        .alert {
+            border-radius: 6px;
+        }
+    </style>
+}

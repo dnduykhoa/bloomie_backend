@@ -1,0 +1,13 @@
+@model string
+<form method="post" asp-action="ApplyPromotionCode" asp-controller="ShoppingCart" class="row g-2 align-items-center mb-3">
+    <div class="col-8 col-md-7">
+        <input type="text" name="promotionCode" class="form-control" placeholder="Nhập mã giảm giá..." value="@Model" required />
+    </div>
+    <div class="col-4 col-md-3">
+        <button type="submit" class="btn btn-primary w-100">Áp dụng</button>
+    </div>
+</form>
+@if (TempData["PromotionMessage"] != null)
+{
+    <div class="alert alert-info py-2 px-3 mb-2">@TempData["PromotionMessage"]</div>
+}

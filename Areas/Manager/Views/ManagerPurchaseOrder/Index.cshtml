@@ -1,0 +1,277 @@
+@model IEnumerable<Bloomie.Models.Entities.PurchaseOrder>
+@{
+    ViewData["Title"] = "Quản lý phiếu nhập hàng";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+    string searchString = ViewBag.SearchString;
+    int? supplierId = ViewBag.SupplierId;
+    DateTime? fromDate = ViewBag.FromDate;
+    DateTime? toDate = ViewBag.ToDate;
+    int totalOrders = ViewBag.TotalOrders ?? 0;
+    int ordersThisMonth = ViewBag.OrdersThisMonth ?? 0;
+    int totalSuppliers = ViewBag.TotalSuppliers ?? 0;
+    int stt = 1;
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header and Buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-file-invoice text-primary me-2"></i> Danh sách phiếu nhập hàng
+                </h2>
+                <div>
+                    <a asp-action="Create" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus me-2"></i> Tạo phiếu nhập hàng
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Tổng phiếu nhập</div>
+                            <div class="stat-value">@totalOrders</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Nhập trong tháng</div>
+                            <div class="stat-value">@ordersThisMonth</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Nhà cung cấp</div>
+                            <div class="stat-value">@totalSuppliers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                <form asp-action="Index" method="get" class="filter-form">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" name="searchString" class="form-control" placeholder="Tìm theo ghi chú..." value="@searchString" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Nhà cung cấp</label>
+                            <select name="supplierId" class="form-select">
+                                <option value="">Tất cả nhà cung cấp</option>
+                                @foreach (var supplier in ViewBag.Suppliers ?? new List<Bloomie.Models.Entities.Supplier>())
+                                {
+                                    <option value="@supplier.Id" selected="@(supplierId == supplier.Id)">@supplier.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Từ ngày</label>
+                            <input type="date" name="fromDate" class="form-control" value="@(fromDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Đến ngày</label>
+                            <input type="date" name="toDate" class="form-control" value="@(toDate?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" data-bs-toggle="tooltip" data-bs-title="Lọc">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <a asp-action="Index" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-redo me-1"></i> Đặt lại bộ lọc
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Purchase Order Table -->
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th class="col-stt">STT</th>
+                            <th class="col-supplier">Nhà cung cấp</th>
+                            <th class="col-date">Ngày nhập</th>
+                            <th class="col-note">Ghi chú</th>
+                            <th class="col-actions">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>@stt</td>
+                                    <td class="text-left supplier-name">@(item.Supplier?.Name ?? "N/A")</td>
+                                    <td class="date-cell">@item.OrderDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-left note-cell">@(string.IsNullOrEmpty(item.Note) ? "-" : item.Note)</td>
+                                    <td class="actions-cell">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm" data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                stt++;
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Không có phiếu nhập kho nào.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --success-color: #10b981;
+        --info-color: #06b6d4;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+    }
+    
+    h2 { font-family: 'Inter', sans-serif; font-size: 1.75rem; font-weight: 600; color: var(--text-dark); }
+    .container-fluid { padding: 0 !important; margin: 0 !important; width: 100% !important; }
+    .card { width: 100% !important; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); background-color: #ffffff; }
+    .card-body { padding: 20px; }
+
+    /* Statistics Cards */
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-left: 4px solid;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .stat-card:nth-child(1) { border-left-color: var(--primary-color); }
+    .stat-card:nth-child(2) { border-left-color: var(--success-color); }
+    .stat-card:nth-child(3) { border-left-color: var(--info-color); }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    .stat-icon.bg-primary { background: linear-gradient(135deg, var(--primary-color), #3b82f6); }
+    .stat-icon.bg-success { background: linear-gradient(135deg, var(--success-color), #34d399); }
+    .stat-icon.bg-info { background: linear-gradient(135deg, var(--info-color), #22d3ee); }
+    
+    .stat-content { flex: 1; }
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 4px;
+    }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+    }
+    .filter-form .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+    }
+    .filter-form .form-control,
+    .filter-form .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; padding: 6px 12px; font-size: 0.9rem; transition: all 0.2s ease;
+    }
+    .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
+    .btn-primary:hover { background-color: #0891b2; border-color: #0891b2; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+    .btn-secondary { background-color: #6b7280; border-color: #6b7280; }
+    .btn-secondary:hover { background-color: #4b5563; border-color: #4b5563; transform: translateY(-1px); }
+
+    .form-control {
+        border-radius: 6px; border: 1px solid #d1d5db; padding: 8px; font-size: 0.9rem; transition: all 0.2s ease;
+    }
+    .form-control:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1); outline: none; }
+
+    .table { background-color: #ffffff; border-radius: 8px; table-layout: fixed; width: 100%; font-size: 0.9rem; }
+    .table th, .table td { border-color: #e5e7eb; text-align: center; vertical-align: middle; padding: 10px; }
+    .table th { background-color: var(--primary-color); color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.85rem; }
+    .table-hover tbody tr:hover { background-color: #f1f5f9; }
+
+    .col-stt { width: 8%; min-width: 60px; }
+    .col-supplier { width: 25%; min-width: 200px; }
+    .col-date { width: 15%; min-width: 120px; }
+    .col-note { width: 37%; min-width: 280px; }
+    .col-actions { width: 15%; min-width: 120px; }
+
+    .supplier-name, .note-cell { white-space: normal; overflow-wrap: break-word; max-width: 100%; line-height: 1.4; text-align: left !important; }
+    .date-cell { white-space: nowrap; text-align: center; }
+    .actions-cell { white-space: nowrap; }
+
+    .btn-info.btn-sm {
+        border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; min-width: 32px; transition: all 0.2s ease;
+        background-color: #3b82f6; border-color: #3b82f6;
+    }
+    .btn-info.btn-sm:hover { background-color: #2563eb; transform: translateY(-1px); }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Tooltip Bootstrap
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    });
+</script>

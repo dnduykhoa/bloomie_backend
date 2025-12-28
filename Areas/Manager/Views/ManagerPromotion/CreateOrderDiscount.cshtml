@@ -1,0 +1,691 @@
+@model Bloomie.Models.ViewModels.PromotionOrderDiscountVM
+@{
+    ViewData["Title"] = "Thêm mã giảm giá đơn hàng";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-receipt text-primary me-2"></i> Thêm mới mã giảm giá đơn hàng
+                </h2>
+            </div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form asp-action="CreateOrderDiscount" method="post" id="promoForm">
+            <!-- Card: Mã khuyến mãi -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Mã khuyến mãi</div>
+                <div class="card-body row g-2 align-items-center">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input asp-for="Code" class="form-control" placeholder="VD: COUPON10" required id="Code" />
+                            <button type="button" class="btn btn-outline-secondary" id="btnRandomCode">Tạo mã ngẫu nhiên</button>
+                        </div>
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <b id="previewCode">Mã khuyến mãi</b>
+                            <div class="small text-muted">Chưa có thông tin chi tiết</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Giá trị -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Giá trị</div>
+                <div class="card-body row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label">Giá trị khuyến mãi</label>
+                        <div class="input-group align-items-stretch">
+                            <div class="btn-group me-1" role="group" id="discountTypeGroup">
+                                <button type="button" class="btn btn-outline-primary" id="btnMoney">Số tiền</button>
+                                <button type="button" class="btn btn-outline-primary" id="btnPercent">%</button>
+                            </div>
+                            <input asp-for="Value" class="form-control" type="number" min="0" required id="ValueInput" placeholder="Nhập số tiền" />
+                            <span class="input-group-text" id="unitLabel">đ</span>
+                        </div>
+                        <input type="hidden" asp-for="IsPercent" id="IsPercentHidden" placeholder="Nhập phần trăm" />
+                        <span asp-validation-for="Value" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Giá trị giảm tối đa</label>
+                        <input asp-for="MaxDiscount" class="form-control" type="number" min="0" />
+                        <span asp-validation-for="MaxDiscount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Điều kiện áp dụng -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Điều kiện áp dụng</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="None" id="condNone" checked />
+                        <label class="form-check-label" for="condNone">Không có</label>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="MinOrderValue" id="condMinOrderValue" />
+                        <label class="form-check-label" for="condMinOrderValue">Tổng giá trị đơn hàng tối thiểu</label>
+                        <div class="input-group mt-2 ms-4" id="groupMinOrderValue" style="display:none;max-width:220px;">
+                            <input asp-for="MinOrderValue" class="form-control" type="number" min="0" step="1000" id="inputMinOrderValue" placeholder="Nhập số tiền" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="MinProductQuantity" id="condMinProductQuantity" />
+                        <label class="form-check-label" for="condMinProductQuantity">Tổng số lượng sản phẩm được khuyến mãi tối thiểu</label>
+                        <div class="input-group mt-2 ms-4" id="groupMinProductQuantity" style="display:none;max-width:320px;">
+                            <input asp-for="MinProductQuantity" class="form-control" type="number" min="0" step="1" id="inputMinProductQuantity" placeholder="Nhập số lượng" style="min-width:120px;max-width:100%;flex:1 1 auto;" />
+                            <span class="input-group-text" style="white-space:nowrap;">sản phẩm</span>
+                        </div>
+                    </div>
+                    <span asp-validation-for="ConditionValue" class="text-danger"></span>
+                    <span asp-validation-for="MinOrderValue" class="text-danger"></span>
+                </div>
+            </div>
+            <!-- Card: Giới hạn sử dụng -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Giới hạn sử dụng</div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="limitUsageCheckbox" />
+                        <label class="form-check-label" for="limitUsageCheckbox">Giới hạn sử dụng</label>
+                    </div>
+                    <div class="mb-2" id="usageLimitInputWrapper" style="display:none;">
+                        <label class="form-label">Số lần sử dụng tối đa</label>
+                        <div class="input-group" style="max-width:200px;">
+                            <input asp-for="UsageLimit" class="form-control text-center" min="1" />
+                            <span class="input-group-text">lần</span>
+                        </div>
+                        <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input asp-for="LimitPerCustomer" class="form-check-input" type="checkbox" id="LimitPerCustomer" />
+                        <label class="form-check-label" for="LimitPerCustomer">Mỗi khách hàng chỉ được sử dụng mã giảm giá này 1 lần</label>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Kết hợp khuyến mãi -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Kết hợp khuyến mãi</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input asp-for="AllowCombineOrder" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Giảm giá đơn hàng</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="AllowCombineProduct" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Giảm giá sản phẩm</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="AllowCombineShipping" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Miễn phí vận chuyển</label>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Thời gian -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Thời gian</div>
+                <div class="card-body row g-2 align-items-center">
+                    <div class="col">
+                        <label class="form-label">Ngày bắt đầu</label>
+                        <input asp-for="StartDate" class="form-control" type="datetime-local" required />
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Ngày kết thúc</label>
+                        <input asp-for="EndDate" class="form-control" type="datetime-local" id="endDateInput" disabled />
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <input type="checkbox" id="noEndDate" class="form-check-input" checked />
+                        <label for="noEndDate" class="form-check-label">Không có ngày kết thúc</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Công khai -->
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-light">
+                    <i class="bi bi-globe text-primary me-2"></i>
+                    <span class="fw-bold">Công khai - Hiển thị trên trang Vouchers để users tự thu thập</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="IsPublic" value="true" class="form-check-input" id="isPublicCheck" role="switch" style="width: 3rem; height: 1.5rem; cursor: pointer;" />
+                        <input type="hidden" name="IsPublic" value="false" />
+                        <label class="form-check-label ms-2" for="isPublicCheck" style="cursor: pointer;">
+                            <span class="fw-semibold">Cho phép hiển thị công khai</span>
+                        </label>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0" style="border-left: 4px solid #0dcaf0;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            <strong>Lưu ý:</strong> Nếu chọn, mã này sẽ xuất hiện trên trang Vouchers công khai để users tự lưu vào ví của họ.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                <a asp-action="CreateTypeSelect" asp-route-tab="code" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Tạo mã khuyến mãi
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Tổng quan khuyến mãi</div>
+            <div class="card-body" id="promoSummary">
+                <div id="summaryEmpty" style="display:none;">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:270px;">
+                        <!-- Voucher style card with illustration -->
+                        <div style="position:relative;width:90%;max-width:320px;background:#fff;border-radius:18px;border:2px dashed #b6b6b6;box-shadow:0 2px 8px #0001;overflow:hidden;">
+                            <!-- Top label -->
+                            <div style="background:#f5f5f5;border-bottom:1.5px dashed #b6b6b6;padding:10px 0 8px 0;text-align:center;font-weight:600;font-size:1.15rem;letter-spacing:1px;">
+                                Mã khuyến mãi
+                            </div>
+                            <!-- Notch effect -->
+                            <div style="position:absolute;left:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="position:absolute;right:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <!-- Main content with illustration -->
+                            <div style="padding:24px 0 18px 0;text-align:center;min-height:110px;">
+                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" alt="voucher empty" style="width:70px;opacity:0.6;" />
+                                <div class="text-muted mt-2" style="font-size:1.05rem;">Chưa có thông tin chi tiết</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="summaryFilled" style="display:none;">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:270px;">
+                        <!-- Voucher style card with info -->
+                        <div style="position:relative;width:90%;max-width:320px;background:#fff;border-radius:18px;border:2px dashed #b6b6b6;box-shadow:0 2px 8px #0001;overflow:hidden;">
+                            <!-- Top label -->
+                            <div style="background:#f5f5f5;border-bottom:1.5px dashed #b6b6b6;padding:10px 0 8px 0;text-align:center;font-weight:600;font-size:1.15rem;letter-spacing:1px;">
+                                <span id="summaryCode"></span>
+                            </div>
+                            <!-- Notch effect -->
+                            <div style="position:absolute;left:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="position:absolute;right:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <!-- Main content with info -->
+                            <div style="padding:18px 18px 12px 18px;text-align:left;min-height:110px;">
+                                <ul class="mb-2 ps-2" style="font-size:1.05rem;">
+                                    <li><b>Loại:</b> <span id="summaryType"></span></li>
+                                    <li><b>Giá trị khuyến mãi:</b> <span id="summaryValue"></span></li>
+                                    <li id="maxDiscountRow" style="display:none;">
+                                        <b>Giá trị giảm tối đa:</b> <span id="summaryMaxDiscount">Chưa cập nhật</span>
+                                    </li>
+                                    <li><b>Điều kiện áp dụng:</b> <span id="summaryCondition"></span></li>
+                                    <li><b>Giới hạn sử dụng:</b> <span id="summaryUsageLimit"></span></li>
+                                    <li><b>Kết hợp khuyến mãi:</b> <span id="summaryCombine"></span></li>
+                                    <li><b>Thời gian:</b> <span id="summaryTime"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size:0.95em;">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Chương trình chưa được kích hoạt
+                </div>
+            </div>
+        </div>
+
+        <!-- Card Hướng dẫn -->
+        <div class="card mb-3">
+            <div class="card-header fw-bold bg-info bg-opacity-10">Hướng dẫn sử dụng mã giảm giá</div>
+            <div class="card-body" style="font-size:1.04rem;">
+                <ul class="mb-2 ps-3">
+                    <li><b>Giá trị khuyến mãi</b>:<br>
+                        - Nếu chọn <b>%</b>: Số tiền giảm = Đơn hàng × (Giá trị khuyến mãi / 100). Nếu có "Giá trị giảm tối đa", số tiền giảm không vượt quá giá trị này.<br>
+                        - Nếu chọn <b>Số tiền</b>: Số tiền giảm = Giá trị khuyến mãi (giảm trực tiếp số tiền này trên đơn hàng).
+                    </li>
+                    <li class="mt-2"><b>Điều kiện áp dụng</b>:<br>
+                        - <b>Không có</b>: Đơn hàng nào cũng áp dụng được.<br>
+                        - <b>Tổng giá trị đơn hàng tối thiểu</b>: Đơn hàng phải đạt từ số tiền này trở lên.<br>
+                        - <b>Tổng giá trị sản phẩm được khuyến mãi tối thiểu</b>: Tổng giá trị các sản phẩm thuộc nhóm khuyến mãi phải đạt từ số tiền này trở lên.<br>
+                        - <b>Tổng số lượng sản phẩm được khuyến mãi tối thiểu</b>: Tổng số lượng sản phẩm thuộc nhóm khuyến mãi phải đạt từ số lượng này trở lên.
+                    </li>
+                    <li class="mt-2"><b>Giới hạn sử dụng</b>:<br>
+                        - <b>Giới hạn sử dụng</b>: Số lần mã được dùng tổng cộng.<br>
+                        - <b>Giới hạn mỗi khách hàng</b>: Mỗi khách chỉ dùng được 1 lần.
+                    </li>
+                    <li class="mt-2"><b>Kết hợp khuyến mãi</b>:<br>
+                        - Nếu tick các ô này, mã có thể dùng chung với các loại khuyến mãi khác (giảm giá đơn hàng, sản phẩm, miễn phí ship).
+                    </li>
+                    <li class="mt-2"><b>Thời gian áp dụng</b>:<br>
+                        - Chỉ áp dụng cho đơn hàng trong khoảng thời gian đã chọn.
+                    </li>
+                </ul>
+                <div class="alert alert-info mt-2 mb-0 p-2" style="font-size:0.98em;">
+                    <b>Ví dụ:</b> Nếu bạn tạo mã <b>SALE10</b> giảm <b>10%</b> cho đơn hàng từ <b>500.000đ</b>, khách mua đơn <b>600.000đ</b> sẽ được giảm <b>60.000đ</b> (nếu không có giới hạn tối đa).<br>
+                    Nếu bạn chọn giảm <b>50.000đ</b> cho đơn hàng từ <b>300.000đ</b>, khách mua đơn <b>400.000đ</b> sẽ được giảm đúng <b>50.000đ</b>.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --secondary-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-success {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #0891b2; 
+        border-color: #0891b2; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-success {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+
+    .btn-success:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// --- Hàm tiện ích ---
+function safeGet(id) {
+    const el = document.getElementById(id);
+    if (!el) console.error(`Element with ID '${id}' not found`);
+    return el;
+}
+
+// Biến toàn cục
+let selectedWards = []; // Không dùng ở form này, nhưng giữ để tương thích sau
+let allWards = [];
+let savedMoneyValue = ''; // Lưu giá trị Số tiền
+let savedPercentValue = ''; // Lưu giá trị %
+
+// --- Random code ---
+const randomCode = (length = 8) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
+
+// --- Kiểm tra form đã điền chưa ---
+function isFormFilled() {
+    const code = safeGet('Code')?.value.trim();
+    const value = safeGet('ValueInput')?.value;
+    const maxDiscount = safeGet('MaxDiscount')?.value;
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    const minOrder = safeGet('inputMinOrderValue')?.value;
+    const minQty = safeGet('inputMinProductQuantity')?.value;
+    const limitUsage = safeGet('limitUsageCheckbox')?.checked;
+    const usageLimit = safeGet('UsageLimit')?.value;
+    const limitPerCustomer = safeGet('LimitPerCustomer')?.checked;
+    const allowCombineOrder = safeGet('AllowCombineOrder')?.checked;
+    const allowCombineProduct = safeGet('AllowCombineProduct')?.checked;
+    const allowCombineShipping = safeGet('AllowCombineShipping')?.checked;
+    const start = safeGet('StartDate')?.value;
+    const end = safeGet('endDateInput')?.value;
+
+    return (
+        code ||
+        value ||
+        maxDiscount ||
+        (condType && condType !== 'None') ||
+        minOrder || minQty ||
+        limitUsage || usageLimit ||
+        limitPerCustomer ||
+        allowCombineOrder || allowCombineProduct || allowCombineShipping ||
+        start || end
+    );
+}
+
+// --- Cập nhật Tổng quan ---
+function updateSummary() {
+    const summaryEmpty = safeGet('summaryEmpty');
+    const summaryFilled = safeGet('summaryFilled');
+
+    if (!isFormFilled()) {
+        if (summaryEmpty) summaryEmpty.style.display = '';
+        if (summaryFilled) summaryFilled.style.display = 'none';
+        return;
+    }
+
+    if (summaryEmpty) summaryEmpty.style.display = 'none';
+    if (summaryFilled) summaryFilled.style.display = '';
+
+    // Mã
+    const code = safeGet('Code')?.value.trim() || 'Mã khuyến mãi';
+    safeGet('summaryCode').innerText = code;
+
+    // Loại
+    safeGet('summaryType').innerText = 'Giảm giá đơn hàng';
+
+    // Giá trị khuyến mãi (chỉ hiển thị % hoặc số tiền)
+    const value = safeGet('ValueInput')?.value;
+    const isPercent = safeGet('IsPercentHidden')?.value === 'true';
+    let valueText = 'Chưa cập nhật';
+
+    if (value && value !== '0') {
+        if (isPercent) {
+            valueText = `${value}%`;
+        } else {
+            valueText = `${Number(value).toLocaleString()}đ`;
+        }
+    } else if (value === '0') {
+        valueText = '0đ';
+    }
+    safeGet('summaryValue').innerText = valueText;
+
+    // === Xử lý riêng: Giá trị giảm tối đa (dòng mới) ===
+    const maxDiscountInput = safeGet('MaxDiscount')?.value.trim();
+    const maxDiscountRow = safeGet('maxDiscountRow');
+    const summaryMaxDiscount = safeGet('summaryMaxDiscount');
+
+    if (maxDiscountInput && maxDiscountInput !== '' && maxDiscountInput !== '0') {
+        summaryMaxDiscount.innerText = `${Number(maxDiscountInput).toLocaleString()}đ`;
+        maxDiscountRow.style.display = '';
+    } else {
+        summaryMaxDiscount.innerText = 'Chưa cập nhật';
+        maxDiscountRow.style.display = 'none';
+    }
+
+    // Điều kiện áp dụng
+    let condText = 'Chưa cập nhật';
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    if (condType === 'None') {
+        condText = 'Không có';
+    } else if (condType === 'MinOrderValue') {
+        const val = safeGet('inputMinOrderValue')?.value;
+        condText = val ? `Đơn hàng từ ${Number(val).toLocaleString()}đ` : 'Chưa nhập giá trị đơn hàng';
+    } else if (condType === 'MinProductQuantity') {
+        const val = safeGet('inputMinProductQuantity')?.value;
+        condText = val ? `Tối thiểu ${val} sản phẩm` : 'Chưa nhập số lượng';
+    }
+    safeGet('summaryCondition').innerText = condText;
+
+    // Giới hạn sử dụng
+    const limitChecked = safeGet('limitUsageCheckbox')?.checked;
+    const usageLimit = safeGet('UsageLimit')?.value;
+    const limitPerCustomer = safeGet('LimitPerCustomer')?.checked;
+    
+    let usageLimitText = 'Chưa cập nhật';
+    const limitParts = [];
+    
+    // Thêm số lần sử dụng
+    if (limitChecked && usageLimit) {
+        limitParts.push(`${usageLimit} lần sử dụng`);
+    } else if (limitChecked) {
+        limitParts.push('Có giới hạn');
+    }
+    
+    // Thêm giới hạn mỗi khách hàng
+    if (limitPerCustomer) {
+        limitParts.push('Mỗi khách hàng chỉ được dùng 1 lần');
+    }
+    
+    if (limitParts.length > 0) {
+        usageLimitText = limitParts.join(', ');
+    }
+    
+    safeGet('summaryUsageLimit').innerText = usageLimitText;
+
+    // Kết hợp khuyến mãi
+    const combine = [];
+    if (safeGet('AllowCombineOrder')?.checked) combine.push('Đơn hàng');
+    if (safeGet('AllowCombineProduct')?.checked) combine.push('Sản phẩm');
+    if (safeGet('AllowCombineShipping')?.checked) combine.push('Miễn phí ship');
+    const combineText = combine.length ? combine.join(', ') : 'Không có';
+    safeGet('summaryCombine').innerText = combineText;
+
+    // Thời gian
+    let timeText = 'Chưa cập nhật';
+    const start = safeGet('StartDate')?.value;
+    const end = safeGet('EndDate')?.value;
+    const noEndDate = safeGet('noEndDate')?.checked;
+    
+    if (start) {
+        const [date, time] = start.split('T');
+        const [y, m, d] = date.split('-');
+        timeText = `${d}/${m}/${y} ${time || ''}`;
+        
+        if (noEndDate) {
+            timeText += ' → Không có ngày kết thúc';
+        } else if (end) {
+            const [dateE, timeE] = end.split('T');
+            const [yE, mE, dE] = dateE.split('-');
+            timeText += ` → ${dE}/${mE}/${yE} ${timeE || ''}`;
+        }
+    }
+    
+    safeGet('summaryTime').innerText = timeText;
+}
+
+// --- Đổi loại giảm giá (tiền / %) ---
+const setDiscountType = (isPercent) => {
+    const btnMoney = safeGet('btnMoney');
+    const btnPercent = safeGet('btnPercent');
+    const typeHidden = safeGet('IsPercentHidden');
+    const unitLabel = safeGet('unitLabel');
+    const valueBox = safeGet('ValueInput');
+
+    // Lưu giá trị hiện tại trước khi chuyển
+    const currentValue = valueBox.value;
+    const currentIsPercent = typeHidden.value === 'true';
+    
+    if (currentValue) {
+        if (currentIsPercent) {
+            savedPercentValue = currentValue; // Lưu giá trị %
+        } else {
+            savedMoneyValue = currentValue; // Lưu giá trị Số tiền
+        }
+    }
+
+    typeHidden.value = isPercent ? 'true' : 'false';
+    btnMoney.classList.toggle('active', !isPercent);
+    btnMoney.classList.toggle('btn-primary', !isPercent);
+    btnMoney.classList.toggle('btn-outline-primary', isPercent);
+    btnPercent.classList.toggle('active', isPercent);
+    btnPercent.classList.toggle('btn-primary', isPercent);
+    btnPercent.classList.toggle('btn-outline-primary', !isPercent);
+
+    unitLabel.innerText = isPercent ? '%' : 'đ';
+    valueBox.placeholder = isPercent ? 'Nhập %' : 'Nhập số tiền';
+    
+    // Khôi phục giá trị đã lưu (nếu có)
+    if (isPercent && savedPercentValue) {
+        valueBox.value = savedPercentValue;
+    } else if (!isPercent && savedMoneyValue) {
+        valueBox.value = savedMoneyValue;
+    } else {
+        valueBox.value = ''; // Clear nếu chưa có giá trị đã lưu
+    }
+    
+    updateSummary();
+};
+
+// --- Cập nhật điều kiện ---
+const updateConditionInputs = () => {
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    safeGet('groupMinOrderValue').style.display = condType === 'MinOrderValue' ? '' : 'none';
+    safeGet('groupMinProductQuantity').style.display = condType === 'MinProductQuantity' ? '' : 'none';
+    updateSummary();
+};
+
+// --- Fix placeholder khi focus ---
+const setupPlaceholderFix = (input) => {
+    input.addEventListener('focus', function () {
+        this.dataset.oldPlaceholder = this.placeholder;
+        this.placeholder = '';
+    });
+    input.addEventListener('blur', function () {
+        this.placeholder = this.dataset.oldPlaceholder || '';
+    });
+};
+
+// === KHỞI CHẠY KHI DOM SẴN SÀNG ===
+document.addEventListener('DOMContentLoaded', function () {
+    const limitUsageCheckbox = safeGet('limitUsageCheckbox');
+    const usageLimitInputWrapper = safeGet('usageLimitInputWrapper');
+    const btnMoney = safeGet('btnMoney');
+    const btnPercent = safeGet('btnPercent');
+    const valueBox = safeGet('ValueInput');
+    const noEndDate = safeGet('noEndDate');
+    const endDateInput = safeGet('endDateInput');
+
+    // 1. Giới hạn sử dụng
+    if (limitUsageCheckbox && usageLimitInputWrapper) {
+        limitUsageCheckbox.addEventListener('change', function () {
+            usageLimitInputWrapper.style.display = this.checked ? '' : 'none';
+            updateSummary();
+        });
+    }
+
+    // 2. Loại giảm giá
+    if (btnMoney && btnPercent && valueBox) {
+        btnMoney.onclick = () => { setDiscountType(false); };
+        btnPercent.onclick = () => { setDiscountType(true); };
+        setupPlaceholderFix(valueBox);
+    }
+
+    // 3. Điều kiện áp dụng
+    document.querySelectorAll('input[name="ConditionType"]').forEach(radio => {
+        radio.addEventListener('change', () => { updateConditionInputs(); });
+    });
+    updateConditionInputs();
+
+    // 4. Không có ngày kết thúc
+    if (noEndDate && endDateInput) {
+        noEndDate.addEventListener('change', function () {
+            endDateInput.disabled = this.checked;
+            if (this.checked) endDateInput.value = '';
+            updateSummary();
+        });
+        if (noEndDate.checked) endDateInput.disabled = true;
+    }
+
+    // 5. Tạo mã ngẫu nhiên
+    safeGet('btnRandomCode').onclick = function () {
+        const code = randomCode();
+        safeGet('Code').value = code;
+        safeGet('previewCode').innerText = code;
+        updateSummary();
+    };
+
+    // 6. Cập nhật khi nhập mã
+    safeGet('Code').oninput = function () {
+        safeGet('previewCode').innerText = this.value || 'Mã khuyến mãi';
+        updateSummary();
+    };
+
+    // 7. Theo dõi TẤT CẢ các trường thay đổi
+    const watchedSelectors = [
+        '#Code', '#ValueInput', '#MaxDiscount',
+        '#inputMinOrderValue', '#inputMinProductQuantity',
+        '#UsageLimit', '#StartDate', '#EndDate', '#noEndDate',
+        '#limitUsageCheckbox', '#LimitPerCustomer',
+        '#AllowCombineOrder', '#AllowCombineProduct', '#AllowCombineShipping',
+        'input[name="ConditionType"]'
+    ];
+    watchedSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') {
+                el.addEventListener('change', updateSummary);
+            } else {
+                el.addEventListener('input', updateSummary);
+                el.addEventListener('change', updateSummary);
+            }
+        });
+    });
+
+    // 8. Cập nhật ban đầu
+    setDiscountType(true); // Mặc định %
+    updateSummary();
+});
+</script>

@@ -1,0 +1,607 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title - Bloomie Staff</title>
+    <link rel="icon" type="image/png" href="/images/BloomieFavicon.png" sizes="32x32" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4b5563; /* Xám đậm */
+            --secondary-color: #9ca3af; /* Xám nhạt */
+            --background-light: #f8fafc;
+            --sidebar-bg: #1f2937; /* Nền tối */
+            --text-dark: #1f2937;
+            --text-light: #ffffff;
+            --accent-color: #d1d5db; /* Xám sáng */
+            --sidebar-hover: #6b7280; /* Xám hover */
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--background-light);
+            color: var(--text-dark);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Page Transition Animation */
+        .page-content {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .page-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .page-transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .page-transition-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #sidebar-wrapper {
+            width: 240px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            color: var(--text-light);
+            position: fixed;
+            padding: 15px 10px;
+            transition: var(--transition);
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+            #sidebar-wrapper::-webkit-scrollbar {
+                width: 8px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-track {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+            #sidebar-wrapper::-webkit-scrollbar-thumb {
+                background: transparent;
+                border-radius: 4px;
+            }
+
+            #sidebar-wrapper.collapsed {
+                width: 70px;
+                padding: 15px 5px;
+            }
+
+        .sidebar-heading {
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            padding-right: 40px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-heading {
+            font-size: 0;
+            margin: 0;
+        }
+
+        .navbar-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            transition: var(--transition);
+            position: absolute;
+            top: 15px;
+            right: 10px;
+        }
+
+            .navbar-toggle:hover {
+                color: var(--secondary-color);
+            }
+
+        #sidebar-wrapper.collapsed .navbar-toggle {
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            right: auto;
+        }
+
+        .sidebar-content {
+            margin-top: 50px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-content {
+            margin-top: 50px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            padding: 5px 10px;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--secondary-color);
+            white-space: nowrap;
+            line-height: 1.2;
+            letter-spacing: 1px;
+            word-spacing: 2px;
+        }
+
+        #sidebar-wrapper.collapsed .sidebar-section-title {
+            font-size: 0.9rem;
+            padding: 2px 0;
+            text-align: center;
+            white-space: normal;
+            line-height: 1.5;
+        }
+
+        .list-group-item {
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            margin: 3px 0;
+            border-radius: 6px;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+            .list-group-item:hover {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+            }
+
+            .list-group-item i {
+                font-size: 1.1rem;
+                width: 18px;
+                text-align: center;
+            }
+
+            .list-group-item.active,
+            .submenu-item.active {
+                background: var(--sidebar-hover);
+                color: var(--text-light);
+                transform: translateX(3px);
+                font-weight: 600;
+            }
+
+        #sidebar-wrapper.collapsed .list-group-item {
+            padding: 8px 6px;
+            justify-content: center;
+        }
+
+            #sidebar-wrapper.collapsed .list-group-item i {
+                font-size: 1rem;
+                width: 16px;
+            }
+
+            #sidebar-wrapper.collapsed .list-group-item span {
+                display: none;
+            }
+
+        #page-content-wrapper {
+            margin-left: 240px;
+            padding: 20px;
+            width: calc(100% - 240px);
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+            #page-content-wrapper.shifted {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+            }
+
+        .navbar {
+            background: #ffffff;
+            padding: 12px 20px;
+            box-shadow: var(--shadow);
+            border-radius: 0 0 8px 8px;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .admin-info {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            transition: var(--transition);
+        }
+
+            .admin-avatar:hover {
+                border-color: var(--secondary-color);
+                transform: scale(1.1);
+            }
+
+        .admin-info .dropdown-menu {
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            border: none;
+            min-width: 200px;
+        }
+
+        .admin-info .dropdown-item {
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .admin-info .dropdown-item:hover {
+                background: var(--primary-color);
+                color: var(--text-light);
+            }
+
+        .notification-icon, .message-icon {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            position: relative;
+            transition: var(--transition);
+        }
+
+            .notification-icon:hover, .message-icon:hover {
+                color: var(--secondary-color);
+            }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+            .user-info:hover {
+                background: var(--background-light);
+                color: var(--secondary-color);
+            }
+
+            .user-info i {
+                font-size: 1.1rem;
+            }
+
+            .user-info .role-name {
+                font-weight: 500;
+                font-style: normal;
+            }
+
+        .badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 50%;
+        }
+
+        .dropdown-menu-notifications, .dropdown-menu-messages {
+            max-height: 400px;
+            overflow: hidden;
+            padding: 15px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-right: 20px;
+            right: auto;
+            margin-left: 0;
+            max-width: 450px;
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+
+        .notification-item, .message-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            color: #000000;
+        }
+
+            .notification-item span, .message-item span {
+                display: block;
+                white-space: normal;
+                max-width: 100%;
+                word-break: break-word;
+            }
+
+            .notification-item a, .message-item a {
+                color: #000000;
+                text-decoration: none;
+            }
+
+                .notification-item a:hover, .message-item a:hover {
+                    color: #000000;
+                    text-decoration: none;
+                }
+
+        media (max-width: 576px) {
+            .dropdown-menu-notifications, .dropdown-menu-messages
+
+        {
+            max-width: 90%;
+            width: auto;
+        }
+
+        .notification-item span, .message-item span {
+            font-size: 0.7rem;
+        }
+
+        }
+    </style>
+</head>
+@Html.AntiForgeryToken()
+<body>
+    <div id="wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">Bloomie Staff</div>
+            <button class="navbar-toggle" id="sidebarToggle" data-bs-toggle="tooltip" data-bs-title="Ẩn/Hiện Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="sidebar-content">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Quản lý</div>
+                    <a href="@Url.Action("Index", "StaffOrder", new { area = "Staff" })" class="list-group-item @(ViewBag.ActivePage == "StaffOrder" ? "active" : "")" data-bs-toggle="tooltip" data-bs-title="Quản lý Đơn hàng">
+                        <i class="fas fa-cart-shopping"></i><span>Quản lý Đơn hàng</span>
+                    </a>
+                    <a href="@Url.Action("Index", "StaffRating", new { area = "Staff" })" class="list-group-item @(ViewBag.ActivePage == "StaffRating" ? "active" : "")" data-bs-toggle="tooltip" data-bs-title="Quản lý Đánh giá & Báo cáo">
+                        <i class="fas fa-star"></i><span>Quản lý Đánh giá & Phản hồi</span>
+                    </a>
+                    <a href="@Url.Action("Index", "Home", new { area = "" })" class="list-group-item" data-bs-toggle="tooltip" data-bs-title="Trang chủ Bloomie">
+                        <i class="fas fa-home"></i><span>Trang chủ</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="@Url.Action("Index", "StaffDashboard", new { area = "Staff" })">Staff Panel</a>
+                    <div class="admin-info">
+                        <!-- Notification Icon -->
+                        <div class="dropdown">
+                            <a class="notification-icon" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Thông báo">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge-count" id="notificationCount">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-notifications" aria-labelledby="notificationDropdown">
+                                <li>
+                                    <a class="dropdown-item notification-item" href="#">
+                                        <span>Chưa có thông báo mới</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/Staff/Notifications/Index">Xem tất cả</a></li>
+                            </ul>
+                        </div>
+                        <!-- Message Icon -->
+                        <div class="dropdown">
+                            <a class="message-icon" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tin nhắn">
+                                <i class="fas fa-envelope"></i>
+                                <span class="badge-count" id="messageCount">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-messages" aria-labelledby="messageDropdown">
+                                <li>
+                                    <a class="dropdown-item message-item" href="#">
+                                        <span>Chưa có tin nhắn mới</span>
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/Staff/Notifications/Messages">Xem tất cả</a></li>
+                            </ul>
+                        </div>
+                        <!-- User Account with Role -->
+                        <div class="dropdown">
+                            <a class="user-info dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-title="Tài khoản">
+                                <i class="fas fa-user"></i>
+                                <span class="role-name">@(User.Identity?.Name ?? "Nhân viên")</span>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" asp-controller="Account" asp-action="UpdateAccount" asp-area="">Cập nhật tài khoản</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="ManagementAccount" asp-action="Logout">Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-fluid p-2 page-content">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Page Transition Overlay -->
+    <div class="page-transition-overlay" id="pageTransitionOverlay">
+        <div class="page-transition-spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Page Transition Effect
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('pageTransitionOverlay');
+            
+            // Handle all navigation links
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not(.no-transition)').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#' && !href.startsWith('javascript:') && !this.classList.contains('dropdown-item')) {
+                        if (!this.closest('.dropdown-menu')) {
+                            e.preventDefault();
+                            overlay.classList.add('active');
+                            setTimeout(() => {
+                                window.location.href = href;
+                            }, 300);
+                        }
+                    }
+                });
+            });
+
+            // Hide overlay on page load
+            setTimeout(() => {
+                overlay.classList.remove('active');
+            }, 100);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar-wrapper');
+            const content = document.getElementById('page-content-wrapper');
+            const toggleButton = document.getElementById('sidebarToggle');
+
+            // Lấy URL hiện tại và chuẩn hóa
+            let currentUrl = window.location.pathname.toLowerCase();
+            if (currentUrl.endsWith('/')) {
+                currentUrl = currentUrl.slice(0, -1);
+            }
+            if (currentUrl === '') {
+                currentUrl = '/';
+            }
+
+            // Chọn tất cả các liên kết trong sidebar
+            const sidebarLinks = document.querySelectorAll('.list-group-item, .submenu-item');
+            sidebarLinks.forEach(link => {
+                let linkUrl = link.getAttribute('href')?.toLowerCase();
+                if (linkUrl && linkUrl.endsWith('/')) {
+                    linkUrl = linkUrl.slice(0, -1);
+                }
+                // So sánh URL, cho phép khớp với controller/action
+                if (linkUrl) {
+                    // Kiểm tra khớp chính xác hoặc khớp với phần controller/action
+                    const linkParts = linkUrl.split('/');
+                    const currentParts = currentUrl.split('/');
+                    const linkControllerAction = linkParts.slice(-2).join('/');
+                    const currentControllerAction = currentParts.slice(-2).join('/');
+                    if (linkUrl === currentUrl || linkControllerAction === currentControllerAction) {
+                        link.classList.add('active');
+                        // Nếu là mục con, mở rộng submenu cha nhưng không thêm .active
+                        const parentSubmenu = link.closest('.submenu');
+                        if (parentSubmenu) {
+                            parentSubmenu.classList.add('show');
+                            const parentMenuItem = parentSubmenu.previousElementSibling;
+                            if (parentMenuItem && parentMenuItem.classList.contains('has-submenu')) {
+                                const toggle = parentMenuItem.querySelector('.submenu-toggle');
+                                if (toggle) toggle.classList.remove('collapsed');
+                            }
+                        }
+                    }
+                }
+            });
+
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                content.classList.add('shifted');
+            }
+
+            toggleButton.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                content.classList.toggle('shifted');
+                localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            });
+
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            function handleResize() {
+                if (window.innerWidth <= 992) {
+                    sidebar.classList.add('collapsed');
+                    content.classList.add('shifted');
+                    localStorage.setItem('sidebarCollapsed', true);
+                } else if (!localStorage.getItem('sidebarCollapsed')) {
+                    sidebar.classList.remove('collapsed');
+                    content.classList.remove('shifted');
+                }
+            }
+
+            window.addEventListener('resize', handleResize);
+            handleResize();
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

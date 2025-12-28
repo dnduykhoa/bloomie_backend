@@ -1,0 +1,199 @@
+@model IEnumerable<Bloomie.Models.Entities.Order>
+@{
+    ViewData["Title"] = "Lịch sử giao hàng";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0"><i class="fas fa-history me-2"></i> Lịch sử giao hàng</h4>
+        <a asp-controller="ShipperDashboard" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Dashboard
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-bottom">
+            <h5 class="mb-0 fw-bold">
+                <i class="fas fa-filter me-2"></i> Bộ lọc
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Từ ngày</label>
+                    <input type="date" name="startDate" class="form-control" 
+                           value="@ViewBag.StartDate" 
+                           max="@DateTime.Now.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Đến ngày</label>
+                    <input type="date" name="endDate" class="form-control" 
+                           value="@ViewBag.EndDate" 
+                           max="@DateTime.Now.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Trạng thái</label>
+                    <select name="statusFilter" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="Đã giao" selected="@(ViewBag.StatusFilter == "Đã giao")">Đã giao</option>
+                        <option value="Hoàn thành" selected="@(ViewBag.StatusFilter == "Hoàn thành")">Hoàn thành</option>
+                        <option value="Đã xác nhận" selected="@(ViewBag.StatusFilter == "Đã xác nhận")">Giao thất bại</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Thanh toán</label>
+                    <select name="paymentMethodFilter" class="form-select">
+                        <option value="">Tất cả</option>
+                        <option value="COD" selected="@(ViewBag.PaymentMethodFilter == "COD")">COD</option>
+                        <option value="Momo" selected="@(ViewBag.PaymentMethodFilter == "Momo")">Momo</option>
+                        <option value="VNPay" selected="@(ViewBag.PaymentMethodFilter == "VNPay")">VNPay</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i> Lọc
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Thống kê nhanh -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Tổng đơn</div>
+                    <div class="h3 mb-0 text-primary">@Model.Count()</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Đã giao thành công</div>
+                    <div class="h3 mb-0 text-success">@Model.Count(o => o.Status == "Đã giao" || o.Status == "Hoàn thành")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Đơn COD</div>
+                    <div class="h3 mb-0 text-warning">@Model.Count(o => o.PaymentMethod == "COD")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="text-muted small mb-1">Tổng tiền thu</div>
+                    <div class="h4 mb-0 text-danger">
+                        @Model.Where(o => o.PaymentMethod == "COD" && o.PaymentStatus == "Đã thanh toán").Sum(o => o.TotalAmount).ToString("N0")₫
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danh sách đơn hàng -->
+    @if (Model.Any())
+    {
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light border-bottom">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-list me-2"></i> Danh sách đơn hàng (@Model.Count() đơn)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th>Ngày giao</th>
+                                <th>Địa chỉ</th>
+                                <th>PT Thanh toán</th>
+                                <th class="text-end">Số tiền</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><strong>#@order.OrderId</strong></td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (order.DeliveryDate.HasValue)
+                                        {
+                                            @order.DeliveryDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td><small>@order.ShippingAddress</small></td>
+                                    <td>
+                                        <span class="badge @(order.PaymentMethod == "COD" ? "bg-warning text-dark" : "bg-info")">
+                                            @order.PaymentMethod
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-bold">@order.TotalAmount.ToString("N0")₫</td>
+                                    <td class="text-center">
+                                        @if (order.Status == "Đã giao" || order.Status == "Hoàn thành")
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> @order.Status
+                                            </span>
+                                        }
+                                        else if (order.Status == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle"></i> Thất bại
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@order.Status</span>
+                                        }
+                                        <br />
+                                        @if (order.PaymentMethod == "COD")
+                                        {
+                                            if (order.PaymentStatus == "Đã thanh toán")
+                                            {
+                                                <small class="badge bg-success mt-1">Đã thu tiền</small>
+                                            }
+                                            else
+                                            {
+                                                <small class="badge bg-warning text-dark mt-1">Chưa thu</small>
+                                            }
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="Details" asp-route-id="@order.Id" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3 d-block"></i>
+            <h5>Không tìm thấy đơn hàng nào</h5>
+            <p class="mb-0">Thử điều chỉnh bộ lọc để xem kết quả khác.</p>
+        </div>
+    }
+</div>

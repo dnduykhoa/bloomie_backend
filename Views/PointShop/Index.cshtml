@@ -1,0 +1,367 @@
+@using Bloomie.Models.Entities
+@{
+    ViewData["Title"] = "Cửa hàng đổi điểm";
+    var userPoints = ViewBag.UserPoints as int?;
+    var rewards = ViewBag.Rewards as List<PointReward>;
+}
+
+<style>
+    .pointshop-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .points-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .points-header h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+    .points-display {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    .rewards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        margin: 30px 0;
+    }
+    .reward-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: all 0.3s;
+        position: relative;
+    }
+    .reward-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .reward-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+    .reward-body {
+        padding: 20px;
+    }
+    .reward-name {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .reward-description {
+        color: #666;
+        margin-bottom: 15px;
+        min-height: 40px;
+    }
+    .reward-cost {
+        font-size: 1.8rem;
+        color: #667eea;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    .reward-stock {
+        font-size: 0.9rem;
+        color: #999;
+        margin-bottom: 10px;
+    }
+    .reward-stock.low {
+        color: #ff9800;
+        font-weight: bold;
+    }
+    .redeem-btn {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .redeem-btn:hover:not(:disabled) {
+        transform: scale(1.02);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    .redeem-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    .reward-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: #ff9800;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+    .insufficient-points {
+        opacity: 0.6;
+    }
+    .tab-buttons {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        padding: 10px 25px;
+        border: 2px solid #667eea;
+        background: white;
+        color: #667eea;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    .tab-btn.active {
+        background: #667eea;
+        color: white;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="pointshop-container">
+    <div class="points-header">
+        <div>
+            <h1>🎁 Cửa hàng đổi điểm</h1>
+            <p class="mb-0">Đổi điểm tích lũy của bạn để nhận các phần quà hấp dẫn</p>
+        </div>
+        <div class="text-end">
+            <div style="font-size: 1rem; opacity: 0.9;">Điểm của bạn</div>
+            <div class="points-display">@(userPoints ?? 0) 💎</div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="tab-buttons">
+            <button class="tab-btn active" data-type="all">Tất cả</button>
+            <button class="tab-btn" data-type="@((int)RewardType.Voucher)">Mã giảm giá</button>
+            <button class="tab-btn" data-type="@((int)RewardType.FreeShip)">Miễn phí ship</button>
+        </div>
+        <a href="@Url.Action("RedemptionHistory", "PointShop")" class="btn btn-outline-primary">
+            Lịch sử đổi quà
+        </a>
+    </div>
+
+    @if (rewards != null && rewards.Any())
+    {
+        <div class="rewards-grid">
+            @foreach (var reward in rewards)
+            {
+                var hasEnoughPoints = (userPoints ?? 0) >= reward.PointsCost;
+                var isOutOfStock = reward.Stock.HasValue && reward.Stock.Value <= 0;
+                var isLowStock = reward.Stock.HasValue && reward.Stock.Value <= 5 && reward.Stock.Value > 0;
+                var cardClass = !hasEnoughPoints || isOutOfStock ? "insufficient-points" : "";
+                
+                <div class="reward-card @cardClass" data-reward-type="@((int)reward.RewardType)">
+                    @if (isLowStock)
+                    {
+                        <div class="reward-badge">Sắp hết!</div>
+                    }
+                    else if (reward.RewardType == RewardType.Voucher)
+                    {
+                        <div class="reward-badge">Voucher</div>
+                    }
+                    
+                    <div class="reward-image">
+                        @if (!string.IsNullOrEmpty(reward.ImageUrl))
+                        {
+                            <img src="@reward.ImageUrl" alt="@reward.Name" style="width: 100%; height: 100%; object-fit: cover;">
+                        }
+                        else
+                        {
+                            @if (reward.RewardType == RewardType.Voucher)
+                            {
+                                <span>🎟️</span>
+                            }
+                            else
+                            {
+                                <span>🎁</span>
+                            }
+                        }
+                    </div>
+                    
+                    <div class="reward-body">
+                        <div class="reward-name">@reward.Name</div>
+                        
+                        @if (!string.IsNullOrEmpty(reward.Description))
+                        {
+                            <div class="reward-description">@reward.Description</div>
+                        }
+                        
+                        <div class="reward-cost">
+                            @reward.PointsCost điểm
+                        </div>
+                        
+                        @if (reward.Stock.HasValue)
+                        {
+                            <div class="reward-stock @(isLowStock ? "low" : "")">
+                                Còn lại: @reward.Stock.Value
+                            </div>
+                        }
+                        
+                        @if (reward.RewardType == RewardType.Voucher && reward.PromotionCode != null)
+                        {
+                            <div class="text-muted small mb-2">
+                                @if (reward.PromotionCode.IsPercent)
+                                {
+                                    <span>Giảm @reward.PromotionCode.Value%</span>
+                                }
+                                else
+                                {
+                                    <span>Giảm @string.Format("{0:N0}", reward.PromotionCode.Value)₫</span>
+                                }
+                                @if (reward.ValidDays > 0)
+                                {
+                                    <span> • HSD: @reward.ValidDays ngày</span>
+                                }
+                            </div>
+                        }
+                        
+                        <button class="redeem-btn" 
+                                data-reward-id="@reward.Id"
+                                data-reward-name="@reward.Name"
+                                data-reward-cost="@reward.PointsCost"
+                                @((!hasEnoughPoints || isOutOfStock) ? "disabled" : "")>
+                            @if (isOutOfStock)
+                            {
+                                <span>Hết hàng</span>
+                            }
+                            else if (!hasEnoughPoints)
+                            {
+                                <span>Không đủ điểm</span>
+                            }
+                            else
+                            {
+                                <span>Đổi ngay</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="fas fa-gift"></i>
+            <h3>Chưa có phần quà nào</h3>
+            <p>Các phần quà sẽ sớm được cập nhật</p>
+        </div>
+    }
+
+    <div class="text-center mt-5">
+        <a href="@Url.Action("Index", "CheckIn")" class="btn btn-lg btn-outline-primary">
+            📅 Điểm danh để tích điểm
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            // Tab filtering
+            $('.tab-btn').click(function() {
+                $('.tab-btn').removeClass('active');
+                $(this).addClass('active');
+                
+                var type = $(this).data('type');
+                if (type === 'all') {
+                    $('.reward-card').show();
+                } else {
+                    $('.reward-card').hide();
+                    $('.reward-card[data-reward-type="' + type + '"]').show();
+                }
+            });
+
+            // Redeem button
+            $('.redeem-btn').click(function() {
+                if ($(this).prop('disabled')) return;
+                
+                var rewardId = $(this).data('reward-id');
+                var rewardName = $(this).data('reward-name');
+                var rewardCost = $(this).data('reward-cost');
+                
+                Swal.fire({
+                    title: 'Xác nhận đổi quà',
+                    html: `
+                        <p>Bạn có chắc muốn đổi <strong>${rewardName}</strong>?</p>
+                        <p>Sẽ sử dụng <strong>${rewardCost} điểm</strong></p>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đồng ý',
+                    cancelButtonText: 'Hủy',
+                    confirmButtonColor: '#667eea'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post('@Url.Action("RedeemReward", "PointShop")', 
+                            { rewardId: rewardId },
+                            function(response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Thành công!',
+                                        html: `
+                                            <p>${response.message}</p>
+                                            ${response.voucherCode ? `<p>Mã voucher: <strong>${response.voucherCode}</strong></p>` : ''}
+                                            <p>Điểm còn lại: <strong>${response.remainingPoints}</strong></p>
+                                        `,
+                                        confirmButtonText: 'OK'
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Lỗi',
+                                        text: response.message
+                                    });
+                                }
+                            }
+                        ).fail(function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi',
+                                text: 'Có lỗi xảy ra, vui lòng thử lại'
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

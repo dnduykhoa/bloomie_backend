@@ -1,0 +1,287 @@
+@model List<Bloomie.Models.Entities.VoucherCampaign>
+@{
+    ViewData["Title"] = "Flash Sale - Giảm Giá Giới Hạn";
+    var userCollected = ViewBag.UserCollectedCampaigns as List<string> ?? new List<string>();
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var totalFlashSale = Model.Count();
+    var availableCount = Model.Count(c => c.CollectedCount < (System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(c.Config ?? "{}")?.GetValueOrDefault("TotalVouchers", 0) ?? 0));
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("VoucherCampaigns", "Promotion")">Khuyến mãi</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Flash Sale</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-bolt me-2"></i>
+                FLASH SALE
+            </h1>
+            <p class="header-subtitle">Voucher giảm giá giới hạn - Nhanh tay kẻo lỡ!</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+
+    @if (!isAuthenticated)
+    {
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Vui lòng <a asp-controller="Account" asp-action="Login" class="alert-link fw-bold">đăng nhập</a> để thu thập voucher Flash Sale!
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-inbox me-2"></i>
+            Hiện không có Flash Sale nào đang diễn ra. Quay lại sau nhé!
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var campaign in Model)
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(campaign.Config ?? "{}");
+                var totalVouchers = config!.ContainsKey("TotalVouchers") ? config["TotalVouchers"] : 100;
+                var maxPerUser = config.ContainsKey("MaxVouchersPerUser") ? config["MaxVouchersPerUser"] : 1;
+                var remaining = totalVouchers - campaign.CollectedCount;
+                var percentCollected = (double)campaign.CollectedCount / totalVouchers * 100;
+                var hasCollected = userCollected.Contains($"CampaignId:{campaign.Id}");
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow border-danger @(hasCollected ? "border-success" : "")">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="bi bi-lightning-fill me-1"></i>
+                                @campaign.Name
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Voucher Info -->
+                            <div class="mb-3 p-3 bg-light rounded text-center">
+                                <h6 class="text-muted mb-1">Mã voucher</h6>
+                                <h4 class="mb-0 fw-bold text-danger">@campaign.PromotionCode?.Code</h4>
+                                <p class="mb-0 mt-2">
+                                    @if (campaign.PromotionCode?.IsPercent == true)
+                                    {
+                                        <span class="badge bg-danger fs-6">Giảm @campaign.PromotionCode.Value%</span>
+                                        if (campaign.PromotionCode.MaxDiscount.HasValue)
+                                        {
+                                            <small class="d-block text-muted mt-1">(Tối đa @((campaign.PromotionCode.MaxDiscount.Value).ToString("N0"))đ)</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger fs-6">Giảm @((campaign.PromotionCode?.Value ?? 0).ToString("N0"))đ</span>
+                                    }
+                                </p>
+                            </div>
+
+                            <!-- Description -->
+                            @if (!string.IsNullOrEmpty(campaign.Description))
+                            {
+                                <p class="text-muted small">@campaign.Description</p>
+                            }
+
+                            <!-- Countdown -->
+                            <div class="mb-3 p-2 bg-warning bg-opacity-10 rounded text-center">
+                                <small class="text-muted d-block">Kết thúc sau</small>
+                                <h5 class="mb-0 fw-bold text-danger countdown" data-end="@campaign.EndDate.ToString("o")">
+                                    --:--:--
+                                </h5>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small class="text-muted">Còn lại: <strong>@remaining/@totalVouchers</strong></small>
+                                    <small class="text-muted"><strong>@percentCollected.ToString("F0")%</strong> đã lấy</small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: @percentCollected%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            @if (hasCollected)
+                            {
+                                <button class="btn btn-success w-100 disabled">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Đã Thu Thập
+                                </button>
+                            }
+                            else if (remaining <= 0)
+                            {
+                                <button class="btn btn-secondary w-100 disabled">
+                                    <i class="bi bi-x-circle me-1"></i> Đã Hết Voucher
+                                </button>
+                            }
+                            else if (isAuthenticated)
+                            {
+                                <button class="btn btn-danger w-100 collect-flash-btn" data-campaign-id="@campaign.Id">
+                                    <i class="bi bi-lightning-fill me-1"></i> Thu Thập Ngay
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-danger w-100">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập để lấy
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Countdown timers
+        function updateCountdowns() {
+            document.querySelectorAll('.countdown').forEach(el => {
+                const endDate = new Date(el.dataset.end);
+                const now = new Date();
+                const diff = endDate - now;
+
+                if (diff <= 0) {
+                    el.textContent = 'ĐÃ KẾT THÚC';
+                    el.classList.add('text-secondary');
+                    return;
+                }
+
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                
+                el.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            });
+        }
+
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000);
+
+        // Collect flash sale voucher
+        $(document).on('click', '.collect-flash-btn', function() {
+            const btn = $(this);
+            const campaignId = btn.data('campaign-id');
+
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...');
+
+            $.ajax({
+                url: '@Url.Action("CollectFlashSale", "Promotion")',
+                type: 'POST',
+                data: { 
+                    campaignId: campaignId,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        btn.removeClass('btn-danger').addClass('btn-success')
+                           .html('<i class="bi bi-check-circle-fill me-1"></i>Đã Thu Thập');
+                        
+                        alert('✅ ' + response.message + '\nCòn lại: ' + response.remaining + ' voucher');
+                        
+                        // Reload page to update
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        alert('❌ ' + response.message);
+                        btn.prop('disabled', false).html('<i class="bi bi-lightning-fill me-1"></i>Thu Thập Ngay');
+                    }
+                },
+                error: function() {
+                    alert('❌ Có lỗi xảy ra. Vui lòng thử lại!');
+                    btn.prop('disabled', false).html('<i class="bi bi-lightning-fill me-1"></i>Thu Thập Ngay');
+                }
+            });
+        });
+    </script>
+}
+
+@Html.AntiForgeryToken()
+
+<style>
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+</style>

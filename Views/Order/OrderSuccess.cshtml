@@ -1,0 +1,390 @@
+@model Bloomie.Models.Entities.Order
+
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="order-success-section">
+    <div class="container">
+        <div class="success-message text-center">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="mb-3">Đặt hàng thành công!</h2>
+            <p class="mb-4">Cảm ơn bạn đã tin tưởng và lựa chọn Bloomie Flower Shop. Đơn hàng của bạn đã được ghi nhận thành công.</p>
+        </div>
+
+        <!-- Thông tin đơn hàng -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Thông tin đơn hàng #@Model.OrderId</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                            <p><strong>Mã đơn hàng:</strong> #@Model.OrderId</p>
+                        <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p><strong>Trạng thái:</strong>
+                            <span class="badge fs-6
+                                @(Model.Status == "Chờ xác nhận" ? "bg-warning text-dark" :
+                                  Model.Status == "Đã xác nhận" ? "bg-info text-white" :
+                                  Model.Status == "Đang giao" ? "bg-primary" :
+                                  Model.Status == "Hoàn thành" ? "bg-success" :
+                                  Model.Status == "Đã hủy" ? "bg-danger" : "bg-secondary")">
+                                @Model.Status
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
+                        <p><strong>Người nhận:</strong> @(Model.ReceiverName ?? "Chưa có thông tin")</p>
+                        <p><strong>Địa chỉ giao hàng:</strong> @Model.ShippingAddress</p>
+                        <p><strong>Số điện thoại:</strong> @Model.Phone</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chi tiết đơn hàng -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Chi tiết đơn hàng đã đặt</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.OrderDetails != null && Model.OrderDetails.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                    <th>Ngày giao</th>
+                                    <th>Giờ giao</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var detail in Model.OrderDetails)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                @{
+                                                    string imageUrl = null;
+                                                    if (!string.IsNullOrEmpty(detail.Product?.ImageUrl))
+                                                    {
+                                                        imageUrl = detail.Product.ImageUrl;
+                                                    }
+                                                    else if (detail.Product?.Images != null && detail.Product.Images.Any())
+                                                    {
+                                                        imageUrl = detail.Product.Images.First().Url;
+                                                    }
+                                                }
+                                                @if (!string.IsNullOrEmpty(imageUrl))
+                                                {
+                                                    <img src="@imageUrl" alt="@detail.Product.Name" class="product-img me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;" />
+                                                }
+                                                <div>
+                                                    <strong>@detail.Product?.Name</strong>
+                                                    @if (detail.IsGift)
+                                                    {
+                                                        <span class="badge bg-success ms-2" style="font-size: 0.75rem;"><i class="fas fa-gift me-1"></i>Quà tặng</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(detail.Note))
+                                                    {
+                                                        <br /><small class="text-muted">Ghi chú: @detail.Note</small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>@detail.Quantity</td>
+                                        <td>
+                                            @if (detail.Product != null && detail.Product.Price > detail.UnitPrice)
+                                            {
+                                                <div>
+                                                    <span style="color: #dc3545; font-weight: 500;">@detail.UnitPrice.ToString("#,##0") đ</span>
+                                                    <br />
+                                                    <span style="text-decoration: line-through; color: #999; font-size: 0.85em;">@detail.Product.Price.ToString("#,##0") đ</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span>@detail.UnitPrice.ToString("#,##0") đ</span>
+                                            }
+                                        </td>
+                                        <td>@((detail.UnitPrice * detail.Quantity).ToString("#,##0")) đ</td>
+                                        <td>@detail.DeliveryDate?.ToString("dd/MM/yyyy")</td>
+                                        <td>@detail.DeliveryTime</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Tổng kết thanh toán - Style hóa đơn -->
+                    <div class="row mt-4">
+                        <div class="col-md-7 ms-auto">
+                            <div class="bg-light p-3 rounded border">
+                                <table class="table table-borderless mb-0">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-end"><strong>Tiền hàng:</strong></td>
+                                            <td class="text-end" style="width: 150px;"><strong>@((Model.OrderDetails?.Sum(od => od.UnitPrice * od.Quantity) ?? 0).ToString("#,##0")) đ</strong></td>
+                                        </tr>
+                                        
+                                        @if (Model.ShippingFee > 0)
+                                        {
+                                            <tr style="background-color: #f0f9ff;">
+                                                <td class="text-end py-2">
+                                                    <i class="fas fa-shipping-fast me-2" style="color: #0ea5e9;"></i>
+                                                    <span style="color: #0369a1; font-weight: 500;">Phí vận chuyển:</span>
+                                                </td>
+                                                <td class="text-end py-2" style="color: #0284c7; font-weight: 600;">
+                                                    +@Model.ShippingFee.ToString("#,##0") đ
+                                                </td>
+                                            </tr>
+                                        }
+                                        
+                                        @if (Model.PromotionDiscount > 0 || Model.VoucherDiscount > 0 || Model.ShippingDiscount > 0 || Model.PointsDiscount > 0)
+                                        {
+                                            @if (Model.PromotionDiscount > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-end"><i class="fas fa-gift me-2" style="color: #ff6b6b;"></i><span style="color: #555;">Giảm giá tự động:</span></td>
+                                                    <td class="text-end" style="color: #28a745; font-weight: 500;">-@Model.PromotionDiscount.ToString("#,##0") đ</td>
+                                                </tr>
+                                            }
+                                            @if (Model.VoucherDiscount > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-end">
+                                                        <i class="fas fa-ticket-alt me-2" style="color: #f59e0b;"></i><span style="color: #555;">Voucher @(!string.IsNullOrEmpty(Model.DiscountVoucherCode) ? $"({Model.DiscountVoucherCode})" : ""):</span>
+                                                    </td>
+                                                    <td class="text-end" style="color: #28a745; font-weight: 500;">-@Model.VoucherDiscount.ToString("#,##0") đ</td>
+                                                </tr>
+                                            }
+                                            @if (Model.PointsDiscount > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-end"><i class="fas fa-coins me-2" style="color: #fbbf24;"></i><span style="color: #555;">Điểm tích lũy (@Model.PointsUsed điểm):</span></td>
+                                                    <td class="text-end" style="color: #28a745; font-weight: 500;">-@Model.PointsDiscount.ToString("#,##0") đ</td>
+                                                </tr>
+                                            }
+                                            @if (Model.ShippingDiscount > 0)
+                                            {
+                                                <tr>
+                                                    <td class="text-end">
+                                                        <i class="fas fa-shipping-fast me-2" style="color: #3b82f6;"></i><span style="color: #555;">Giảm phí ship @(!string.IsNullOrEmpty(Model.ShippingVoucherCode) ? $"({Model.ShippingVoucherCode})" : ""):</span>
+                                                    </td>
+                                                    <td class="text-end" style="color: #28a745; font-weight: 500;">-@Model.ShippingDiscount.ToString("#,##0") đ</td>
+                                                </tr>
+                                            }
+                                        }
+                                        
+                                        <tr style="border-top: 2px solid #dee2e6;">
+                                            <td class="text-end pt-3"><h5 class="mb-0" style="color: #000;">Tổng thanh toán:</h5></td>
+                                            <td class="text-end pt-3"><h4 class="mb-0 fw-bold" style="color: #dc3545;">@Model.TotalAmount.ToString("#,##0") đ</h4></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">Không có chi tiết sản phẩm.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Thông tin thanh toán -->
+        @if (Model.PaymentMethod == "COD")
+        {
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Thông tin thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">Bạn đã chọn phương thức thanh toán <strong>Thanh toán khi nhận hàng (COD)</strong>.</p>
+                    <p class="mb-2">Vui lòng chuẩn bị số tiền <strong>@Model.TotalAmount.ToString("#,##0") đ</strong> để thanh toán cho nhân viên giao hàng.</p>
+                    <p class="mb-0">Chúng tôi sẽ liên hệ với bạn qua số điện thoại @Model.Phone để xác nhận đơn hàng trước khi giao.</p>
+                </div>
+            </div>
+        }
+        else if (Model.PaymentMethod == "Momo" || Model.PaymentMethod == "VNPAY")
+        {
+            @if (Model.PaymentStatus == "Đã thanh toán")
+            {
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Thanh toán thành công</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">Bạn đã thanh toán thành công số tiền <strong>@Model.TotalAmount.ToString("#,##0") đ</strong> qua @Model.PaymentMethod.</p>
+                        <p class="mb-0">Mã giao dịch sẽ được gửi qua email và tin nhắn SMS.</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i>Chưa thanh toán</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">Đơn hàng của bạn chưa được thanh toán qua @Model.PaymentMethod.</p>
+                        <p class="mb-0">Vui lòng kiểm tra lại hoặc liên hệ hỗ trợ nếu gặp vấn đề.</p>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Hướng dẫn tiếp theo -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Hướng dẫn tiếp theo</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="step-icon mb-2">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h6>Chờ xác nhận</h6>
+                        <p class="small text-muted">Chúng tôi sẽ xác nhận đơn hàng trong vòng 24 giờ</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="step-icon mb-2">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <h6>Giao hàng</h6>
+                        <p class="small text-muted">Đơn hàng sẽ được giao trong 1-2 ngày làm việc</p>
+                    </div>
+                    <div class="col-md-4 text-center mb-3">
+                        <div class="step-icon mb-2">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h6>Hoàn thành</h6>
+                        <p class="small text-muted">Xác nhận nhận hàng và đánh giá sản phẩm</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nút xem hóa đơn PDF -->
+        <div class="text-center mb-4">
+            <a href="@Url.Action("ExportInvoicePdf", "Order", new { orderId = Model.Id })" target="_blank" class="btn btn-outline-primary">
+                <i class="fas fa-file-pdf me-2"></i>Xem hóa đơn PDF
+            </a>
+        </div>
+
+        <!-- Hành động -->
+        <div class="text-center">
+            <a href="@Url.Action("TrackOrder", "Order", new { id = Model.Id })" class="btn btn-primary me-2">
+                <i class="fas fa-search me-2"></i>Theo dõi đơn hàng
+            </a>
+            <a href="@Url.Action("Index", "Order")" class="btn btn-outline-primary me-2">
+                <i class="fas fa-list me-2"></i>Xem tất cả đơn hàng
+            </a>
+            <a href="@Url.Action("Index", "Product")" class="btn btn-outline-secondary">
+                <i class="fas fa-shopping-bag me-2"></i>Tiếp tục mua sắm
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    /* Animations */
+    .container {
+        animation: fadeInUp 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .order-success-section {
+        padding: 40px 0;
+    }
+
+    .success-message {
+        margin-bottom: 40px;
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        color: #D0021B;
+        margin-bottom: 20px;
+    }
+
+    .success-message h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #D0021B;
+    }
+
+    .success-message p {
+        font-size: 1.1rem;
+        color: #666;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 10px 10px 0 0 !important;
+        font-weight: 600;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        border-top: none;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #D0021B;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.5rem;
+        margin: 0 auto;
+    }
+
+    .btn {
+        border-radius: 5px;
+        font-weight: 500;
+        padding: 10px 20px;
+    }
+
+    .btn i {
+        font-size: 1rem;
+    }
+</style>

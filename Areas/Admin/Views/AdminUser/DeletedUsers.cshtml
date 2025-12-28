@@ -1,0 +1,423 @@
+@model IEnumerable<Bloomie.Data.ApplicationUser>
+@{
+    ViewData["Title"] = "Tài khoản đã vô hiệu hóa";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-users text-primary me-2"></i>Quản lý người dùng
+                </h2>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info border-0 mb-0" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+                    <div class="text-center py-5">
+                        <i class="fas fa-info-circle fa-4x text-primary mb-3"></i>
+                        <h5 class="mb-2">Không có tài khoản nào bị vô hiệu hóa</h5>
+                        <p class="mb-3 text-muted">Tất cả tài khoản đang hoạt động bình thường.</p>
+                        <a asp-action="Index" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-warning">
+                                <i class="fas fa-user-slash"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">@Model.Count()</div>
+                                <div class="stat-label">Tài khoản bị vô hiệu hóa</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-success">
+                                <i class="fas fa-undo"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Đã khôi phục tháng này</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Đã xóa vĩnh viễn</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-info">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value">@Model.Count()</div>
+                                <div class="stat-label">Tổng số tài khoản</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-tabs mb-4">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="Index">
+                            <i class="fas fa-users"></i> Đang hoạt động
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" asp-action="DeletedUsers">
+                            <i class="fas fa-user-slash"></i> Đã vô hiệu hóa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-action="RecentActivity">
+                            <i class="fas fa-history"></i> Hoạt động gần đây
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Alert Info -->
+                <div class="alert alert-warning border-0 mb-4" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b !important;">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle fa-lg text-warning me-3 mt-1"></i>
+                        <div>
+                            <strong>Lưu ý:</strong> Các tài khoản này đã bị vô hiệu hóa. Bạn có thể khôi phục hoặc xóa vĩnh viễn chúng.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="filter-section mb-4">
+                    <form method="get" asp-action="DeletedUsers" id="filterForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label">Tìm kiếm</label>
+                                <input type="text" class="form-control" name="searchString" value="@ViewBag.SearchString" placeholder="Email hoặc họ tên..." />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Từ ngày xóa</label>
+                                <input type="date" class="form-control" name="fromDate" value="@ViewBag.FromDate" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control" name="toDate" value="@ViewBag.ToDate" />
+                            </div>
+                            <div class="col-md-1">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th><i class="fas fa-envelope me-2"></i>Email</th>
+                                <th><i class="fas fa-user me-2"></i>Họ tên</th>
+                                <th><i class="fas fa-clock me-2"></i>Thời gian vô hiệu hóa</th>
+                                <th class="text-center"><i class="fas fa-cog me-2"></i>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="user-avatar me-2">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <span>@user.Email</span>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold">@user.FullName</td>
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        @user.DeletedAt?.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <form asp-action="Restore" asp-route-id="@user.Id" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-success btn-sm" title="Khôi phục tài khoản">
+                                                <i class="fas fa-undo me-1"></i>Khôi phục
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-danger btn-sm" 
+                                                onclick="confirmHardDelete('@user.Id', '@user.Email')" 
+                                                title="Xóa vĩnh viễn">
+                                            <i class="fas fa-trash-alt me-1"></i>Xóa vĩnh viễn
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Hidden forms for hard delete -->
+@foreach (var user in Model)
+{
+    <form id="hardDeleteForm_@user.Id" asp-action="HardDelete" asp-route-id="@user.Id" method="post" style="display:none;">
+    </form>
+}
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --text-dark: #1e293b;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+    }
+
+    .btn-success {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+
+    .btn-success:hover {
+        background-color: #059669;
+    }
+
+    .btn-danger {
+        background-color: #ef4444;
+        border-color: #ef4444;
+    }
+
+    .btn-danger:hover {
+        background-color: #dc2626;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .filter-section .form-label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .table-responsive {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: var(--primary-color);
+        color: var(--text-light);
+        border-bottom: 2px solid #e5e7eb;
+        font-weight: 600;
+        padding: 12px 16px;
+        white-space: nowrap;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+
+    .table tbody td {
+        padding: 12px 16px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    .user-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 6px 12px;
+        font-size: 0.875rem;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-dark);
+        border-radius: 6px 6px 0 0;
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom: 3px solid var(--primary-color);
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+    }
+
+    .alert {
+        border-radius: 8px;
+    }
+</style>
+
+<script>
+    function confirmHardDelete(userId, userEmail) {
+        if (confirm('⚠️ CẢNH BÁO: XÓA VĨNH VIỄN\n\n' +
+                    'Bạn có chắc chắn muốn XÓA VĨNH VIỄN tài khoản:\n' +
+                    userEmail + '\n\n' +
+                    '❌ Thao tác này KHÔNG THỂ HOÀN TÁC!\n' +
+                    '❌ Tất cả dữ liệu sẽ bị XÓA VĨNH VIỄN!\n' +
+                    '❌ Không thể khôi phục sau khi xóa!\n\n' +
+                    'Nhấn OK để tiếp tục xóa vĩnh viễn.')) {
+            document.getElementById('hardDeleteForm_' + userId).submit();
+        }
+    }
+</script>

@@ -1,0 +1,266 @@
+@model Bloomie.Models.Entities.Product
+@{
+    ViewData["Title"] = $"Chi tiết sản phẩm - {Model.Name}";
+    var isModal = Context.Request.Query["modal"].ToString() == "true";
+    Layout = isModal ? null : "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+}
+
+@if (isModal)
+{
+    @:<!DOCTYPE html>
+    @:<html lang="vi">
+    @:<head>
+        @:<meta charset="utf-8" />
+        @:<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>@ViewData["Title"]</title>
+        @:<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+        @:<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        @:<style>
+            @:body {
+                @:background: #f8f9fa;
+                @:padding: 20px;
+            @:}
+        @:</style>
+    @:</head>
+    @:<body>
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-flower text-primary me-2"></i> Chi tiết sản phẩm
+                </h2>
+                @if (!isModal)
+                {
+                    <div>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">
+                            <i class="fas fa-edit me-1"></i> Chỉnh sửa
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Quay lại
+                        </a>
+                    </div>
+                }
+            </div>
+
+            <div class="row">
+                <!-- Cột trái: Hình ảnh -->
+                <div class="col-lg-5">
+                    <div class="card mb-3 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-images text-primary me-2"></i> Hình ảnh sản phẩm</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Ảnh chính -->
+                            <div class="text-center mb-3">
+                                <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded shadow" style="max-height: 400px; object-fit: cover;">
+                            </div>
+
+                            <!-- Ảnh phụ -->
+                            @if (Model.Images != null && Model.Images.Any(img => img.Url != Model.ImageUrl))
+                            {
+                                <div class="row g-2">
+                                    @foreach (var image in Model.Images.Where(img => img.Url != Model.ImageUrl))
+                                    {
+                                        <div class="col-4">
+                                            <img src="@image.Url" alt="Sub image" class="img-thumbnail" style="height: 100px; width: 100%; object-fit: cover;">
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Thông tin -->
+                <div class="col-lg-7">
+                    <!-- Thông tin cơ bản -->
+                    <div class="card mb-3 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin cơ bản</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Tên sản phẩm</label>
+                                    <div class="fw-bold fs-5">@Model.Name</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Giá bán</label>
+                                    <div class="fw-bold fs-5 text-danger">@Model.Price.ToString("N0") đ</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Số lượng tồn kho</label>
+                                    <div class="fw-bold">
+                                        <span class="badge @(Model.StockQuantity > 10 ? "bg-success" : Model.StockQuantity > 0 ? "bg-warning" : "bg-danger")">
+                                            @Model.StockQuantity
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Trạng thái</label>
+                                    <div class="fw-bold">
+                                        <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(Model.IsActive ? "Đang hoạt động" : "Ngừng hoạt động")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small">Danh mục</label>
+                                <div>
+                                    @if (Model.ProductCategories != null && Model.ProductCategories.Any())
+                                    {
+                                        @foreach (var pc in Model.ProductCategories)
+                                        {
+                                            <span class="badge bg-info me-1">@pc.Category.Name</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Chưa phân loại</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="text-muted small">Mô tả</label>
+                                <div class="border rounded p-3 bg-light">
+                                    @Html.Raw(Model.Description ?? "<em class='text-muted'>Chưa có mô tả</em>")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chi tiết hoa -->
+                    @if (Model.ProductDetails != null && Model.ProductDetails.Any())
+                    {
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-seedling text-success me-2"></i> Chi tiết hoa trong sản phẩm</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Loại hoa</th>
+                                                <th>Biến thể</th>
+                                                <th class="text-center">Số lượng</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var detail in Model.ProductDetails)
+                                            {
+                                                <tr>
+                                                    <td>@detail.FlowerVariant?.FlowerType?.Name</td>
+                                                    <td>@detail.FlowerVariant?.Name</td>
+                                                    <td class="text-center">
+                                                        <span class="badge bg-primary">@detail.Quantity</span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!isModal)
+{
+@section Scripts {
+    <script>
+        // Có thể thêm JavaScript nếu cần
+    </script>
+}
+}
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --text-dark: #164e63;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+    }
+
+    h2 {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .card {
+        border-radius: 8px;
+        background-color: #ffffff;
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+    }
+
+    .btn-primary, .btn-secondary, .btn-warning {
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .table {
+        background-color: #ffffff;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .table th, .table td {
+        border-color: #e5e7eb;
+        vertical-align: middle;
+        padding: 12px;
+    }
+
+    .table thead th {
+        background-color: #f9fafb;
+        color: var(--text-dark);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+</style>
+
+@if (isModal)
+{
+    @:<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @:</body>
+    @:</html>
+}

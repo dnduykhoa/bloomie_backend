@@ -1,0 +1,1198 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Bloomie.Data.ApplicationUser> UserManager
+@model Bloomie.Models.ViewModels.RevenueViewModel
+@{
+    ViewData["Title"] = "Báo cáo doanh thu";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-chart-line text-primary me-2"></i> Báo cáo doanh thu
+                </h2>
+                <div>
+                    <a href="@Url.Action("ExportExcel", new { startDate = ViewBag.StartDate, endDate = ViewBag.EndDate })" class="btn btn-success shadow-sm">
+                        <i class="fas fa-file-excel me-2"></i> Xuất Excel
+                    </a>
+                </div>
+            </div>
+
+            <!-- Bộ lọc thời gian -->
+            <div class="card mb-4 shadow-sm border">
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i> Từ ngày
+                            </label>
+                            <input type="date" name="startDate" class="form-control" value="@ViewBag.StartDate" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="fas fa-calendar-alt me-1"></i> Đến ngày
+                            </label>
+                            <input type="date" name="endDate" class="form-control" value="@ViewBag.EndDate" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold mb-2">
+                                <i class="fas fa-filter me-1"></i> Bộ lọc nhanh
+                            </label>
+                            <select name="filter" class="form-select" id="quickFilter" onchange="applyQuickFilter()">
+                                <option value="">-- Chọn bộ lọc --</option>
+                                <option value="today">Hôm nay</option>
+                                <option value="week">7 ngày qua</option>
+                                <option value="month">30 ngày qua</option>
+                                <option value="year">1 năm qua</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                                <i class="fas fa-search me-1"></i> Áp dụng
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Cards Row 1 -->
+            <div class="row mt-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#revenueModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Tổng doanh thu</p>
+                                    <h4 class="mb-1 fw-bold text-dark">@Model.TotalRevenue.ToString("N0") ₫</h4>
+                                </div>
+                                <div class="stat-icon revenue-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#actualRevenueModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Doanh thu thực</p>
+                                    <h4 class="mb-1 fw-bold text-dark">@Model.ActualRevenue.ToString("N0") ₫</h4>
+                                </div>
+                                <div class="stat-icon actual-icon">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#costModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Tổng chi phí nhập</p>
+                                    <h4 class="mb-1 fw-bold text-dark">@Model.TotalCost.ToString("N0") ₫</h4>
+                                </div>
+                                <div class="stat-icon cost-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#profitModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Lợi nhuận gộp</p>
+                                    <h4 class="mb-1 fw-bold">@Model.GrossProfit.ToString("N0") ₫</h4>
+                                    <small class="text-muted">Tỷ suất: @Model.ProfitMargin.ToString("N2")%</small>
+                                </div>
+                                <div class="stat-icon profit-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards Row 2 - Deductions -->
+            <div class="row">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#ordersModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Số đơn hàng</p>
+                                    <h4 class="mb-1 fw-bold text-dark">@Model.TotalOrders</h4>
+                                    <small class="text-muted">TB: @Model.AverageOrderValue.ToString("N0") ₫</small>
+                                </div>
+                                <div class="stat-icon order-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#returnModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Hoàn trả</p>
+                                    <h4 class="mb-1 fw-bold text-danger">-@Model.TotalReturned.ToString("N0") ₫</h4>
+                                    <small class="text-muted">Đơn hàng bị trả lại</small>
+                                </div>
+                                <div class="stat-icon return-icon">
+                                    <i class="fas fa-undo"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#discountModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Tổng giảm giá</p>
+                                    <h4 class="mb-1 fw-bold text-warning">-@Model.TotalPromotionDiscount.ToString("N0") ₫</h4>
+                                    <small class="text-muted">Khuyến mãi, voucher & ship</small>
+                                </div>
+                                <div class="stat-icon discount-icon">
+                                    <i class="fas fa-tags"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm stat-card h-100 hover-card" data-bs-toggle="modal" data-bs-target="#pointsModal" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <p class="text-muted mb-1 fw-bold small text-uppercase">Điểm thành viên</p>
+                                    <h4 class="mb-1 fw-bold text-info">-@Model.TotalPointsValue.ToString("N0") ₫</h4>
+                                    <small class="text-muted">Điểm đã sử dụng</small>
+                                </div>
+                                <div class="stat-icon points-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row mt-2">
+                <div class="col-md-8 mb-3">
+                    <div class="card shadow-sm border h-100">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-chart-area text-primary me-2"></i> Biểu đồ doanh thu theo thời gian
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card shadow-sm border h-100">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-credit-card text-primary me-2"></i> Phương thức thanh toán
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                                <canvas id="paymentMethodChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category & Status Charts -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border h-100">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-chart-pie text-primary me-2"></i> Doanh thu theo danh mục
+                            </h5>
+                        </div>
+                        <div class="card-body d-flex align-items-center justify-content-center">
+                            <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm border h-100">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-tasks text-primary me-2"></i> Trạng thái đơn hàng
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tables Row -->
+            <div class="row">
+                <div class="col-md-7 mb-3">
+                    <div class="card shadow-sm border">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-trophy text-warning me-2"></i> Top 10 sản phẩm bán chạy
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th class="text-center" style="width: 60px;">STT</th>
+                                            <th>Tên sản phẩm</th>
+                                            <th class="text-center" style="width: 100px;">Số lượng</th>
+                                            <th class="text-end" style="width: 150px;">Doanh thu</th>
+                                            <th class="text-center" style="width: 100px;">% Đóng góp</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.RevenueByProduct.Count; i++)
+                                        {
+                                            var product = Model.RevenueByProduct[i];
+                                            var percentage = Model.TotalRevenue > 0 ? (product.Revenue / Model.TotalRevenue * 100) : 0;
+                                            <tr>
+                                                <td class="fw-bold text-center">@(i + 1)</td>
+                                                <td>@product.ProductName</td>
+                                                <td class="text-center">@product.Quantity</td>
+                                                <td class="text-end fw-bold">@product.Revenue.ToString("N0") ₫</td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary">@percentage.ToString("N2")%</span>
+                                                </td>
+                                            </tr>
+                                        }
+                                        @if (!Model.RevenueByProduct.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">
+                                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                    <p class="mb-0">Không có dữ liệu</p>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5 mb-3">
+                    <div class="card shadow-sm border">
+                        <div class="card-header bg-light border-bottom">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-user-tie text-success me-2"></i> Top 10 khách hàng VIP
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-primary text-white">
+                                        <tr>
+                                            <th class="text-center" style="width: 60px;">STT</th>
+                                            <th>Khách hàng</th>
+                                            <th class="text-center" style="width: 80px;">Đơn</th>
+                                            <th class="text-end" style="width: 130px;">Tổng chi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @for (int i = 0; i < Model.TopCustomers.Count; i++)
+                                        {
+                                            var customer = Model.TopCustomers[i];
+                                            var user = await UserManager.FindByIdAsync(customer.UserId);
+                                            var displayName = user?.UserName ?? customer.UserId;
+                                            <tr>
+                                                <td class="fw-bold text-center">@(i + 1)</td>
+                                                <td>@displayName</td>
+                                                <td class="text-center">@customer.OrderCount</td>
+                                                <td class="text-end fw-bold">@customer.TotalSpent.ToString("N0") ₫</td>
+                                            </tr>
+                                        }
+                                        @if (!Model.TopCustomers.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-4">
+                                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                    <p class="mb-0">Không có dữ liệu</p>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Tổng doanh thu -->
+<div class="modal fade" id="revenueModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-dollar-sign me-2"></i>Chi tiết Tổng doanh thu</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng giá trị của tất cả đơn hàng trong khoảng thời gian đã chọn (không bao gồm đơn hủy)</p>
+                <div class="alert alert-info">
+                    <strong>Công thức:</strong><br>
+                    Tổng doanh thu = Σ (Giá trị đơn hàng)
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="fas fa-shopping-cart text-primary me-2"></i>Số đơn hàng:</td>
+                        <td class="text-end fw-bold">@Model.TotalOrders đơn</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-dollar-sign text-success me-2"></i>Tổng doanh thu:</td>
+                        <td class="text-end fw-bold text-success">@Model.TotalRevenue.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-calculator text-info me-2"></i>Trung bình/đơn:</td>
+                        <td class="text-end fw-bold">@Model.AverageOrderValue.ToString("N0") ₫</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Doanh thu thực -->
+<div class="modal fade" id="actualRevenueModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-hand-holding-usd me-2"></i>Chi tiết Doanh thu thực</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Doanh thu sau khi trừ đi các đơn hàng hoàn trả</p>
+                <div class="alert alert-success">
+                    <strong>Công thức:</strong><br>
+                    Doanh thu thực = Tổng doanh thu - Hoàn trả
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="fas fa-plus text-success me-2"></i>Tổng doanh thu:</td>
+                        <td class="text-end fw-bold">@Model.TotalRevenue.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-minus text-danger me-2"></i>Hoàn trả:</td>
+                        <td class="text-end fw-bold text-danger">-@Model.TotalReturned.ToString("N0") ₫</td>
+                    </tr>
+                    <tr class="table-active">
+                        <td class="fw-bold"><i class="fas fa-equals text-success me-2"></i>Doanh thu thực:</td>
+                        <td class="text-end fw-bold text-success fs-5">@Model.ActualRevenue.ToString("N0") ₫</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Chi phí nhập -->
+<div class="modal fade" id="costModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-receipt me-2"></i>Chi tiết Chi phí nhập hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng chi phí nhập hàng từ nhà cung cấp trong khoảng thời gian</p>
+                <div class="alert alert-warning">
+                    <strong>Công thức:</strong><br>
+                    Tổng chi phí = Σ (Số lượng × Giá nhập của từng phiếu nhập)
+                </div>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-light">
+                        <td class="fw-bold"><i class="fas fa-file-invoice text-primary me-2"></i>Số phiếu nhập:</td>
+                        <td class="text-end fw-bold">@((int?)ViewBag.PurchaseOrdersCount ?? 0) phiếu</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-money-bill-wave text-warning me-2"></i>Tổng chi phí:</td>
+                        <td class="text-end fw-bold text-warning fs-5">@Model.TotalCost.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-calculator text-secondary me-2"></i>Trung bình/phiếu:</td>
+                        <td class="text-end fw-bold">
+                            @{
+                                var avgCost = (int?)ViewBag.PurchaseOrdersCount > 0 
+                                    ? (Model.TotalCost / (int)ViewBag.PurchaseOrdersCount) 
+                                    : 0;
+                            }
+                            @avgCost.ToString("N0") ₫
+                        </td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><i class="fas fa-chart-pie text-info me-2"></i>Tỷ lệ / Doanh thu:</td>
+                        <td class="text-end fw-bold">
+                            @{
+                                var costRatio = Model.ActualRevenue > 0 
+                                    ? (Model.TotalCost / Model.ActualRevenue * 100) 
+                                    : 0;
+                            }
+                            @costRatio.ToString("N2")%
+                        </td>
+                    </tr>
+                </table>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Chi phí này được trừ khỏi doanh thu thực để tính lợi nhuận gộp
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Lợi nhuận gộp -->
+<div class="modal fade" id="profitModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-chart-line me-2"></i>Chi tiết Lợi nhuận gộp</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Lợi nhuận sau khi trừ chi phí nhập hàng</p>
+                <div class="alert alert-primary">
+                    <strong>Công thức:</strong><br>
+                    Lợi nhuận gộp = Doanh thu thực - Chi phí nhập
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="fas fa-plus text-success me-2"></i>Doanh thu thực:</td>
+                        <td class="text-end fw-bold">@Model.ActualRevenue.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-minus text-danger me-2"></i>Chi phí nhập:</td>
+                        <td class="text-end fw-bold text-danger">-@Model.TotalCost.ToString("N0") ₫</td>
+                    </tr>
+                    <tr class="table-active">
+                        <td class="fw-bold"><i class="fas fa-equals text-primary me-2"></i>Lợi nhuận gộp:</td>
+                        <td class="text-end fw-bold text-primary fs-5">@Model.GrossProfit.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-percent text-info me-2"></i>Tỷ suất lợi nhuận:</td>
+                        <td class="text-end fw-bold text-info">@Model.ProfitMargin.ToString("N2")%</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Số đơn hàng -->
+<div class="modal fade" id="ordersModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-shopping-cart me-2"></i>Chi tiết Số đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng số đơn hàng và giá trị trung bình</p>
+                <div class="alert alert-info mb-0">
+                    <strong>Công thức:</strong><br>
+                    Giá trị TB = Tổng doanh thu ÷ Số đơn hàng
+                </div>
+                <table class="table table-sm">
+                    <tr>
+                        <td><i class="fas fa-shopping-cart text-primary me-2"></i>Tổng đơn hàng:</td>
+                        <td class="text-end fw-bold fs-5">@Model.TotalOrders đơn</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-calculator text-info me-2"></i>Giá trị trung bình:</td>
+                        <td class="text-end fw-bold">@Model.AverageOrderValue.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-dollar-sign text-success me-2"></i>Tổng doanh thu:</td>
+                        <td class="text-end fw-bold text-success">@Model.TotalRevenue.ToString("N0") ₫</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Hoàn trả -->
+<div class="modal fade" id="returnModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-undo me-2"></i>Chi tiết Hoàn trả</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng giá trị các đơn hàng đã được hoàn trả (đã phê duyệt)</p>
+                <div class="alert alert-danger">
+                    <strong>Lưu ý:</strong><br>
+                    Chỉ tính các đơn hoàn trả đã được phê duyệt
+                </div>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-light">
+                        <td class="fw-bold"><i class="fas fa-file-alt text-info me-2"></i>Số đơn hoàn trả:</td>
+                        <td class="text-end fw-bold">@((int?)ViewBag.ReturnedOrdersCount ?? 0) đơn</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-money-bill-wave text-danger me-2"></i>Tổng tiền hoàn:</td>
+                        <td class="text-end fw-bold text-danger fs-5">@Model.TotalReturned.ToString("N0") ₫</td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-calculator text-secondary me-2"></i>Trung bình/đơn:</td>
+                        <td class="text-end fw-bold">
+                            @{
+                                var avgReturn = (int?)ViewBag.ReturnedOrdersCount > 0 
+                                    ? (Model.TotalReturned / (int)ViewBag.ReturnedOrdersCount) 
+                                    : 0;
+                            }
+                            @avgReturn.ToString("N0") ₫
+                        </td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><i class="fas fa-percent text-warning me-2"></i>Tỷ lệ hoàn trả:</td>
+                        <td class="text-end fw-bold">
+                            @{
+                                var returnRate = Model.TotalOrders > 0 
+                                    ? ((decimal)(int?)ViewBag.ReturnedOrdersCount / Model.TotalOrders * 100) 
+                                    : 0;
+                            }
+                            @returnRate.ToString("N2")%
+                        </td>
+                    </tr>
+                </table>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Số tiền này được trừ vào doanh thu thực để tính lợi nhuận chính xác
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Điểm thành viên -->
+<div class="modal fade" id="pointsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-gift me-2"></i>Chi tiết Điểm thành viên</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng giá trị điểm tích lũy đã được sử dụng để giảm giá</p>
+                <div class="alert alert-info">
+                    <strong>Quy đổi:</strong><br>
+                    1 điểm = 1,000 ₫ giảm giá
+                </div>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-light">
+                        <td class="fw-bold"><i class="fas fa-coins text-warning me-2"></i>Tổng điểm đã dùng:</td>
+                        <td class="text-end fw-bold">
+                            @{
+                                var totalPointsUsed = Model.TotalPointsValue / 1000; // 1 điểm = 1000đ
+                            }
+                            @totalPointsUsed.ToString("N0") điểm
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><i class="fas fa-hand-holding-usd text-success me-2"></i>Giá trị quy đổi:</td>
+                        <td class="text-end fw-bold text-info fs-5">@Model.TotalPointsValue.ToString("N0") ₫</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><i class="fas fa-shopping-cart text-primary me-2"></i>Số đơn có dùng điểm:</td>
+                        <td class="text-end">
+                            <a href="@Url.Action("Index", "ManagerOrder", new { area = "Manager", startDate = ViewBag.StartDate, endDate = ViewBag.EndDate, hasPoints = true })" 
+                               class="btn btn-sm btn-primary" target="_blank">
+                                <i class="fas fa-external-link-alt me-1"></i>
+                                Xem chi tiết đơn hàng
+                            </a>
+                        </td>
+                    </tr>
+                </table>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Điểm được trừ riêng, không tính vào "Tổng giảm giá" ở card khác
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Tổng giảm giá -->
+<div class="modal fade" id="discountModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-tags me-2"></i>Chi tiết Tổng giảm giá</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Tổng giá trị các loại giảm giá đã áp dụng cho đơn hàng trong khoảng thời gian</p>
+                <div class="alert" style="background-color: #f3e8ff; border-color: #d8b4fe;">
+                    <strong>Công thức:</strong><br>
+                    Tổng giảm giá = Giảm khuyến mãi + Giảm voucher + Giảm ship
+                </div>
+                
+                <h6 class="fw-bold mb-3"><i class="fas fa-list-ul me-2"></i>Breakdown chi tiết:</h6>
+                <table class="table table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;" class="text-center">#</th>
+                            <th>Loại giảm giá</th>
+                            <th class="text-end" style="width: 150px;">Số tiền</th>
+                            <th class="text-end" style="width: 100px;">% Tổng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center">
+                                <i class="fas fa-gift" style="color: #ff6b6b; font-size: 1.2rem;"></i>
+                            </td>
+                            <td>
+                                <strong>Khuyến mãi sản phẩm</strong>
+                                <br><small class="text-muted">Giảm giá trực tiếp + CTKM tự động (ProductDiscount, PromotionGift...)</small>
+                            </td>
+                            <td class="text-end fw-bold" style="color: #ff6b6b;">
+                                @(((decimal?)ViewBag.PromotionDiscountOnly ?? 0).ToString("N0")) ₫
+                            </td>
+                            <td class="text-end">
+                                @{
+                                    var promoPercent = Model.TotalPromotionDiscount > 0 
+                                        ? (((decimal?)ViewBag.PromotionDiscountOnly ?? 0) / Model.TotalPromotionDiscount * 100) 
+                                        : 0;
+                                }
+                                <span class="badge bg-danger">@promoPercent.ToString("N1")%</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">
+                                <i class="fas fa-ticket-alt" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                            </td>
+                            <td>
+                                <strong>Voucher đơn hàng</strong>
+                                <br><small class="text-muted">Mã giảm giá áp dụng cho tổng đơn</small>
+                            </td>
+                            <td class="text-end fw-bold" style="color: #f59e0b;">
+                                @(((decimal?)ViewBag.VoucherDiscountOnly ?? 0).ToString("N0")) ₫
+                            </td>
+                            <td class="text-end">
+                                @{
+                                    var voucherPercent = Model.TotalPromotionDiscount > 0 
+                                        ? (((decimal?)ViewBag.VoucherDiscountOnly ?? 0) / Model.TotalPromotionDiscount * 100) 
+                                        : 0;
+                                }
+                                <span class="badge bg-warning">@voucherPercent.ToString("N1")%</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-center">
+                                <i class="fas fa-shipping-fast" style="color: #3b82f6; font-size: 1.2rem;"></i>
+                            </td>
+                            <td>
+                                <strong>Giảm phí vận chuyển</strong>
+                                <br><small class="text-muted">Voucher freeship hoặc giảm ship</small>
+                            </td>
+                            <td class="text-end fw-bold" style="color: #3b82f6;">
+                                @(((decimal?)ViewBag.ShippingDiscountOnly ?? 0).ToString("N0")) ₫
+                            </td>
+                            <td class="text-end">
+                                @{
+                                    var shipPercent = Model.TotalPromotionDiscount > 0 
+                                        ? (((decimal?)ViewBag.ShippingDiscountOnly ?? 0) / Model.TotalPromotionDiscount * 100) 
+                                        : 0;
+                                }
+                                <span class="badge bg-primary">@shipPercent.ToString("N1")%</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <td colspan="2" class="text-end fw-bold">
+                                <i class="fas fa-equals me-2" style="color: #8b5cf6;"></i>
+                                TỔNG GIẢM GIÁ:
+                            </td>
+                            <td class="text-end fw-bold fs-5" style="color: #8b5cf6;">
+                                @Model.TotalPromotionDiscount.ToString("N0") ₫
+                            </td>
+                            <td class="text-end">
+                                <span class="badge" style="background-color: #8b5cf6;">100%</span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div class="alert alert-info mb-2">
+                    <i class="fas fa-coins me-2"></i>
+                    <strong>Điểm thành viên:</strong> @Model.TotalPointsValue.ToString("N0") ₫
+                    <br><small>Được tính riêng, không bao gồm trong tổng giảm giá trên</small>
+                </div>
+
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Số liệu được tổng hợp từ @Model.TotalOrders đơn hàng trong khoảng thời gian đã chọn
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Quick filter function
+        function applyQuickFilter() {
+            const filter = document.getElementById('quickFilter').value;
+            const startDateInput = document.querySelector('input[name="startDate"]');
+            const endDateInput = document.querySelector('input[name="endDate"]');
+            
+            const today = new Date();
+            let startDate = new Date();
+            let endDate = new Date();
+            
+            switch(filter) {
+                case 'today':
+                    startDate = today;
+                    endDate = today;
+                    break;
+                case 'week':
+                    startDate.setDate(today.getDate() - 7);
+                    endDate = today;
+                    break;
+                case 'month':
+                    startDate.setDate(today.getDate() - 30);
+                    endDate = today;
+                    break;
+                case 'year':
+                    startDate.setFullYear(today.getFullYear() - 1);
+                    endDate = today;
+                    break;
+                default:
+                    return; // Không làm gì nếu chọn "-- Chọn bộ lọc --"
+            }
+            
+            // Format dates to YYYY-MM-DD
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+            
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+            
+            // Auto submit form
+            document.querySelector('form').submit();
+        }
+
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByDate.Select(r => new { date = r.Date.ToString("dd/MM"), revenue = r.Revenue, orders = r.OrderCount })));
+        
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: revenueData.map(d => d.date),
+                datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: revenueData.map(d => d.revenue),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('vi-VN');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Payment Method Chart
+        const paymentCtx = document.getElementById('paymentMethodChart').getContext('2d');
+        const paymentData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByPaymentMethod.Select(p => new { method = p.PaymentMethod, revenue = p.Revenue })));
+        
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: paymentData.map(p => p.method),
+                datasets: [{
+                    data: paymentData.map(p => p.revenue),
+                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(2);
+                                return context.label + ': ' + context.parsed.toLocaleString('vi-VN') + ' VNĐ (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RevenueByCategory.Select(c => new { name = c.CategoryName, revenue = c.Revenue })));
+        
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryData.map(c => c.name),
+                datasets: [{
+                    data: categoryData.map(c => c.revenue),
+                    backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(2);
+                                return context.label + ': ' + context.parsed.toLocaleString('vi-VN') + ' VNĐ (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Status Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const statusData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.OrdersByStatus.Select(s => new { status = s.Status, count = s.OrderCount })));
+        
+        new Chart(statusCtx, {
+            type: 'bar',
+            data: {
+                labels: statusData.map(s => s.status),
+                datasets: [{
+                    label: 'Số đơn hàng',
+                    data: statusData.map(s => s.count),
+                    backgroundColor: '#2563eb'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'Số đơn: ' + context.parsed.y;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    </script>
+
+    <style>
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            width: 100% !important; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+            background-color: #ffffff; 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+        }
+
+        /* Buttons */
+        .btn-primary, .btn-success, .btn-secondary {
+            border-radius: 6px; 
+            padding: 6px 12px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: var(--sidebar-hover); 
+            border-color: var(--sidebar-hover); 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .btn-success { 
+            background-color: #10b981; 
+            border-color: #10b981; 
+        }
+        
+        .btn-success:hover { 
+            background-color: #059669; 
+            border-color: #059669; 
+            transform: translateY(-1px); 
+        }
+        
+        .btn-secondary { 
+            background-color: #6b7280; 
+            border-color: #6b7280; 
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #4b5563; 
+            border-color: #4b5563; 
+            transform: translateY(-1px); 
+        }
+
+        /* Form Controls */
+        .form-control, .form-select {
+            border-radius: 6px; 
+            border: 1px solid #d1d5db; 
+            padding: 8px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1); 
+            outline: none; 
+        }
+
+        /* Stat Cards */
+        .stat-card { 
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover { 
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        /* Hover Card - Clickable */
+        .hover-card {
+            cursor: pointer;
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .hover-card:active {
+            transform: translateY(-2px) scale(1.01);
+        }
+        
+        .stat-icon { 
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        
+        /* Icon Gradients - Cyan/Teal theme */
+        .revenue-icon { background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); color: white; }
+        .actual-icon { background: linear-gradient(135deg, #0e7490 0%, #06b6d4 100%); color: white; }
+        .cost-icon { background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%); color: white; }
+        .profit-icon { background: linear-gradient(135deg, #0891b2 0%, #67e8f9 100%); color: white; }
+        .order-icon { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: white; }
+        .return-icon { background: linear-gradient(135deg, #ef4444 0%, #f87171 100%); color: white; }
+        .discount-icon { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); color: white; }
+        .points-icon { background: linear-gradient(135deg, #06b6d4 0%, #67e8f9 100%); color: white; }
+
+        /* Tables */
+        .table { 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            width: 100%; 
+            font-size: 0.9rem; 
+        }
+        
+        .table th, .table td { 
+            border-color: #e5e7eb; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 10px; 
+        }
+        
+        .table th { 
+            background-color: var(--primary-color); 
+            color: var(--text-light); 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+        }
+        
+        .table-hover tbody tr:hover { 
+            background-color: #f0fdfa; 
+        }
+        
+        /* Card Headers */
+        .card-header {
+            border-radius: 8px 8px 0 0 !important;
+            padding: 15px 20px;
+        }
+        
+        .card-header h5 {
+            font-size: 1rem;
+            margin-bottom: 0;
+            font-weight: 600;
+        }
+        
+        /* Typography */
+        h4 { 
+            font-size: 1.4rem; 
+            color: #164e63; 
+            font-weight: 700; 
+        }
+        
+        h5 { 
+            font-size: 1rem; 
+            font-weight: 600; 
+        }
+        
+        .text-uppercase { 
+            letter-spacing: 0.5px; 
+        }
+        
+        /* Badge */
+        .badge {
+            padding: 6px 12px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border-radius: 12px;
+        }
+        
+        .badge.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        /* Empty State */
+        .table tbody td .fa-inbox {
+            color: #cbd5e1;
+        }
+
+        /* Chart Containers */
+        .chart-container {
+            position: relative;
+        }
+
+        .chart-container canvas {
+            max-height: 300px;
+        }
+
+        .card.h-100 {
+            height: 100%;
+        }
+        
+        /* Modal Headers - Cyan theme */
+        .modal-header.bg-primary {
+            background-color: var(--primary-color) !important;
+        }
+        
+        .modal-header.bg-success {
+            background-color: #0e7490 !important;
+        }
+        
+        .modal-header.bg-warning {
+            background-color: #0891b2 !important;
+        }
+        
+        .modal-header.bg-info {
+            background-color: #06b6d4 !important;
+        }
+        
+        .modal-header.bg-danger {
+            background-color: #ef4444 !important;
+        }
+    </style>
+}

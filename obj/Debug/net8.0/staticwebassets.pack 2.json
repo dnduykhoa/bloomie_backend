@@ -1,0 +1,389 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/obj/Debug/net8.0/scopedcss/projectbundle/Bloomie.bundle.scp.css",
+      "PackagePath": "staticwebassets/Bloomie.bundle.scp.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/css/site.css",
+      "PackagePath": "staticwebassets/css/site.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/favicon.ico",
+      "PackagePath": "staticwebassets/favicon.ico"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/banners/banner1.gif",
+      "PackagePath": "staticwebassets/images/banners/banner1.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/banners/banner2.gif",
+      "PackagePath": "staticwebassets/images/banners/banner2.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/banners/banner3.gif",
+      "PackagePath": "staticwebassets/images/banners/banner3.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/banners/banner4.gif",
+      "PackagePath": "staticwebassets/images/banners/banner4.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/logos/bloomie_logo.png",
+      "PackagePath": "staticwebassets/images/logos/bloomie_logo.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/logos/hoa_chuc_mung.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_chuc_mung.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/logos/hoa_cuoi.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_cuoi.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/logos/hoa_sinh_nhat.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_sinh_nhat.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/logos/hoa_tinh_yeu.webp",
+      "PackagePath": "staticwebassets/images/logos/hoa_tinh_yeu.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 14.03.08_7e9adfaf.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 14.03.08_7e9adfaf.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 14.04.21_3bc4c599.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 14.04.21_3bc4c599.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 16.05.50_475089c8.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 16.05.50_475089c8.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-19 lúc 22.56.31_d3de67a9.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-19 lúc 22.56.31_d3de67a9.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/profiles/06b71a56-10c9-4200-b850-76da018862ac.jpg",
+      "PackagePath": "staticwebassets/images/profiles/06b71a56-10c9-4200-b850-76da018862ac.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/profiles/a46c789f-2e21-4637-89ac-4da713ff2dbd.jpg",
+      "PackagePath": "staticwebassets/images/profiles/a46c789f-2e21-4637-89ac-4da713ff2dbd.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/profiles/default-avatar.png",
+      "PackagePath": "staticwebassets/images/profiles/default-avatar.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/profiles/e1296bbb-7adb-4a43-bee3-0d0c251c2d07.jpg",
+      "PackagePath": "staticwebassets/images/profiles/e1296bbb-7adb-4a43-bee3-0d0c251c2d07.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/46b6b416-a388-452b-a0b7-8638cf302477.png",
+      "PackagePath": "staticwebassets/images/ratings/46b6b416-a388-452b-a0b7-8638cf302477.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/514c4f06-cbb8-417f-ac6c-9390a57b3721.jpg",
+      "PackagePath": "staticwebassets/images/ratings/514c4f06-cbb8-417f-ac6c-9390a57b3721.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/56e36aae-bf98-4a40-a522-e85cd17e288b.png",
+      "PackagePath": "staticwebassets/images/ratings/56e36aae-bf98-4a40-a522-e85cd17e288b.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/684db4c2-3340-4e7a-970f-9951e986d09f.png",
+      "PackagePath": "staticwebassets/images/ratings/684db4c2-3340-4e7a-970f-9951e986d09f.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/92a4f995-505c-40d1-8e6f-099a4fbcbdb0.jpg",
+      "PackagePath": "staticwebassets/images/ratings/92a4f995-505c-40d1-8e6f-099a4fbcbdb0.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/e0939265-0900-4dde-9155-ea260ee39ae3.png",
+      "PackagePath": "staticwebassets/images/ratings/e0939265-0900-4dde-9155-ea260ee39ae3.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/ratings/fc89f7f2-c22f-4df9-8601-f89e53ac97eb.png",
+      "PackagePath": "staticwebassets/images/ratings/fc89f7f2-c22f-4df9-8601-f89e53ac97eb.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/replies/011a66bd-6807-448b-90a6-50526bacd4b6.jpg",
+      "PackagePath": "staticwebassets/images/replies/011a66bd-6807-448b-90a6-50526bacd4b6.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/replies/893cb8d0-752a-403d-8f74-8457d4b92ef2.jpeg",
+      "PackagePath": "staticwebassets/images/replies/893cb8d0-752a-403d-8f74-8457d4b92ef2.jpeg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/replies/92351b86-a5be-4d02-8377-c3f72c383630.jpg",
+      "PackagePath": "staticwebassets/images/replies/92351b86-a5be-4d02-8377-c3f72c383630.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/replies/bd7b7e15-717f-4602-aca9-11cba5c9e9aa.jpg",
+      "PackagePath": "staticwebassets/images/replies/bd7b7e15-717f-4602-aca9-11cba5c9e9aa.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/images/replies/cbf08401-7e29-4ad6-8217-2d5706f2d48c.jpg",
+      "PackagePath": "staticwebassets/images/replies/cbf08401-7e29-4ad6-8217-2d5706f2d48c.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/js/login-history.js",
+      "PackagePath": "staticwebassets/js/login-history.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/js/site.js",
+      "PackagePath": "staticwebassets/js/site.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/LICENSE",
+      "PackagePath": "staticwebassets/lib/bootstrap"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/LICENSE.txt"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation/LICENSE.md",
+      "PackagePath": "staticwebassets/lib/jquery-validation/LICENSE.md"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation/dist/additional-methods.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/additional-methods.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation/dist/additional-methods.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/additional-methods.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation/dist/jquery.validate.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/jquery.validate.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery-validation/dist/jquery.validate.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/jquery.validate.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery/LICENSE.txt",
+      "PackagePath": "staticwebassets/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery/dist/jquery.js",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery/dist/jquery.min.js",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/lib/jquery/dist/jquery.min.map",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/DO AN/Bloomie/wwwroot/wards-hcm.json",
+      "PackagePath": "staticwebassets/wards-hcm.json"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.Bloomie.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.Bloomie.props",
+      "PackagePath": "build\\Bloomie.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.Bloomie.props",
+      "PackagePath": "buildMultiTargeting\\Bloomie.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.Bloomie.props",
+      "PackagePath": "buildTransitive\\Bloomie.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

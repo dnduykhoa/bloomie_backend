@@ -1,0 +1,413 @@
+@model IEnumerable<dynamic>
+@{
+    ViewData["Title"] = "Hoạt động gần đây";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-users text-primary me-2"></i>Quản lý người dùng
+                </h2>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Hoạt động hôm nay</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Đăng nhập hôm nay</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Người dùng mới tuần này</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value">0</div>
+                            <div class="stat-label">Đơn hàng hôm nay</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="Index">
+                        <i class="fas fa-users"></i> Đang hoạt động
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="DeletedUsers">
+                        <i class="fas fa-user-slash"></i> Đã vô hiệu hóa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="RecentActivity">
+                        <i class="fas fa-history"></i> Hoạt động gần đây
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Filter Options -->
+            <div class="card mb-4 border-0 bg-light">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Loại hoạt động</label>
+                            <select name="activityType" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="login">Đăng nhập</option>
+                                <option value="logout">Đăng xuất</option>
+                                <option value="register">Đăng ký</option>
+                                <option value="order">Đặt hàng</option>
+                                <option value="profile">Cập nhật thông tin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Từ ngày</label>
+                            <input type="date" name="fromDate" class="form-control" value="@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Đến ngày</label>
+                            <input type="date" name="toDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Lọc
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alert Info -->
+            <div class="alert alert-info border-0 mb-4" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-left: 4px solid #3b82f6 !important;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-info-circle fa-lg text-info me-3 mt-1"></i>
+                    <div>
+                        <strong>Thông tin:</strong> Hiển thị các hoạt động gần đây của người dùng trong hệ thống. Dữ liệu được cập nhật theo thời gian thực.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            @if (Model != null && Model.Any())
+            {
+                <div class="timeline-container">
+                    @foreach (var activity in Model)
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                <div class="timeline-icon bg-@GetBadgeColor(activity.Status)">
+                                    <i class="fas fa-@GetIcon(activity.Type)"></i>
+                                </div>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1 fw-bold">@activity.Type</h6>
+                                        <p class="mb-1 text-muted" style="font-size: 0.9rem;">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            @activity.Description
+                                        </p>
+                                    </div>
+                                    <span class="badge bg-@GetBadgeColor(activity.Status)">
+                                        <i class="fas fa-clock me-1"></i>
+                                        @activity.Timestamp.ToString("dd/MM/yyyy HH:mm")
+                                    </span>
+                                </div>
+                                <div class="activity-details">
+                                    <p class="mb-1"><i class="fas fa-map-marker-alt me-2 text-muted"></i>IP: @activity.IpAddress</p>
+                                    <p class="mb-0"><i class="fas fa-desktop me-2 text-muted"></i>@(activity.DeviceInfo.Length > 80 ? activity.DeviceInfo.Substring(0, 80) + "..." : activity.DeviceInfo)</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted mb-2">Chưa có hoạt động nào</h5>
+                    <p class="text-muted">Các hoạt động gần đây của người dùng sẽ được hiển thị tại đây.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetBadgeColor(string status)
+    {
+        return status switch
+        {
+            "success" => "success",
+            "warning" => "warning",
+            "danger" => "danger",
+            "info" => "info",
+            _ => "secondary"
+        };
+    }
+
+    string GetIcon(string type)
+    {
+        return type switch
+        {
+            "Đăng nhập" => "sign-in-alt",
+            "Truy cập trang" => "eye",
+            "Tạo tài khoản" => "user-plus",
+            "Xóa tài khoản" => "trash",
+            _ => "circle"
+        };
+    }
+}
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+        border-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-select, .form-control {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-select:focus, .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        flex-shrink: 0;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-dark);
+        border-radius: 6px 6px 0 0;
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom: 3px solid var(--primary-color);
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+    }
+
+    .alert {
+        border-radius: 8px;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 12px;
+    }
+
+    /* Timeline Styles */
+    .timeline-container {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline-item {
+        position: relative;
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: relative;
+        flex-shrink: 0;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        font-size: 0.7rem;
+        color: white;
+        position: relative;
+        z-index: 2;
+    }
+
+    .timeline-marker::after {
+        content: '';
+        position: absolute;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: calc(100% + 30px);
+        background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+    }
+
+    .timeline-item:last-child .timeline-marker::after {
+        display: none;
+    }
+
+    .timeline-content {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-content:hover {
+        background-color: #f8fafc;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateX(4px);
+    }
+
+    .activity-details {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .activity-details p {
+        line-height: 1.8;
+    }
+</style>

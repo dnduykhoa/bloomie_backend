@@ -1,0 +1,344 @@
+@model object
+@using Bloomie.Models.Entities
+
+@{
+    ViewData["Title"] = "Tặng Voucher";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.User as Bloomie.Data.ApplicationUser;
+    var promotionCodes = ViewBag.PromotionCodes as List<PromotionCode>;
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-gift text-primary me-2"></i>Tặng Voucher cho @user?.UserName
+                </h2>
+            </div>
+
+            <!-- Error Messages -->
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>@TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-7">
+                    <form asp-action="GiftVoucher" method="post">
+                        <input type="hidden" name="userId" value="@user?.Id" />
+                        
+                        <!-- Card: Chọn Voucher -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">
+                                <i class="fas fa-ticket-alt text-primary me-2"></i>Chọn Mã Khuyến Mãi <span class="text-danger">*</span>
+                            </div>
+                            <div class="card-body">
+                                @if (promotionCodes != null && promotionCodes.Any())
+                                {
+                                    <div class="voucher-list">
+                                        @foreach (var promoCode in promotionCodes)
+                                        {
+                                            var promotion = promoCode.Promotion;
+                                            <label class="voucher-item">
+                                                <input class="form-check-input" type="radio" name="promotionCodeId" value="@promoCode.Id" required />
+                                                <div class="voucher-content">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="mb-1">
+                                                                <code class="text-danger fs-5">@promoCode.Code</code>
+                                                                @if (promotion != null)
+                                                                {
+                                                                    <span class="text-muted">- @promotion.Name</span>
+                                                                }
+                                                            </h6>
+                                                        </div>
+                                                        <div>
+                                                            @if (promoCode.IsPercent)
+                                                            {
+                                                                <span class="badge bg-success">@promoCode.Value%</span>
+                                                                if (promoCode.MaxDiscount.HasValue)
+                                                                {
+                                                                    <small class="text-muted ms-1">(Tối đa @promoCode.MaxDiscount.Value.ToString("N0")₫)</small>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-success">-@promoCode.Value?.ToString("N0")₫</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    @if (promotion != null && !string.IsNullOrEmpty(promotion.Description))
+                                                    {
+                                                        <p class="mb-2 text-muted small">@promotion.Description</p>
+                                                    }
+                                                    
+                                                    <div class="d-flex gap-3 small text-muted">
+                                                        @if (promoCode.ExpiryDate.HasValue)
+                                                        {
+                                                            <span>
+                                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                                HSD: @promoCode.ExpiryDate.Value.ToString("dd/MM/yyyy")
+                                                            </span>
+                                                        }
+                                                        @if (promoCode.UsageLimit.HasValue)
+                                                        {
+                                                            <span>
+                                                                <i class="fas fa-users me-1"></i>
+                                                                Đã dùng: @promoCode.UsedCount/@promoCode.UsageLimit
+                                                            </span>
+                                                        }
+                                                        @if (promoCode.LimitPerCustomer)
+                                                        {
+                                                            <span class="badge bg-info">1 lần/khách</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Hiện không có mã khuyến mãi nào khả dụng. Vui lòng tạo mã khuyến mãi trước.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Card: Ghi chú -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">
+                                <i class="fas fa-comment-alt text-primary me-2"></i>Ghi Chú (Tùy chọn)
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" id="note" name="note" rows="3" 
+                                          placeholder="Nhập lý do tặng voucher hoặc ghi chú cho người dùng..."></textarea>
+                                <small class="text-muted mt-2 d-block">
+                                    Nếu để trống, hệ thống sẽ tự động thêm ghi chú mặc định.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a asp-action="Details" asp-route-id="@user?.Id" class="btn btn-secondary px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4" @(promotionCodes == null || !promotionCodes.Any() ? "disabled" : "")>
+                                <i class="fas fa-gift me-2"></i>Tặng Voucher
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-5">
+                    <!-- Card: Thông tin người dùng -->
+                    <div class="card mb-3">
+                        <div class="card-header fw-bold bg-light">
+                            <i class="fas fa-user-circle text-primary me-2"></i>Thông Tin Người Dùng
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-4">Tên đăng nhập:</dt>
+                                <dd class="col-8">@user?.UserName</dd>
+                                
+                                <dt class="col-4">Email:</dt>
+                                <dd class="col-8">@user?.Email</dd>
+                                
+                                @if (!string.IsNullOrEmpty(user?.PhoneNumber))
+                                {
+                                    <dt class="col-4">SĐT:</dt>
+                                    <dd class="col-8">@user?.PhoneNumber</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- Card: Lưu ý -->
+                    <div class="card mb-3">
+                        <div class="card-header fw-bold bg-warning bg-opacity-10">
+                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Lưu Ý
+                        </div>
+                        <div class="card-body">
+                            <ul class="mb-0 ps-3" style="font-size: 0.95rem;">
+                                <li class="mb-2">Voucher sẽ được thêm vào ví của người dùng ngay lập tức</li>
+                                <li class="mb-2">Người dùng có thể xem và sử dụng voucher khi thanh toán</li>
+                                <li class="mb-2">Hệ thống sẽ kiểm tra voucher có hợp lệ trước khi tặng</li>
+                                <li class="mb-0">Không thể tặng voucher mà người dùng đã có (chưa dùng)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-success {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    dl dt {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    dl dd {
+        color: #6b7280;
+    }
+
+    /* Voucher List Styles */
+    .voucher-list {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .voucher-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .voucher-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .voucher-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .voucher-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .voucher-item {
+        display: flex;
+        align-items: start;
+        padding: 16px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background-color: #fff;
+    }
+    
+    .voucher-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .voucher-item .form-check-input {
+        width: 1.5em;
+        height: 1.5em;
+        margin-right: 16px;
+        margin-top: 0;
+        cursor: pointer;
+    }
+
+    .voucher-item .voucher-content {
+        flex: 1;
+    }
+    
+    .voucher-item:has(input:checked) {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    }
+    
+    code {
+        font-size: 1.1rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        background-color: #f8f9fa;
+    }
+</style>

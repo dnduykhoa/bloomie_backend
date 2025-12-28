@@ -1,0 +1,513 @@
+@model Bloomie.Models.ViewModels.ProductViewModel
+@using Bloomie.Models.Entities
+@inject Bloomie.Data.ApplicationDbContext db
+@{
+    ViewData["Title"] = "Thêm sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var shapeCategories = db.Categories.Where(c => c.Type == (int)CategoryType.Shape).ToList();
+    var allCategories = db.Categories.Where(c => c.Type != (int)CategoryType.Shape).ToList();
+    var flowerTypes = db.FlowerTypes.Select(ft => new { Id = ft.Id, Name = ft.Name }).ToList();
+    var flowerVariants = db.FlowerVariants.Select(fv => new { Id = fv.Id, Name = fv.Name, FlowerTypeId = fv.FlowerTypeId }).ToList();
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i> Thêm sản phẩm mới
+                </h2>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin cơ bản</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label for="Name" class="form-label fw-bold">Tên sản phẩm <span class="text-danger">*</span></label>
+                                    <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm" />
+                                    <span asp-validation-for="Name" class="text-danger"></span>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="Price" class="form-label fw-bold">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                            <input asp-for="Price" class="form-control" placeholder="0" />
+                                            <span asp-validation-for="Price" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="StockQuantity" class="form-label fw-bold">Số lượng <span class="text-danger">*</span></label>
+                                            <input asp-for="StockQuantity" class="form-control" placeholder="0" />
+                                            <span asp-validation-for="StockQuantity" class="text-danger"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="ShapeCategoryId" class="form-label fw-bold">Kiểu trình bày</label>
+                                    <select asp-for="ShapeCategoryId" class="form-select">
+                                        <option value="">-- Chọn kiểu trình bày --</option>
+                                        @foreach (var cat in shapeCategories)
+                                        {
+                                            <option value="@cat.Id">@cat.Name</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="ShapeCategoryId" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="CategoryIds" class="form-label fw-bold">Danh mục sản phẩm</label>
+                                    <div class="custom-multiselect">
+                                        <button class="multiselect-button" type="button" onclick="toggleCategoryDropdown()">
+                                            <span id="selectedCategoriesText">-- Chọn danh mục --</span>
+                                            <i class="fas fa-chevron-down dropdown-arrow ms-auto"></i>
+                                        </button>
+                                        <div class="multiselect-dropdown" id="categoryDropdownMenu">
+                                            @foreach (var cat in allCategories)
+                                            {
+                                                <label class="multiselect-option">
+                                                    <input class="category-checkbox" type="checkbox" name="CategoryIds" value="@cat.Id">
+                                                    <span class="checkbox-custom"></span>
+                                                    <span class="option-text">@cat.Name</span>
+                                                </label>
+                                            }
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Chọn một hoặc nhiều danh mục</small>
+                                    <span asp-validation-for="CategoryIds" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-image text-primary me-2"></i> Hình ảnh</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label for="MainImage" class="form-label fw-bold">Ảnh chính <span class="text-danger">*</span></label>
+                                    <input type="file" asp-for="MainImage" class="form-control" accept="image/*" />
+                                    <small class="form-text text-muted">Định dạng: JPG, PNG, GIF (tối đa 5MB)</small>
+                                    <span asp-validation-for="MainImage" class="text-danger"></span>
+                                </div>
+
+                                <div class="form-group mb-0">
+                                    <label for="SubImages" class="form-label fw-bold">Ảnh phụ</label>
+                                    <input type="file" asp-for="SubImages" multiple class="form-control" accept="image/*" />
+                                    <small class="form-text text-muted">Có thể chọn nhiều ảnh (Giữ <kbd>Ctrl</kbd> hoặc <kbd>Cmd</kbd> để chọn nhiều file)</small>
+                                    <span asp-validation-for="SubImages" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-leaf text-primary me-2"></i> Thành phần loại hoa</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="flower-list">
+                                    <!-- JS sẽ thêm các dòng ở đây -->
+                                </div>
+                                <button type="button" class="btn btn-success btn-sm mt-2" onclick="addFlowerRow()">
+                                    <i class="fas fa-plus me-1"></i> Thêm loại hoa
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Mô tả chi tiết - Full Width -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-align-left text-primary me-2"></i> Mô tả chi tiết</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group mb-0">
+                                    <textarea asp-for="Description" class="form-control" id="Description" rows="8"></textarea>
+                                    <span asp-validation-for="Description" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a class="btn btn-secondary" href="@Url.Action("Index")">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu sản phẩm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
+    <script>
+        ClassicEditor
+            .create(document.querySelector('#Description'))
+            .catch(error => {
+                console.error(error);
+            });
+    </script>
+
+    <script>
+    var flowerTypes = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(flowerTypes));
+    var flowerVariants = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(flowerVariants));
+    
+    function toggleCategoryDropdown() {
+        const dropdown = document.getElementById('categoryDropdownMenu');
+        const arrow = document.querySelector('.dropdown-arrow');
+        dropdown.classList.toggle('show');
+        arrow.classList.toggle('rotated');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const multiselect = document.querySelector('.custom-multiselect');
+        if (multiselect && !multiselect.contains(event.target)) {
+            document.getElementById('categoryDropdownMenu').classList.remove('show');
+            document.querySelector('.dropdown-arrow').classList.remove('rotated');
+        }
+    });
+
+    function addFlowerRow() {
+        var idx = document.querySelectorAll('.flower-row').length;
+        var html = `<div class="flower-row mb-3 p-3 border rounded bg-light">
+            <div class="row g-2">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Loại hoa</label>
+                    <select class="form-select flower-type-select">
+                        <option value="">-- Chọn loại hoa --</option>`;
+        flowerTypes.forEach(ft => {
+            html += `<option value="${ft.Id}">${ft.Name}</option>`;
+        });
+        html += `</select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Biến thể</label>
+                    <select name="Flowers[${idx}].FlowerVariantId" class="form-select flower-variant-select" disabled>
+                        <option value="">-- Chọn biến thể --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Số lượng</label>
+                    <input type="number" name="Flowers[${idx}].Quantity" class="form-control" placeholder="0" min="1" />
+                </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm mt-2" onclick="this.closest('.flower-row').remove()">
+                <i class="fas fa-trash me-1"></i> Xóa
+            </button>
+        </div>`;
+        var container = document.createElement('div');
+        container.innerHTML = html;
+        var row = container.firstChild;
+        // Add event listener for type select
+        var typeSelect = row.querySelector('.flower-type-select');
+        var variantSelect = row.querySelector('.flower-variant-select');
+        typeSelect.addEventListener('change', function() {
+            var typeId = this.value;
+            variantSelect.innerHTML = '<option value="">-- Chọn biến thể --</option>';
+            if (typeId) {
+                flowerVariants.filter(fv => fv.FlowerTypeId == typeId).forEach(fv => {
+                    variantSelect.innerHTML += `<option value="${fv.Id}">${fv.Name}</option>`;
+                });
+                variantSelect.disabled = false;
+            } else {
+                variantSelect.disabled = true;
+            }
+        });
+        document.getElementById('flower-list').appendChild(row);
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.querySelectorAll('.flower-row').length === 0) {
+            addFlowerRow();
+        }
+
+        // Category dropdown selection
+        const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+        const selectedText = document.getElementById('selectedCategoriesText');
+        
+        categoryCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const selected = Array.from(categoryCheckboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.nextElementSibling.textContent.trim());
+                
+                if (selected.length === 0) {
+                    selectedText.textContent = '-- Chọn danh mục --';
+                } else if (selected.length === 1) {
+                    selectedText.textContent = selected[0];
+                } else {
+                    selectedText.textContent = `${selected.length} danh mục đã chọn`;
+                }
+            });
+        });
+    });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #60a5fa;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --background-light: #f8fafc;
+        }
+        
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            border-radius: 8px; 
+            background-color: #ffffff; 
+        }
+        
+        .card-body { 
+            padding: 20px; 
+        }
+
+        .card-header {
+            border-radius: 8px 8px 0 0 !important;
+            padding: 12px 20px;
+        }
+
+        .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+            border-radius: 6px; 
+            padding: 8px 16px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: #1d4ed8; 
+            border-color: #1d4ed8; 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+
+        .btn-secondary { 
+            background-color: #6b7280; 
+            border-color: #6b7280; 
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #4b5563; 
+            transform: translateY(-1px); 
+        }
+
+        .btn-success {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .flower-row {
+            background-color: #f9fafb !important;
+            border: 1px solid #e5e7eb !important;
+        }
+
+        .alert-danger {
+            border-radius: 6px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        /* Custom multiselect dropdown */
+        .custom-multiselect {
+            position: relative;
+        }
+
+        .multiselect-button {
+            width: 100%;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .multiselect-button:hover {
+            border-color: var(--primary-color);
+        }
+
+        .multiselect-button:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+
+        .dropdown-arrow.rotated {
+            transform: rotate(180deg);
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .multiselect-dropdown.show {
+            display: block;
+        }
+
+        .multiselect-option {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            margin: 0;
+            transition: background-color 0.15s ease;
+        }
+
+        .multiselect-option:last-child {
+            border-bottom: none;
+        }
+
+        .multiselect-option:hover {
+            background-color: #f9fafb;
+        }
+
+        .multiselect-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+
+        .dropdown-menu {
+            border-radius: 6px;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-check {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .form-check:last-child {
+            border-bottom: none;
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .form-check-label {
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        #categoryDropdown {
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .ck-editor__editable[role="textbox"] {
+            min-height: 350px;
+            max-height: 600px;
+        }
+    </style>
+}

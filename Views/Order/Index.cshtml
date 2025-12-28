@@ -1,0 +1,320 @@
+@model IEnumerable<Bloomie.Models.Entities.Order>
+
+@{
+    ViewData["Title"] = "Đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Đơn hàng</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-shopping-bag me-2"></i>
+                Đơn Hàng
+            </h1>
+            <p class="header-subtitle">Theo dõi tình trạng đơn hàng của bạn</p>
+        </div>
+    </div>
+</div>
+
+<section class="order-section">
+    <div class="container">
+
+        @if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Bộ lọc trạng thái -->
+        <div class="filter-section mb-4">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="@Url.Action("Index", "Order")" class="btn @(string.IsNullOrEmpty(ViewBag.CurrentStatus) ? "btn-primary" : "btn-outline-primary")">Tất cả</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Chờ xác nhận" })" class="btn @(ViewBag.CurrentStatus == "Chờ xác nhận" ? "btn-primary" : "btn-outline-primary")">Chờ xác nhận</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Đã xác nhận" })" class="btn @(ViewBag.CurrentStatus == "Đã xác nhận" ? "btn-primary" : "btn-outline-primary")">Đã xác nhận</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Đang giao" })" class="btn @(ViewBag.CurrentStatus == "Đang giao" ? "btn-primary" : "btn-outline-primary")">Đang giao</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Hoàn thành" })" class="btn @(ViewBag.CurrentStatus == "Hoàn thành" ? "btn-primary" : "btn-outline-primary")">Hoàn thành</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Đã hoàn trả" })" class="btn @(ViewBag.CurrentStatus == "Đã hoàn trả" ? "btn-primary" : "btn-outline-primary")">Hoàn trả</a>
+                <a href="@Url.Action("Index", "Order", new { status = "Đã hủy" })" class="btn @(ViewBag.CurrentStatus == "Đã hủy" ? "btn-primary" : "btn-outline-primary")">Đã hủy</a>
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Bạn chưa có đơn hàng nào</h4>
+                <p class="text-muted">Hãy bắt đầu mua sắm để tạo đơn hàng đầu tiên!</p>
+                <a href="@Url.Action("Index", "Product")" class="btn btn-primary">Mua sắm ngay</a>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var order in Model)
+                {
+                    <div class="col-md-12 mb-4">
+                        <div class="order-card card shadow-sm">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="card-title mb-2">Đơn hàng #@order.OrderId</h5>
+                                        <p class="card-text mb-1">
+                                            <strong>Ngày đặt:</strong> @order.OrderDate.ToString("dd/MM/yyyy HH:mm")
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <strong>Tổng tiền:</strong> @order.TotalAmount.ToString("#,##0") đ
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <strong>Thanh toán:</strong> @order.PaymentMethod
+                                        </p>
+                                        <p class="card-text mb-1">
+                                            <strong>Giao hàng:</strong> @order.ShippingAddress
+                                        </p>
+                                        @if (!string.IsNullOrEmpty(order.Note))
+                                        {
+                                            <p class="card-text mb-1">
+                                                <strong>Ghi chú:</strong> @order.Note
+                                            </p>
+                                        }
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <div class="mb-2">
+                                            <span class="badge fs-6
+                                                @(order.Status == "Chờ xác nhận" ? "bg-warning text-dark" :
+                                                  order.Status == "Đã xác nhận" ? "bg-info text-white" :
+                                                  order.Status == "Đang giao" ? "bg-primary" :
+                                                  order.Status == "Hoàn thành" ? "bg-success" :
+                                                  order.Status == "Đã hoàn trả" ? "bg-success" :
+                                                  order.Status == "Đã hủy" ? "bg-danger" : "bg-secondary")">
+                                                @order.Status
+                                            </span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="badge fs-6
+                                                @(order.PaymentStatus == "Đã thanh toán" ? "bg-success text-white" :
+                                                  order.PaymentStatus == "Chờ thanh toán" ? "bg-warning text-dark" :
+                                                  "bg-secondary text-white")">
+                                                @order.PaymentStatus
+                                            </span>
+                                        </div>
+                                        <div class="btn-group-vertical" role="group">
+                                            <a href="@Url.Action("Details", "Order", new { id = order.Id })" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                                            <a href="@Url.Action("TrackOrder", "Order", new { id = order.Id })" class="btn btn-outline-info btn-sm">Theo dõi</a>
+                                            @if (order.Status == "Chờ xác nhận")
+                                            {
+                                                <form method="post" action="@Url.Action("CancelOrder", "Order", new { id = order.Id })" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">Hủy đơn</button>
+                                                </form>
+                                            }
+                                            @if (order.Status == "Đã giao")
+                                            {
+                                                <form method="post" action="@Url.Action("ConfirmReceived", "Order", new { id = order.Id })" class="d-inline" onsubmit="return confirm('Xác nhận đã nhận hàng?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-outline-success btn-sm">Đã nhận hàng</button>
+                                                </form>
+                                            }
+                                            @if (order.Status == "Hoàn thành")
+                                            {
+                                                <a href="@Url.Action("Reorder", "Order", new { id = order.Id })" class="btn btn-outline-secondary btn-sm">Đặt lại</a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<style>
+    /* Animations */
+    .customer-header {
+        animation: slideDown 0.6s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .container {
+        animation: fadeInUp 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    .order-section {
+        padding: 0 0 40px;
+    }
+
+    .order-section h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #D0021B;
+        text-align: center;
+        position: relative;
+        margin-bottom: 35px;
+    }
+
+    .order-section h2::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: #D0021B;
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .filter-section {
+        text-align: center;
+    }
+
+    .order-card {
+        border: none;
+        border-radius: 10px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .order-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .breadcrumb {
+        font-size: 1rem;
+        background-color: transparent;
+        padding: 0 15px;
+        margin: 0;
+    }
+
+    .breadcrumb-item a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #D0021B;
+    }
+
+    .breadcrumb-item.active {
+        color: #333;
+        font-weight: 500;
+    }
+</style>

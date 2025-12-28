@@ -1,0 +1,356 @@
+@model List<Bloomie.Models.ViewModels.UserRoleViewModel>
+
+@{
+    ViewData["Title"] = "Phân Quyền Người Dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-user-shield text-primary me-2"></i>Phân Quyền Người Dùng
+                </h2>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-7">
+                    <form asp-action="ManageUserRoles" asp-route-userId="@ViewBag.UserId" method="post">
+                        <!-- Card: Thông tin người dùng -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">
+                                <i class="fas fa-info-circle text-primary me-2"></i>Thông tin người dùng
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên đăng nhập</label>
+                                    <input type="text" class="form-control" value="@ViewBag.UserName" readonly style="background-color: #f8f9fa;">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="text" class="form-control" value="@ViewBag.Email" readonly style="background-color: #f8f9fa;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card: Chọn vai trò -->
+                        <div class="card mb-3">
+                            <div class="card-header fw-bold">
+                                <i class="fas fa-user-tag text-primary me-2"></i>Chọn vai trò <span class="text-danger">*</span>
+                            </div>
+                            <div class="card-body">
+                                @if (Model != null && Model.Any())
+                                {
+                                    <div class="role-selection-container">
+                                        @for (int i = 0; i < Model.Count; i++)
+                                        {
+                                            <div class="form-check form-check-card mb-3">
+                                                <input type="hidden" asp-for="@Model[i].RoleId" />
+                                                <input type="hidden" asp-for="@Model[i].RoleName" />
+                                                <input class="form-check-input" 
+                                                       type="checkbox" 
+                                                       asp-for="@Model[i].IsSelected" 
+                                                       id="role_@i">
+                                                <label class="form-check-label w-100" for="role_@i">
+                                                    <div class="p-3 border rounded hover-shadow" style="transition: all 0.3s;">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-3">
+                                                                @switch (Model[i].RoleName?.ToLower())
+                                                                {
+                                                                    case "admin":
+                                                                        <i class="fas fa-user-shield fa-2x text-danger"></i>
+                                                                        break;
+                                                                    case "manager":
+                                                                        <i class="fas fa-user-tie fa-2x text-warning"></i>
+                                                                        break;
+                                                                    case "staff":
+                                                                        <i class="fas fa-user-cog fa-2x text-info"></i>
+                                                                        break;
+                                                                    default:
+                                                                        <i class="fas fa-user fa-2x text-primary"></i>
+                                                                        break;
+                                                                }
+                                                            </div>
+                                                            <div>
+                                                                <h6 class="mb-0 fw-bold text-dark">@Model[i].RoleName</h6>
+                                                                <small class="text-muted">
+                                                                    @switch (Model[i].RoleName?.ToLower())
+                                                                    {
+                                                                        case "admin":
+                                                                            <span>Quản trị viên hệ thống</span>
+                                                                            break;
+                                                                        case "manager":
+                                                                            <span>Quản lý cửa hàng</span>
+                                                                            break;
+                                                                        case "staff":
+                                                                            <span>Nhân viên cửa hàng</span>
+                                                                            break;
+                                                                        default:
+                                                                            <span>Người dùng thông thường</span>
+                                                                            break;
+                                                                    }
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Không có vai trò nào trong hệ thống.
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Required Field Note -->
+                        <div class="text-end mb-3">
+                            <small class="text-muted">
+                                <i class="fas fa-asterisk text-danger" style="font-size: 0.6rem;"></i> Trường bắt buộc
+                            </small>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a href="@Url.Action("Index", "AdminUser")" class="btn btn-secondary px-4">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-2"></i>Lưu Thay Đổi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right Column - Hướng dẫn -->
+                <div class="col-lg-5">
+                    <!-- Success/Error Messages -->
+                    @if (TempData["success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <!-- Card Hướng dẫn -->
+                    <div class="card mb-3">
+                        <div class="card-header fw-bold bg-info bg-opacity-10">
+                            <i class="fas fa-question-circle me-2"></i>Hướng dẫn phân quyền
+                        </div>
+                        <div class="card-body" style="font-size:1.04rem;">
+                            <ul class="mb-2 ps-3">
+                                <li><b>Admin (Quản trị viên)</b>:<br>
+                                    - Quyền cao nhất trong hệ thống<br>
+                                    - Quản lý toàn bộ hệ thống, người dùng, vai trò<br>
+                                    - Truy cập tất cả các chức năng quản trị
+                                </li>
+                                <li class="mt-2"><b>Manager (Quản lý)</b>:<br>
+                                    - Quản lý cửa hàng, sản phẩm, đơn hàng<br>
+                                    - Xem báo cáo, thống kê<br>
+                                    - Quản lý nhân viên và khuyến mãi
+                                </li>
+                                <li class="mt-2"><b>Staff (Nhân viên)</b>:<br>
+                                    - Xử lý đơn hàng, phục vụ khách hàng<br>
+                                    - Cập nhật trạng thái đơn hàng<br>
+                                    - Hỗ trợ khách hàng và xử lý đánh giá
+                                </li>
+                            </ul>
+                            <div class="alert alert-info mt-3 mb-0 p-2" style="font-size:0.98em; border-left: 4px solid #0dcaf0;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <b>Lưu ý:</b> Một người dùng có thể có nhiều vai trò. Quyền hạn sẽ được tổng hợp từ tất cả các vai trò được gán.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Thông tin bổ sung -->
+                    <div class="card mb-3">
+                        <div class="card-header fw-bold bg-warning bg-opacity-10">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Lưu ý quan trọng
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning mb-2 p-2" style="font-size:0.95em;">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <strong>Bảo mật:</strong> Chỉ gán vai trò Admin cho những người đáng tin cậy. Vai trò này có toàn quyền kiểm soát hệ thống.
+                            </div>
+                            <div class="alert alert-info mb-0 p-2" style="font-size:0.95em;">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                <strong>Cập nhật:</strong> Thay đổi vai trò sẽ có hiệu lực ngay lập tức. Người dùng cần đăng nhập lại để áp dụng quyền mới.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-success {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-success {
+        background-color: #10b981;
+        border-color: #10b981;
+    }
+
+    .btn-success:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .form-check-card {
+        margin-bottom: 0;
+    }
+
+    .form-check-card .form-check-input {
+        width: 1.5em;
+        height: 1.5em;
+        margin-top: 0;
+    }
+
+    .form-check-card .form-check-label {
+        cursor: pointer;
+        margin-left: 0.5rem;
+    }
+
+    .form-check-card .border {
+        border-color: #dee2e6 !important;
+        background: #fff;
+    }
+
+    .form-check-card input:checked ~ label .border {
+        border-color: #2563eb !important;
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15);
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        transform: translateY(-1px);
+    }
+
+    .role-selection-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .role-selection-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .role-selection-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .role-selection-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .role-selection-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+</style>

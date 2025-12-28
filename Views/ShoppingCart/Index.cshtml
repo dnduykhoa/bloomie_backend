@@ -1,0 +1,1063 @@
+@model Bloomie.Models.Entities.ShoppingCart
+@using Bloomie.Data
+@using Bloomie.Models.Entities
+@{
+    ViewData["Title"] = "Giỏ hàng";
+    var cart = Model;
+    // Tạm tính: chỉ tính sản phẩm thường (không tính gift items)
+    var total = cart.CartItems?.Where(i => !i.IsGift).Sum(i => ((i.Product?.Price ?? 0) - (i.Discount ?? 0)) * i.Quantity) ?? 0;
+    // Giảm giá từ voucher
+    var discount = cart.DiscountAmount ?? 0;
+    // Tổng giá gift items (miễn phí hoặc giảm giá)
+    var giftTotal = cart.CartItems?.Where(i => i.IsGift).Sum(i => ((i.Product?.Price ?? 0) - (i.Discount ?? 0)) * i.Quantity) ?? 0;
+    // Tổng thanh toán = Tạm tính - Giảm giá + Gift items
+    var finalTotal = total - discount + giftTotal;
+    if (finalTotal < 0) finalTotal = 0;
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Giỏ hàng</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-shopping-cart me-2"></i>
+                Giỏ Hàng Của Bạn
+            </h1>
+            <p class="header-subtitle">Kiểm tra sản phẩm và hoàn tất đơn hàng</p>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    @if (cart.CartItems == null || !cart.CartItems.Any())
+    {
+        <div class="alert alert-info">Giỏ hàng đang trống.</div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <form method="post" action="/Order/Checkout">
+                    <table class="table align-middle table-bordered bg-white">
+                        <thead class="table-light">
+                            <tr>
+                                <th><input type="checkbox" id="selectAll" /></th>
+                                <th>Ảnh</th>
+                                <th>Sản phẩm</th>
+                                <th>Giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in cart.CartItems)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!item.IsGift)
+                                    {
+                                        <input type="checkbox" name="selectedItems" value="@item.ProductId" checked />
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var firstImageUrl = !string.IsNullOrEmpty(item.Product?.ImageUrl) 
+                                            ? item.Product.ImageUrl 
+                                            : (item.Product?.Images?.FirstOrDefault()?.Url ?? "/images/placeholder.jpg");
+                                    }
+                                    <img src="@firstImageUrl" alt="Ảnh sản phẩm" style="width:60px;height:60px;object-fit:cover;" />
+                                </td>
+                                <td>
+                                    <strong>@item.Product?.Name</strong><br />
+                                    @if (!item.IsGift)
+                                    {
+                                        <div class="delivery-info-edit mt-2">
+                                            <div class="delivery-info-display" style="cursor:pointer" data-cartitem="@item.ProductId">
+                                                <div>
+                                                    <span class="small fw-bold text-muted">Ngày giao:</span>
+                                                    <span class="delivery-date-text">@item.DeliveryDate?.ToString("dd/MM/yyyy")</span>
+                                                </div>
+                                                <div>
+                                                    <span class="small fw-bold text-muted">Khung giờ:</span>
+                                                    <span class="delivery-time-text">@item.DeliveryTime</span>
+                                                </div>
+                                                <div class="mt-1">
+                                                    <span class="text-primary" style="cursor:pointer"><i class="bi bi-pencil"></i> Đổi</span>
+                                                </div>
+                                            </div>
+                                            <form method="post" action="/ShoppingCart/UpdateDeliveryInfo" class="delivery-update-form d-none">
+                                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                                <input type="hidden" name="deliveryDate" class="delivery-date-value" value="@item.DeliveryDate?.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="deliveryTime" class="delivery-time-value" value="@item.DeliveryTime" />
+                                            </form>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        // Lấy ngày giao và khung giờ từ sản phẩm mua cùng ProductId
+                                        var mainItem = cart.CartItems?.FirstOrDefault(i => i.ProductId == item.ProductId && !i.IsGift);
+                                        <small>Ngày giao: @mainItem?.DeliveryDate?.ToString("dd/MM/yyyy")</small><br />
+                                        <small>Khung giờ: @mainItem?.DeliveryTime</small>
+                                    }
+                                    @if (item.IsGift)
+                                    {
+                                        <br />
+                                        <div class="badge bg-info text-dark mt-1">Sản phẩm tặng kèm</div>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!item.IsGift)
+                                    {
+                                        @if (item.Discount > 0)
+                                        {
+                                            var discountedPrice = (item.Product?.Price ?? 0) - (item.Discount ?? 0);
+                                            <div class="text-danger fw-bold">@String.Format("{0:#,##0}", discountedPrice) đ</div>
+                                            <div class="text-muted small"><del>@String.Format("{0:#,##0}", item.Product?.Price) đ</del></div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-danger">@String.Format("{0:#,##0}", item.Product?.Price) đ</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var price = (item.Product?.Price ?? 0) - (item.Discount ?? 0);
+                                        if (item.Discount >= (item.Product?.Price ?? 0))
+                                        {
+                                            <span class="text-info">Miễn phí</span>
+                                        }
+                                        else if (item.Discount > 0)
+                                        {
+                                            <span class="text-info">@String.Format("{0:#,##0}", price) đ</span>
+                                            <div class="text-success small">
+                                                Đã giảm @String.Format("{0:#,##0}", item.Discount ?? 0) đ
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-info">@String.Format("{0:#,##0}", item.Product?.Price ?? 0) đ</span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    <div class="input-group input-group-sm" style="max-width:120px;">
+                                        <button type="button" class="btn btn-outline-secondary decrease-qty" data-product-id="@item.ProductId" @(item.IsGift ? "disabled" : "")>-</button>
+                                        <input type="text" class="form-control text-center qty-value" value="@item.Quantity" readonly data-product-id="@item.ProductId" />
+                                        <button type="button" class="btn btn-outline-secondary increase-qty" data-product-id="@item.ProductId" @(item.IsGift ? "disabled" : "")>+</button>
+                                    </div>
+                                </td>
+                                <td class="text-end item-total" data-product-id="@item.ProductId">
+                                    @if (!item.IsGift)
+                                    {
+                                        @String.Format("{0:#,##0}", ((item.Product?.Price ?? 0) - (item.Discount ?? 0)) * item.Quantity)<span> đ</span>
+                                    }
+                                    else
+                                    {
+                                        var price = (item.Product?.Price ?? 0) - (item.Discount ?? 0);
+                                        if (item.Discount >= (item.Product?.Price ?? 0))
+                                        {
+                                            <span class="text-info">0 đ</span>
+                                        }
+                                        else if (item.Discount > 0)
+                                        {
+                                            <span class="text-info">@String.Format("{0:#,##0}", price * item.Quantity) đ</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-info">@String.Format("{0:#,##0}", (item.Product?.Price ?? 0) * item.Quantity) đ</span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    @if (!item.IsGift)
+                                    {
+                                        <a href="/ShoppingCart/RemoveFromCart?productId=@item.ProductId&deliveryDate=@item.DeliveryDate?.ToString("yyyy-MM-dd")&deliveryTime=@item.DeliveryTime" class="btn btn-sm btn-danger">Xóa</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+            <div class="col-lg-4">
+                <div class="card p-3 mb-3">
+                    <h5 class="mb-3">Tóm tắt đơn hàng</h5>
+                    
+                    @* Voucher Section *@
+                    @{
+                        var availableVouchers = ViewBag.AvailableVouchers as List<UserVoucher>;
+                    }
+                    @if (availableVouchers != null && availableVouchers.Any())
+                    {
+                        var discountVouchers = availableVouchers.Where(v => 
+                            v.PromotionCode?.Promotion?.Type == PromotionType.Order ||
+                            v.PromotionCode?.Promotion?.Type == PromotionType.Product ||
+                            v.PromotionCode?.Promotion?.Type == PromotionType.Gift
+                        ).ToList();
+                        
+                        <div class="voucher-section mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span><i class="fas fa-ticket-alt me-1"></i>Chọn voucher:</span>
+                                <a href="@Url.Action("MyVouchers", "Promotion")" class="btn btn-sm btn-outline-primary">
+                                    Xem tất cả (@availableVouchers.Count)
+                                </a>
+                            </div>
+                            
+                            <div id="voucherMessage"></div>
+                            
+                            @if (discountVouchers.Any())
+                            {
+                                <select class="form-select mb-2" id="voucherSelect" name="selectedVoucherId">
+                                    <option value="">-- Chọn voucher --</option>
+                                    @foreach (var voucher in discountVouchers)
+                                    {
+                                        var promotion = voucher.PromotionCode?.Promotion;
+                                        var voucherText = "";
+                                        var isSelected = cart.PromotionCode == voucher.PromotionCode?.Code;
+                                        
+                                        // Kiểm tra nếu là Gift promotion
+                                        if (promotion?.Type == PromotionType.Gift)
+                                        {
+                                            var giftPromo = promotion.PromotionGifts?.FirstOrDefault();
+                                            if (giftPromo != null)
+                                            {
+                                                var discountText = "";
+                                                if (giftPromo.GiftDiscountType == "free")
+                                                {
+                                                    discountText = "Tặng miễn phí";
+                                                }
+                                                else if (giftPromo.GiftDiscountType == "percent" && giftPromo.GiftDiscountValue.HasValue)
+                                                {
+                                                    discountText = $"Giảm {giftPromo.GiftDiscountValue}% sản phẩm tặng";
+                                                }
+                                                else if (giftPromo.GiftDiscountType == "money" && giftPromo.GiftDiscountMoneyValue.HasValue)
+                                                {
+                                                    discountText = $"Giảm {giftPromo.GiftDiscountMoneyValue:N0}₫ sản phẩm tặng";
+                                                }
+                                                voucherText = $"{voucher.PromotionCode?.Code} - {discountText}";
+                                            }
+                                            else
+                                            {
+                                                voucherText = $"{voucher.PromotionCode?.Code} - Tặng quà";
+                                            }
+                                        }
+                                        else if (voucher.PromotionCode?.IsPercent == true)
+                                        {
+                                            voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value}%";
+                                            if (voucher.PromotionCode.MaxDiscount.HasValue)
+                                            {
+                                                voucherText += $" (giảm tối đa {voucher.PromotionCode.MaxDiscount.Value:N0}đ)";
+                                            }
+                                        }
+                                        else if (voucher.PromotionCode?.Value.HasValue == true)
+                                        {
+                                            voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value.Value:N0}₫";
+                                        }
+                                        
+                                        <option value="@voucher.Id" selected="@isSelected">
+                                            @voucherText
+                                        </option>
+                                    }
+                                </select>
+                            }
+                            
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Chọn voucher để xem số tiền được giảm
+                            </small>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-light py-2 px-3 mb-3" style="font-size: 0.9rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Bạn chưa có voucher nào. <a href="@Url.Action("MyVouchers", "Promotion")" class="text-decoration-none">Xem thêm</a>
+                        </div>
+                    }
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tạm tính:</span>
+                        <span class="fw-bold">@String.Format("{0:#,##0}", total) đ</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 text-muted">
+                        <span>Số lượng:</span>
+                        <span>@(cart.CartItems?.Sum(i => i.Quantity) ?? 0) sản phẩm</span>
+                    </div>
+                    @if (cart.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Giảm giá:</span>
+                            <span>-@String.Format("{0:#,##0}", discount) đ</span>
+                        </div>
+                    }
+                    @{
+                        var giftItems = cart.CartItems?.Where(i => i.IsGift).ToList();
+                    }
+                    @if (giftItems != null && giftItems.Any())
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-info">
+                            <span>Quà tặng:</span>
+                            <span>
+                                @foreach (var gift in giftItems)
+                                {
+                                    <span>@gift.Product?.Name x @gift.Quantity</span><br />
+                                }
+                            </span>
+                        </div>
+                    }
+                    @* <div class="d-flex justify-content-between mb-2">
+                        <span>Phí vận chuyển:</span>
+                        <span class="text-muted small">Sẽ được tính khi thanh toán</span>
+                    </div> *@
+                    @if (cart.GiftProductId != null)
+                    {
+                    <div class="d-flex justify-content-between mb-2 text-info">
+                        <span>Quà tặng:</span>
+                        <span>+1 sản phẩm tặng kèm</span>
+                    </div>
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fs-5 fw-bold text-primary">Tổng thanh toán:</span>
+                        <span class="fs-5 fw-bold text-danger">@String.Format("{0:#,##0}", finalTotal) đ</span>
+                    </div>
+                    @if (cart.SelectedVoucherId.HasValue)
+                    {
+                        <a asp-controller="Order" asp-action="Checkout" asp-route-selectedVoucherId="@cart.SelectedVoucherId" class="btn btn-success w-100 mt-2">
+                            Đặt hoa ngay
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Order" asp-action="Checkout" class="btn btn-success w-100 mt-2">
+                            Đặt hoa ngay
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modals (moved outside table to fix z-index issue) -->
+@if (cart.CartItems != null)
+{
+    @foreach (var item in cart.CartItems.Where(i => !i.IsGift))
+    {
+        <div class="modal fade" tabindex="-1" id="deliveryModal-@item.ProductId" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-calendar-alt me-2"></i>Chọn ngày giao và khung giờ
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar-day me-2 text-danger"></i>Ngày giao hàng:
+                            </label>
+                            <input type="text" class="form-control delivery-modal-date-picker" value="@item.DeliveryDate?.ToString("yyyy-MM-dd")" autocomplete="off" style="cursor: pointer;" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold mb-2">
+                                <i class="fas fa-clock me-2 text-danger"></i>Khung giờ giao:
+                            </label>
+                            <div class="delivery-modal-time-options d-flex gap-2 flex-wrap">
+                                @{
+                                    var timeSlots = new[] {
+                                        "08:00 - 10:00", "09:00 - 11:00", "10:00 - 12:00", "11:00 - 13:00", "12:00 - 14:00", "13:00 - 15:00",
+                                        "14:00 - 16:00", "15:00 - 17:00", "16:00 - 18:00", "17:00 - 19:00", "18:00 - 20:00", "19:00 - 21:00"
+                                    };
+                                }
+                                @foreach (var slot in timeSlots)
+                                {
+                                    var label = slot.Replace(":00", "h").Replace(":", "h");
+                                    var selected = item.DeliveryTime == slot ? "btn-primary-gradient active" : "btn-outline-primary-custom";
+                                    <button type="button" class="btn delivery-modal-time-btn @selected" data-time="@slot">@label</button>
+                                }
+                            </div>
+                            <span class="delivery-modal-time-message text-danger small mt-2" style="display:none"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Đóng
+                        </button>
+                        <button type="button" class="btn btn-primary-gradient delivery-modal-confirm-btn" style="background: #C41E3A; border-color: #C41E3A;">
+                            <i class="fas fa-check me-1"></i>Xác nhận
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+<script>
+    // Hiển thị message từ sessionStorage sau reload
+    document.addEventListener('DOMContentLoaded', function() {
+        var savedMessage = sessionStorage.getItem('voucherMessage');
+        if (savedMessage) {
+            try {
+                var msgData = JSON.parse(savedMessage);
+                var messageDiv = document.getElementById('voucherMessage');
+                if (messageDiv) {
+                    var alertClass = msgData.type === 'success' ? 'alert-success' : 'alert-danger';
+                    var iconClass = msgData.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+                    messageDiv.innerHTML = '<div class="alert ' + alertClass + ' py-2 px-3 mb-2 small"><i class="fas ' + iconClass + ' me-1"></i>' + msgData.text + '</div>';
+                }
+                sessionStorage.removeItem('voucherMessage');
+            } catch(e) {
+                console.error('Error parsing saved message:', e);
+            }
+        }
+        
+        // Chọn tất cả
+        var selectAll = document.getElementById('selectAll');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                document.querySelectorAll('input[name="selectedItems"]').forEach(cb => cb.checked = selectAll.checked);
+            });
+        }
+
+        // Modal logic for delivery info
+        document.querySelectorAll('.delivery-info-display').forEach(function(display) {
+            display.addEventListener('click', function() {
+                var productId = display.dataset.cartitem;
+                var modal = document.getElementById('deliveryModal-' + productId);
+                if (modal) {
+                    var bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                }
+            });
+        });
+
+        // Modal date picker and time slot logic
+        document.querySelectorAll('[id^="deliveryModal-"]').forEach(function(modal) {
+            var dateInput = modal.querySelector('.delivery-modal-date-picker');
+            var timeBtns = modal.querySelectorAll('.delivery-modal-time-btn');
+            var msg = modal.querySelector('.delivery-modal-time-message');
+            var confirmBtn = modal.querySelector('.delivery-modal-confirm-btn');
+            var productId = modal.id.replace('deliveryModal-', '');
+            
+            flatpickr(dateInput, {
+                dateFormat: 'Y-m-d',
+                minDate: 'today',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                onChange: function(selectedDates, dateStr, instance) {
+                    updateModalTimeSlots();
+                }
+            });
+            function updateModalTimeSlots() {
+                var selectedDate = dateInput.value;
+                var now = new Date();
+                var isToday = selectedDate === now.toISOString().split('T')[0];
+                var currentHour = now.getHours() + now.getMinutes()/60;
+                var available = 0;
+                timeBtns.forEach(function(btn) {
+                    var slot = btn.dataset.time;
+                    var s = parseInt(slot.split('-')[0].split(':')[0]);
+                    var e = parseInt(slot.split('-')[1].split(':')[0]);
+                    btn.style.display = 'inline-block';
+                    if (isToday && currentHour >= e) {
+                        btn.style.display = 'none';
+                    } else {
+                        available++;
+                    }
+                });
+                if (available === 0) {
+                    msg.textContent = 'Không có khung giờ khả dụng cho ngày này.';
+                    msg.style.display = 'block';
+                } else {
+                    msg.style.display = 'none';
+                }
+            }
+            timeBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    timeBtns.forEach(function(b) { 
+                        b.classList.remove('btn-primary-gradient', 'active'); 
+                        b.classList.add('btn-outline-primary-custom'); 
+                    });
+                    btn.classList.remove('btn-outline-primary-custom');
+                    btn.classList.add('btn-primary-gradient', 'active');
+                });
+            });
+            confirmBtn.addEventListener('click', function() {
+                var selectedDate = dateInput.value;
+                var selectedTime = null;
+                timeBtns.forEach(function(btn) {
+                    if (btn.classList.contains('btn-primary-gradient') && btn.style.display !== 'none') {
+                        selectedTime = btn.dataset.time;
+                    }
+                });
+                
+                if (!selectedDate || !selectedTime) {
+                    msg.textContent = 'Vui lòng chọn ngày giao và khung giờ.';
+                    msg.style.display = 'block';
+                    return;
+                }
+                
+                // Đóng modal trước
+                var bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) {
+                    bsModal.hide();
+                }
+                
+                // Tạo FormData trực tiếp không cần tìm form
+                var formData = new FormData();
+                formData.append('productId', productId);
+                formData.append('deliveryDate', selectedDate);
+                formData.append('deliveryTime', selectedTime);
+                
+                console.log('Submitting - ProductId:', productId, 'Date:', selectedDate, 'Time:', selectedTime);
+                
+                // Submit
+                fetch('/ShoppingCart/UpdateDeliveryInfo', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) {
+                    console.log('Response:', response.status, response.ok);
+                    return response.json();
+                })
+                .then(function(data) {
+                    console.log('Data:', data);
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Có lỗi xảy ra khi cập nhật.');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                });
+            });
+            // Initial update
+            updateModalTimeSlots();
+        });
+
+        // AJAX voucher selection
+        var voucherSelect = document.getElementById('voucherSelect');
+        if (voucherSelect) {
+            voucherSelect.addEventListener('change', function() {
+                var selectedVoucherId = this.value;
+                var messageDiv = document.getElementById('voucherMessage');
+                
+                // Show loading
+                messageDiv.innerHTML = '<div class="alert alert-info py-2 px-3 mb-2 small"><i class="fas fa-spinner fa-spin me-1"></i>Đang áp dụng voucher...</div>';
+                
+                fetch('/ShoppingCart/ApplyVoucherAjax', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'selectedVoucherId=' + (selectedVoucherId || '')
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Voucher response:', data);
+                    
+                    // Kiểm tra nếu trang hiện tại có gift items
+                    var hasGiftItemsOnPage = document.querySelector('.badge.bg-info.text-dark') !== null;
+                    
+                    if (data.success) {
+                        // Nếu đang có gift items mà voucher mới không có gift items → Reload để xóa
+                        if (hasGiftItemsOnPage && !data.hasGiftItems) {
+                            // Lưu message vào sessionStorage để hiển thị sau reload
+                            sessionStorage.setItem('voucherMessage', JSON.stringify({
+                                type: 'success',
+                                text: data.message
+                            }));
+                            window.location.reload();
+                            return;
+                        }
+                        
+                        // If has gift items, reload to show them
+                        if (data.hasGiftItems) {
+                            // Lưu message vào sessionStorage để hiển thị sau reload
+                            sessionStorage.setItem('voucherMessage', JSON.stringify({
+                                type: 'success',
+                                text: data.message
+                            }));
+                            window.location.reload();
+                            return;
+                        }
+                        
+                        // Show success message in green (không reload)
+                        messageDiv.innerHTML = '<div class="alert alert-success py-2 px-3 mb-2 small"><i class="fas fa-check-circle me-1"></i>' + data.message + '</div>';
+                        
+                        // Update discount amount display
+                        updateDiscountDisplay(data.discountAmount);
+                        
+                        // Update totals
+                        updateTotals(data.total, data.finalTotal);
+                        
+                        // ⭐ Cập nhật href của nút "Đặt hoa ngay" với selectedVoucherId mới
+                        var checkoutButtons = document.querySelectorAll('a[href*="/Order/Checkout"]');
+                        checkoutButtons.forEach(function(btn) {
+                            if (selectedVoucherId) {
+                                btn.href = '/Order/Checkout?selectedVoucherId=' + selectedVoucherId;
+                            } else {
+                                btn.href = '/Order/Checkout';
+                            }
+                        });
+                    } else {
+                        // Show error message in red
+                        messageDiv.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-2 small"><i class="fas fa-exclamation-circle me-1"></i>' + data.message + '</div>';
+                        
+                        // Cập nhật UI ngay cả khi thất bại (voucher cũ đã bị xóa)
+                        updateDiscountDisplay(data.discountAmount || 0);
+                        updateTotals(data.total, data.finalTotal);
+                        
+                        // Reset voucher selection to default
+                        voucherSelect.selectedIndex = 0;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<div class="alert alert-danger py-2 px-3 mb-2 small"><i class="fas fa-exclamation-circle me-1"></i>Có lỗi xảy ra. Vui lòng thử lại.</div>';
+                    voucherSelect.selectedIndex = 0;
+                });
+            });
+        }
+        
+        function formatCurrency(amount) {
+            return Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        // Handle quantity increase/decrease with AJAX
+        document.querySelectorAll('.increase-qty').forEach(btn => {
+            btn.addEventListener('click', function() {
+                var productId = this.dataset.productId;
+                updateQuantity(productId, 'increase');
+            });
+        });
+        
+        document.querySelectorAll('.decrease-qty').forEach(btn => {
+            btn.addEventListener('click', function() {
+                var productId = this.dataset.productId;
+                updateQuantity(productId, 'decrease');
+            });
+        });
+        
+        function updateQuantity(productId, action) {
+            var url = action === 'increase' ? '/ShoppingCart/IncreaseQuantityAjax' : '/ShoppingCart/DecreaseQuantityAjax';
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'productId=' + productId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('AJAX Response:', data); // DEBUG
+                    console.log('voucherCleared:', data.voucherCleared); // DEBUG
+                    
+                    // Nếu có voucher Gift, cần reload để re-validate
+                    if (data.needReload) {
+                        console.log('Reload: needReload = true');
+                        window.location.reload();
+                        return;
+                    }
+                    
+                    // Nếu voucher bị xóa (Gift voucher không đủ điều kiện), reload để xóa gift items
+                    if (data.voucherCleared) {
+                        console.log('Reload: voucherCleared = true');
+                        // Lưu message vào sessionStorage trước khi reload
+                        if (data.voucherMessage) {
+                            sessionStorage.setItem('voucherMessage', data.voucherMessage);
+                        }
+                        window.location.reload();
+                        return;
+                    }
+                    
+                    // Nếu sản phẩm bị xóa (quantity = 0), reload trang
+                    if (data.removed) {
+                        window.location.reload();
+                        return;
+                    }
+                    
+                    // Cập nhật số lượng
+                    var qtyInput = document.querySelector('.qty-value[data-product-id="' + productId + '"]');
+                    if (qtyInput) {
+                        qtyInput.value = data.quantity;
+                    }
+                    
+                    // Cập nhật thành tiền của item
+                    var itemTotalElement = document.querySelector('.item-total[data-product-id="' + productId + '"]');
+                    if (itemTotalElement) {
+                        itemTotalElement.textContent = formatCurrency(data.itemTotal) + ' đ';
+                    }
+                    
+                    // Cập nhật discount nếu có
+                    if (typeof data.discount !== 'undefined') {
+                        updateDiscountDisplay(data.discount);
+                    }
+                    
+                    // Reset voucher dropdown nếu voucher bị xóa
+                    if (data.voucherCleared) {
+                        var voucherSelect = document.getElementById('voucherSelect');
+                        if (voucherSelect) {
+                            voucherSelect.value = '';
+                        }
+                    }
+                    
+                    // Hiển thị voucher message nếu có
+                    if (data.voucherMessage) {
+                        var messageDiv = document.getElementById('voucherMessage');
+                        if (messageDiv) {
+                            // Kiểm tra message là success hay error
+                            var isError = data.voucherMessage.includes('phải từ') || 
+                                         data.voucherMessage.includes('tối thiểu') || 
+                                         data.voucherMessage.includes('không hợp lệ') ||
+                                         data.voucherMessage.includes('không có') ||
+                                         data.voucherMessage.includes('không tìm thấy');
+                            
+                            var alertClass = isError ? 'alert-danger' : 'alert-success';
+                            var iconClass = isError ? 'fa-exclamation-circle' : 'fa-check-circle';
+                            
+                            messageDiv.innerHTML = '<div class="alert ' + alertClass + ' py-2 px-3 mb-2 small"><i class="fas ' + iconClass + ' me-1"></i>' + data.voucherMessage + '</div>';
+                            
+                            // Tự động ẩn sau 5 giây
+                            setTimeout(() => {
+                                messageDiv.innerHTML = '';
+                            }, 5000);
+                        }
+                    }
+                    
+                    // Cập nhật totals
+                    updateTotals(data.total, data.finalTotal);
+                    
+                    // Cập nhật cart count trong header (nếu có)
+                    updateCartCountDisplay();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.reload();
+            });
+        }
+        
+        function updateCartCountDisplay() {
+            // Reload cart count badge nếu có
+            fetch('/ShoppingCart/GetCartCount')
+                .then(response => response.json())
+                .then(count => {
+                    var badge = document.querySelector('.cart-count-badge');
+                    if (badge) {
+                        badge.textContent = count;
+                    }
+                })
+                .catch(err => console.log('Cart count update failed'));
+        }
+        
+        function updateDiscountDisplay(discountAmount) {
+            // Tìm hoặc tạo discount row
+            var summaryCard = document.querySelector('.card.p-3.mb-3');
+            if (!summaryCard) return;
+            
+            var discountRow = summaryCard.querySelector('.text-success');
+            
+            if (discountAmount > 0) {
+                if (!discountRow) {
+                    // Tìm row "Tạm tính" để insert sau nó
+                    var allRows = summaryCard.querySelectorAll('.d-flex.justify-content-between.mb-2');
+                    var tamTinhRow = null;
+                    
+                    allRows.forEach(row => {
+                        if (row.textContent.includes('Tạm tính')) {
+                            tamTinhRow = row;
+                        }
+                    });
+                    
+                    if (tamTinhRow) {
+                        // Tạo discount row mới
+                        var newRow = document.createElement('div');
+                        newRow.className = 'd-flex justify-content-between mb-2 text-success';
+                        newRow.innerHTML = '<span>Giảm giá:</span><span>-' + formatCurrency(discountAmount) + ' đ</span>';
+                        tamTinhRow.insertAdjacentElement('afterend', newRow);
+                    }
+                } else {
+                    // Update existing discount row
+                    var valueSpan = discountRow.querySelector('span:last-child');
+                    if (valueSpan) {
+                        valueSpan.textContent = '-' + formatCurrency(discountAmount) + ' đ';
+                    }
+                }
+            } else if (discountRow) {
+                // Remove discount row if no discount
+                discountRow.remove();
+            }
+        }
+        
+        function updateTotals(total, finalTotal) {
+            // Update "Tạm tính"
+            var summaryCard = document.querySelector('.card.p-3.mb-3');
+            if (!summaryCard) return;
+            
+            var allRows = summaryCard.querySelectorAll('.d-flex.justify-content-between.mb-2');
+            allRows.forEach(el => {
+                if (el.textContent.includes('Tạm tính')) {
+                    var valueSpan = el.querySelector('.fw-bold');
+                    if (valueSpan) {
+                        valueSpan.textContent = formatCurrency(total) + ' đ';
+                    }
+                }
+            });
+            
+            // Update "Tổng thanh toán"
+            var finalTotalElement = document.querySelector('.fs-5.fw-bold.text-danger');
+            if (finalTotalElement) {
+                finalTotalElement.textContent = formatCurrency(finalTotal) + ' đ';
+            }
+        }
+    });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/vi.js"></script>
+<style>
+    /* Animations */
+    .customer-header {
+        animation: slideDown 0.6s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .container.my-5 {
+        animation: fadeInUp 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    .table td, .table th { vertical-align: middle; }
+    .btn-danger { white-space: nowrap; }
+    
+    .delivery-info-edit {
+        background-color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .delivery-info-edit:hover {
+        border-color: #C41E3A;
+    }
+    
+    .delivery-info-display .text-primary {
+        color: #C41E3A !important;
+    }
+    
+    .delivery-info-edit label {
+        margin-bottom: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .delivery-update-form .form-control,
+    .delivery-update-form .form-select {
+        font-size: 0.9rem;
+    }
+    
+    .delivery-date-picker {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .delivery-date-picker:focus {
+        border-color: #C41E3A;
+        box-shadow: 0 0 0 0.25rem rgba(196, 30, 58, 0.15);
+    }
+    
+    @@media (max-width: 768px) {
+        .table { font-size: 0.95rem; }
+        .input-group-sm > .form-control { min-width: 40px; }
+        .delivery-info-edit {
+            padding: 8px;
+        }
+    }
+    
+    /* Modal styling - simple and clean */
+    .modal {
+        z-index: 9999 !important;
+    }
+    
+    .modal-backdrop {
+        z-index: 9998 !important;
+    }
+    
+    .modal-dialog {
+        z-index: 10000 !important;
+    }
+    
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .bg-gradient-primary {
+        background: #C41E3A;
+    }
+    
+    .modal-header {
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .delivery-modal-date-picker {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+    }
+    
+    .delivery-modal-date-picker:focus {
+        border-color: #C41E3A;
+        box-shadow: 0 0 0 0.2rem rgba(196, 30, 58, 0.15);
+        outline: none;
+    }
+    
+    /* Time slot buttons - clean style */
+    .delivery-modal-time-btn {
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    
+    .btn-outline-primary-custom {
+        background: white;
+        color: #495057;
+        border: 1px solid #dee2e6;
+    }
+    
+    .btn-outline-primary-custom:hover {
+        background: #fff5f5;
+        border-color: #C41E3A;
+        color: #C41E3A;
+    }
+    
+    .btn-primary-gradient,
+    .btn-primary-gradient.active {
+        background: #C41E3A !important;
+        border: 1px solid #C41E3A !important;
+        color: white !important;
+    }
+    
+    .btn-primary-gradient:hover {
+        background: #a01829 !important;
+        border-color: #a01829 !important;
+    }
+</style>
+}

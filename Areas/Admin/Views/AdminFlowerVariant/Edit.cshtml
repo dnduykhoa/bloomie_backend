@@ -1,0 +1,185 @@
+@model Bloomie.Models.Entities.FlowerVariant
+@{
+    ViewData["Title"] = "Sửa biến thể hoa";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-edit text-primary me-2"></i> Sửa biến thể hoa
+                </h2>
+                <a class="btn btn-secondary" href="@Url.Action("Index")">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                
+                <!-- Thông tin biến thể -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Thông tin biến thể
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="FlowerTypeId" class="form-label">Loại hoa <span class="text-danger">*</span></label>
+                                <select asp-for="FlowerTypeId" class="form-select" asp-items="@(new SelectList(ViewBag.FlowerTypes, "Id", "Name"))">
+                                    <option value="">-- Chọn loại hoa --</option>
+                                </select>
+                                <span asp-validation-for="FlowerTypeId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Name" class="form-label">Tên biến thể <span class="text-danger">*</span></label>
+                                <input asp-for="Name" class="form-control" placeholder="Nhập tên biến thể" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Color" class="form-label">Màu sắc <span class="text-danger">*</span></label>
+                                <input asp-for="Color" class="form-control" placeholder="VD: Đỏ, Trắng" />
+                                <span asp-validation-for="Color" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Stock" class="form-label">Tồn kho <span class="text-danger">*</span></label>
+                                <input asp-for="Stock" type="number" class="form-control" placeholder="Số lượng tồn kho" />
+                                <span asp-validation-for="Stock" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Size" class="form-label">Kích thước</label>
+                                <input asp-for="Size" class="form-control" placeholder="VD: Nhỏ, Vừa, Lớn" />
+                                <span asp-validation-for="Size" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="Origin" class="form-label">Xuất xứ</label>
+                                <input asp-for="Origin" class="form-control" placeholder="VD: Đà Lạt, Hà Lan" />
+                                <span asp-validation-for="Origin" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex gap-2 justify-content-between pt-3 border-top">
+                    <a href="@Url.Action("Index")" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --info-color: #06b6d4;
+        --text-dark: #1e293b;
+        --border-color: #e5e7eb;
+    }
+
+    .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .card {
+        border-radius: 8px;
+        background-color: #ffffff;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    h2 {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header h5 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .btn {
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        border-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        transform: translateY(-1px);
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+        margin-top: 4px;
+    }
+
+    .border-top {
+        border-color: var(--border-color) !important;
+    }
+</style>

@@ -1,0 +1,358 @@
+@{
+    ViewData["Title"] = "Tạo khuyến mãi";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+    var activeTab = Context.Request.Query["tab"].ToString() ?? "code";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i> Tạo khuyến mãi
+                </h2>
+                <a class="btn btn-secondary" href="@(activeTab == "program" ? Url.Action("ManageCampaigns") : Url.Action("Index"))">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" id="promoTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "code" ? "active" : "")" id="code-tab" data-bs-toggle="tab" data-bs-target="#code" type="button" role="tab">
+                        <i class="fas fa-ticket-alt me-2"></i> Mã khuyến mãi
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link @(activeTab == "program" ? "active" : "")" id="program-tab" data-bs-toggle="tab" data-bs-target="#program" type="button" role="tab">
+                        <i class="fas fa-bullhorn me-2"></i> Chương trình khuyến mãi
+                    </button>
+                </li>
+            </ul>
+            <!-- Tab Content -->
+            <div class="tab-content" id="promoTabContent">
+                <!-- Mã khuyến mãi Tab -->
+                <div class="tab-pane fade @(activeTab == "code" ? "show active" : "")" id="code" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateOrderDiscount")" class="promo-card">
+                                <div class="promo-icon bg-primary">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="promo-content">
+                                    <h5 class="promo-title">Giảm giá đơn hàng</h5>
+                                    <p class="promo-desc">VD: Giảm giá 20% cho các đơn hàng từ 100.000đ</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateProductDiscount")" class="promo-card">
+                                <div class="promo-icon bg-success">
+                                    <i class="fas fa-percent"></i>
+                                </div>
+                                <div class="promo-content">
+                                    <h5 class="promo-title">Giảm giá sản phẩm</h5>
+                                    <p class="promo-desc">VD: Giảm giá 15% sản phẩm trong đơn</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateGift")" class="promo-card">
+                                <div class="promo-icon bg-danger">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div class="promo-content">
+                                    <h5 class="promo-title">Mua X Tặng Y</h5>
+                                    <p class="promo-desc">VD: Mua 1 tặng 1, mua sản phẩm tặng sản phẩm</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateShippingDiscount")" class="promo-card">
+                                <div class="promo-icon bg-warning">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="promo-content">
+                                    <h5 class="promo-title">Miễn phí vận chuyển</h5>
+                                    <p class="promo-desc">VD: Freeship cho các đơn hàng trong khu vực</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Chương trình khuyến mãi Tab -->
+                <div class="tab-pane fade @(activeTab == "program" ? "show active" : "")" id="program" role="tabpanel">
+                    <div class="alert alert-info mb-4 d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                        <div>
+                            <strong>Chương trình tự động:</strong> Tạo các campaign tự động phân phối voucher cho users theo điều kiện
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="@Url.Action("Create", "ManagerProductDiscount", new { area = "Manager" })" class="program-card">
+                                <div class="program-icon bg-primary">
+                                    <i class="bi bi-tag-fill"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Khuyến Mãi Sản Phẩm</h5>
+                                    <p class="program-desc">Tạo chương trình giảm giá tự động cho sản phẩm/danh mục trong thời gian nhất định.</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateFlashSale")" class="program-card">
+                                <div class="program-icon bg-danger">
+                                    <i class="bi bi-lightning-fill"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Flash Sale - Giảm Giá Giới Hạn</h5>
+                                    <p class="program-desc">Voucher giảm giá trong khung giờ nhất định, số lượng có hạn. Users tranh nhau thu thập.</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateLuckyWheel")" class="program-card">
+                                <div class="program-icon bg-warning">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Vòng Quay May Mắn</h5>
+                                    <p class="program-desc">Users quay vòng may mắn để nhận voucher ngẫu nhiên. Có thể giới hạn số lần quay.</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateBirthdayAuto")" class="program-card">
+                                <div class="program-icon bg-info">
+                                    <i class="bi bi-gift-fill"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Tặng Voucher Sinh Nhật</h5>
+                                    <p class="program-desc">Tự động tặng voucher cho users vào ngày sinh nhật (hoặc X ngày trước sinh nhật).</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateReferral")" class="program-card">
+                                <div class="program-icon bg-success">
+                                    <i class="bi bi-people-fill"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Giới Thiệu Bạn Bè (Referral)</h5>
+                                    <p class="program-desc">Người giới thiệu và người được giới thiệu đều nhận voucher khi tham gia/mua hàng.</p>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="@Url.Action("CreateCheckIn")" class="program-card">
+                                <div class="program-icon bg-secondary">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                </div>
+                                <div class="program-content">
+                                    <h5 class="program-title">Điểm Danh Hàng Ngày</h5>
+                                    <p class="program-desc">Users check-in mỗi ngày để tích điểm hoặc nhận voucher. Có thể tặng quà streak (liên tục X ngày).</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --secondary-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    /* Tabs Styling */
+    .nav-tabs {
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6b7280;
+        font-weight: 500;
+        padding: 12px 24px;
+        transition: all 0.2s ease;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+        background: none;
+    }
+
+    /* Promo Card Styling */
+    .promo-card {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .promo-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(14, 116, 144, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .promo-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .promo-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .promo-content {
+        flex: 1;
+    }
+
+    .promo-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+    }
+
+    .promo-desc {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* Program Card Styling */
+    .program-card {
+        display: flex;
+        align-items: flex-start;
+        padding: 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #ffffff;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .program-card:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(14, 116, 144, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .program-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .program-icon i {
+        font-size: 1.3rem;
+        color: white;
+    }
+
+    .program-content {
+        flex: 1;
+    }
+
+    .program-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .program-desc {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* Alert Info */
+    .alert-info {
+        border-radius: 8px;
+        border-left: 4px solid #3b82f6;
+        background-color: #eff6ff;
+        color: #1e40af;
+    }
+
+    /* Background Colors */
+    .bg-primary { background-color: var(--primary-color) !important; }
+    .bg-success { background-color: #10b981 !important; }
+    .bg-danger { background-color: #ef4444 !important; }
+    .bg-warning { background-color: #f59e0b !important; }
+    .bg-info { background-color: #3b82f6 !important; }
+    .bg-secondary { background-color: #6b7280 !important; }
+</style>

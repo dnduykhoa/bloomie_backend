@@ -1,0 +1,238 @@
+@model Bloomie.Models.Entities.Order
+
+@{
+    ViewData["Title"] = "Yêu cầu đổi trả hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="return-request-section">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-transparent py-2">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Order")">Đơn hàng</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Details", "Order", new { id = Model.Id })">Chi tiết đơn #@Model.OrderId</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Yêu cầu đổi trả</li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">Yêu cầu đổi trả hàng</h2>
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Thông tin đơn hàng -->
+        <div class="card mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">Thông tin đơn hàng #@Model.OrderId</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Ngày đặt:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        <p><strong>Trạng thái:</strong> <span class="badge bg-success">@Model.Status</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Tổng tiền:</strong> @Model.TotalAmount.ToString("#,##0") đ</p>
+                        <p><strong>Phương thức thanh toán:</strong> @Model.PaymentMethod</p>
+                    </div>
+                </div>
+
+                <!-- Danh sách sản phẩm -->
+                <h6 class="mt-3 mb-3">Sản phẩm trong đơn hàng:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Số lượng</th>
+                                <th>Đơn giá</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.OrderDetails!)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (detail.Product?.Images != null && detail.Product.Images.Any())
+                                            {
+                                                <img src="@detail.Product.Images.First().Url" alt="@detail.Product.Name" 
+                                                     class="me-2" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" />
+                                            }
+                                            <span>@detail.Product?.Name</span>
+                                        </div>
+                                    </td>
+                                    <td>@detail.Quantity</td>
+                                    <td>@detail.UnitPrice.ToString("#,##0") đ</td>
+                                    <td>@((detail.UnitPrice * detail.Quantity).ToString("#,##0")) đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form yêu cầu đổi trả -->
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">Thông tin đổi trả</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="@Url.Action("RequestReturn", "Order", new { id = Model.Id })" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Loại yêu cầu -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Loại yêu cầu <span class="text-danger">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="returnType" id="returnRefund" value="Hoàn tiền" checked>
+                            <label class="form-check-label" for="returnRefund">
+                                <i class="bi bi-cash-coin text-success"></i> Hoàn tiền
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="returnType" id="returnExchange" value="Đổi hàng">
+                            <label class="form-check-label" for="returnExchange">
+                                <i class="bi bi-arrow-repeat text-primary"></i> Đổi hàng
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Lý do đổi trả -->
+                    <div class="mb-4">
+                        <label for="reason" class="form-label fw-bold">Lý do đổi trả <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" required 
+                                  placeholder="Vui lòng mô tả chi tiết lý do bạn muốn đổi trả sản phẩm (ví dụ: sản phẩm bị hỏng, không đúng mô tả, v.v.)"></textarea>
+                        <small class="text-muted">Tối thiểu 20 ký tự</small>
+                    </div>
+
+                    <!-- Upload hình ảnh -->
+                    <div class="mb-4">
+                        <label for="images" class="form-label fw-bold">Hình ảnh minh chứng (Tùy chọn)</label>
+                        <input class="form-control" type="file" id="images" name="images" multiple accept="image/*">
+                        <small class="text-muted">Tải lên tối đa 5 ảnh (JPG, PNG). Giúp chúng tôi xử lý yêu cầu nhanh hơn.</small>
+                        <div id="imagePreview" class="mt-3 d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <!-- Ghi chú thêm -->
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> <strong>Lưu ý:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Sản phẩm phải còn nguyên vẹn, chưa qua sử dụng</li>
+                            <li>Yêu cầu đổi trả được xử lý trong vòng 24-48 giờ</li>
+                            <li>Chúng tôi sẽ liên hệ với bạn qua số điện thoại: <strong>@Model.Phone</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="@Url.Action("Details", "Order", new { id = Model.Id })" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Quay lại
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-send"></i> Gửi yêu cầu đổi trả
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .return-request-section {
+        padding: 40px 0;
+        min-height: 70vh;
+    }
+
+    .return-request-section h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #D0021B;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .form-label {
+        font-size: 1.05rem;
+    }
+
+    .form-check {
+        padding: 10px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        transition: all 0.3s;
+    }
+
+    .form-check:hover {
+        background-color: #f8f9fa;
+        border-color: #ffc107;
+    }
+
+    .form-check-input:checked + .form-check-label {
+        font-weight: 600;
+    }
+
+    #imagePreview img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+</style>
+
+@section Scripts {
+<script>
+    // Preview images khi upload
+    document.getElementById('images').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        const files = Array.from(e.target.files).slice(0, 5); // Giới hạn 5 ảnh
+        
+        files.forEach(file => {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
+    // Validate form trước khi submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const reason = document.getElementById('reason').value.trim();
+        
+        if (reason.length < 20) {
+            e.preventDefault();
+            alert('Vui lòng nhập lý do đổi trả ít nhất 20 ký tự để chúng tôi hiểu rõ vấn đề của bạn.');
+            return false;
+        }
+    });
+</script>
+}

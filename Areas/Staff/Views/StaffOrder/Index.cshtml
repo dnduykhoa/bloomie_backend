@@ -1,0 +1,240 @@
+@model IEnumerable<Bloomie.Models.Entities.Order>
+
+@{
+    Layout = "~/Areas/Staff/Views/Shared/_StaffLayout.cshtml";
+    ViewData["Title"] = "Quản lý đơn hàng";
+    var currentPage = ViewData["CurrentPage"] as int? ?? 1;
+    var totalPages = ViewData["TotalPages"] as int? ?? 1;
+    var searchString = ViewData["SearchString"] as string ?? "";
+    var statusFilter = ViewData["StatusFilter"] as string;
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Tiêu đề -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-shopping-cart text-primary me-2"></i> Quản lý đơn hàng
+                </h2>
+                <span class="badge bg-primary text-white p-2">
+                    <i class="fas fa-calendar me-2"></i> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                </span>
+            </div>
+
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    @TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    @TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Bộ lọc -->
+            <div class="card mb-3 border-0 bg-light">
+                <div class="card-body">
+                    <form asp-action="Index" method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" name="searchString" value="@searchString" class="form-control" placeholder="Mã đơn, User ID, Địa chỉ...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select name="statusFilter" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="Chờ xác nhận" selected="@(statusFilter == "Chờ xác nhận")">Chờ xác nhận</option>
+                                <option value="Đã xác nhận" selected="@(statusFilter == "Đã xác nhận")">Đã xác nhận</option>
+                                <option value="Đang giao" selected="@(statusFilter == "Đang giao")">Đang giao</option>
+                                <option value="Hoàn thành" selected="@(statusFilter == "Hoàn thành")">Hoàn thành</option>
+                                <option value="Đã hủy" selected="@(statusFilter == "Đã hủy")">Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-1"></i> Lọc
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <a asp-action="Index" class="btn btn-secondary w-100">
+                                <i class="fas fa-redo me-1"></i> Đặt lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bảng đơn hàng -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Ngày đặt</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thanh toán</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var order in Model)
+                            {
+                                <tr>
+                                    <td><strong>@order.OrderId</strong></td>
+                                    <td>@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@(order.UserId ?? "N/A")</td>
+                                    <td><strong class="text-success">@order.TotalAmount.ToString("N0") đ</strong></td>
+                                    <td>
+                                        @if (order.Status == "Chờ xác nhận")
+                                        {
+                                            <span class="badge" style="background-color: #17a2b8; color: white;">@order.Status</span>
+                                        }
+                                        else if (order.Status == "Đã xác nhận")
+                                        {
+                                            <span class="badge" style="background-color: #28a745; color: white;">@order.Status</span>
+                                        }
+                                        else if (order.Status == "Đã hủy")
+                                        {
+                                            <span class="badge" style="background-color: #6c757d; color: white;">@order.Status</span>
+                                        }
+                                        else if (order.Status == "Đang giao")
+                                        {
+                                            <span class="badge" style="background-color: #007bff; color: white;">@order.Status</span>
+                                        }
+                                        else if (order.Status == "Đã giao")
+                                        {
+                                            <span class="badge" style="background-color: #28a745; color: white;">@order.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@order.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (order.PaymentStatus == "Chờ thanh toán")
+                                        {
+                                            <span class="badge" style="background-color: #ffc107; color: black;">@order.PaymentStatus</span>
+                                        }
+                                        else if (order.PaymentStatus == "Đã thanh toán")
+                                        {
+                                            <span class="badge" style="background-color: #28a745; color: white;">@order.PaymentStatus</span>
+                                        }
+                                        else if (order.PaymentStatus == "Thanh toán thất bại")
+                                        {
+                                            <span class="badge" style="background-color: #dc3545; color: white;">@order.PaymentStatus</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@order.PaymentStatus</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Chi tiết
+                                        </a>
+                                        @if (order.Status == "Chờ xác nhận")
+                                        {
+                                            <button type="button" class="btn btn-sm btn-success" 
+                                                    onclick="confirmOrder(@order.Id)">
+                                                <i class="fas fa-check"></i> Xác nhận
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p class="mb-0">Không có đơn hàng nào</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Phân trang -->
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Phân trang" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" 
+                               asp-route-pageNumber="@(currentPage - 1)" 
+                               asp-route-searchString="@searchString" 
+                               asp-route-statusFilter="@statusFilter">Trước</a>
+                        </li>
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                <a class="page-link" asp-action="Index" 
+                                   asp-route-pageNumber="@i" 
+                                   asp-route-searchString="@searchString" 
+                                   asp-route-statusFilter="@statusFilter">@i</a>
+                            </li>
+                        }
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" asp-action="Index" 
+                               asp-route-pageNumber="@(currentPage + 1)" 
+                               asp-route-searchString="@searchString" 
+                               asp-route-statusFilter="@statusFilter">Sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmOrder(orderId) {
+    Swal.fire({
+        title: 'Xác nhận đơn hàng?',
+        text: "Bạn có chắc muốn xác nhận đơn hàng này?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xác nhận',
+        cancelButtonText: 'Hủy'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Staff/StaffOrder/ConfirmOrder/' + orderId;
+            
+            var token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                var hiddenToken = document.createElement('input');
+                hiddenToken.type = 'hidden';
+                hiddenToken.name = '__RequestVerificationToken';
+                hiddenToken.value = token.value;
+                form.appendChild(hiddenToken);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+}
+
+<!-- Anti-forgery token for AJAX -->
+@Html.AntiForgeryToken()

@@ -1,0 +1,689 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Bloomie.Data
+@using Bloomie.Authorization
+@using System.Security.Claims
+@model IEnumerable<Bloomie.Data.ApplicationUser>
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewBag.Title = "Quản lý người dùng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    
+    // Lấy thông tin current user
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentUser = await UserManager.FindByIdAsync(currentUserId);
+    var currentUserRoles = await UserManager.GetRolesAsync(currentUser);
+    var currentUserRole = currentUserRoles.FirstOrDefault() ?? "User";
+    
+    // Statistics
+    var totalUsers = ViewBag.TotalUsers ?? 0;
+    var activeUsers = ViewBag.ActiveUsers ?? 0;
+    var lockedUsers = ViewBag.LockedUsers ?? 0;
+    var newUsersThisMonth = ViewBag.NewUsersThisMonth ?? 0;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-users text-primary me-2"></i> Quản lý người dùng
+                </h2>
+                <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownAddUser" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-plus"></i> Thêm người dùng
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownAddUser">
+                            <li>
+                                <a class="dropdown-item" asp-action="Add">
+                                    <i class="fas fa-user"></i> Thêm thủ công
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" asp-action="Import">
+                                    <i class="fas fa-file-excel"></i> Nhập từ Excel
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <a asp-action="Export" class="btn btn-success">
+                        <i class="fas fa-file-export"></i> Xuất dữ liệu
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Tổng người dùng</div>
+                            <div class="stat-value">@totalUsers</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đang hoạt động</div>
+                            <div class="stat-value">@activeUsers</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-danger">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đang bị khóa</div>
+                            <div class="stat-value">@lockedUsers</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-info">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Mới trong tháng</div>
+                            <div class="stat-value">@newUsersThisMonth</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bootstrap Tabs -->
+            <ul class="nav nav-tabs mb-3" id="userTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" asp-action="Index">
+                        <i class="fas fa-users"></i> Đang hoạt động
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="DeletedUsers">
+                        <i class="fas fa-user-slash"></i> Đã vô hiệu hóa
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" asp-action="RecentActivity">
+                        <i class="fas fa-history"></i> Hoạt động gần đây
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                <form method="get" asp-action="Index" id="filterForm">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" class="form-control" name="searchString" value="@ViewBag.SearchString" placeholder="Email hoặc họ tên..." />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Vai trò</label>
+                            <select class="form-select" name="roleFilter">
+                                <option value="">Tất cả</option>
+                                <option value="Admin" selected="@(ViewBag.RoleFilter == "Admin")">Admin</option>
+                                <option value="Manager" selected="@(ViewBag.RoleFilter == "Manager")">Manager</option>
+                                <option value="Staff" selected="@(ViewBag.RoleFilter == "Staff")">Staff</option>
+                                <option value="User" selected="@(ViewBag.RoleFilter == "User")">User</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="statusFilter">
+                                <option value="">Tất cả</option>
+                                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Hoạt động</option>
+                                <option value="locked" selected="@(ViewBag.StatusFilter == "locked")">Bị khóa</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Từ ngày</label>
+                            <input type="date" class="form-control" name="fromDate" value="@ViewBag.FromDate" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Đến ngày</label>
+                            <input type="date" class="form-control" name="toDate" value="@ViewBag.ToDate" />
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Bulk Actions Card -->
+            <div class="card mb-3 border shadow-sm" id="bulkActionsCard" style="display: none;">
+                <div class="card-header bg-warning">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Thao tác hàng loạt - CẨN THẬN! 
+                        (<span id="selectedCount">0</span> đã chọn)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-3">
+                        <strong>⚠️ Lưu ý:</strong> 
+                        <ul class="mb-0">
+                            <li>Tối đa 5 tài khoản/lần</li>
+                            <li>Không thể thao tác với Admin</li>
+                            <li>Yêu cầu xác nhận mật khẩu</li>
+                        </ul>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-danger" onclick="bulkDelete()">
+                                <i class="fas fa-trash"></i> Xóa đã chọn
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="col-checkbox text-center"><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                                <th class="col-email">Email</th>
+                                <th class="col-fullname">Họ tên</th>
+                                <th class="col-status text-center">Trạng thái</th>
+                                <th class="col-role text-center">Vai trò</th>
+                                <th class="col-actions text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            @foreach (var user in Model)
+            {
+                var userRoles = await UserManager.GetRolesAsync(user);
+                var userRole = userRoles.FirstOrDefault() ?? "User";
+                var isAdmin = userRoles.Contains("Admin");
+                
+                // ⭐ Kiểm tra quyền quản lý user này
+                bool canManage = PermissionMatrix.UserManagement.CanManage(
+                    currentUserRole,
+                    userRole,
+                    currentUser?.IsSuperAdmin ?? false,
+                    user.IsSuperAdmin
+                );
+                
+                bool canDelete = PermissionMatrix.UserManagement.CanDelete(
+                    currentUserRole,
+                    userRole,
+                    currentUser?.IsSuperAdmin ?? false,
+                    user.IsSuperAdmin
+                );
+                
+                bool canLock = PermissionMatrix.UserManagement.CanLockUnlock(
+                    currentUserRole,
+                    userRole,
+                    currentUser?.IsSuperAdmin ?? false,
+                    user.IsSuperAdmin
+                );
+                
+                <tr>
+                    <td class="text-center">
+                        @if (canManage && !user.IsSuperAdmin && user.Id != currentUserId)
+                        {
+                            <input type="checkbox" class="user-checkbox" value="@user.Id" onchange="updateBulkActions()">
+                        }
+                        else
+                        {
+                            <span class="text-muted">🔒</span>
+                        }
+                    </td>
+                    <td class="text-left">
+                        @user.Email
+                        @if (user.IsSuperAdmin)
+                        {
+                            <span class="badge bg-danger ms-2" style="font-size: 0.75rem;">
+                                <i class="fas fa-crown"></i> SUPER ADMIN
+                            </span>
+                        }
+                    </td>
+                    <td class="text-left">@user.FullName</td>
+                    <td class="text-center">
+                        @if (user.LockoutEnd != null && user.LockoutEnd > DateTime.UtcNow)
+                        {
+                            var timeLeft = user.LockoutEnd.Value - DateTime.UtcNow;
+                            if (user.LockoutEnd == DateTimeOffset.MaxValue)
+                            {
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-ban"></i> Khóa vĩnh viễn
+                                </span>
+                            }
+                            else if (timeLeft.TotalDays >= 1)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock"></i> Khóa @timeLeft.Days ngày @timeLeft.Hours giờ
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-clock"></i> Khóa @timeLeft.Hours giờ @timeLeft.Minutes phút
+                                </span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> Hoạt động
+                            </span>
+                        }
+                    </td>
+                    <td class="text-center">
+                        @string.Join(", ", userRoles)
+                    </td>
+                    <td class="text-center">
+                        @if (!canManage)
+                        {
+                            var reason = "";
+                            if (user.IsSuperAdmin)
+                            {
+                                reason = "Chỉ Super Admin mới có thể quản lý Super Admin";
+                            }
+                            else if (userRoles.Contains("Admin") && !currentUserRoles.Contains("Super Admin"))
+                            {
+                                reason = "Chỉ Super Admin mới có thể quản lý Admin";
+                            }
+                            else if (userRoles.Contains("Manager") && currentUserRoles.Contains("Manager"))
+                            {
+                                reason = "Manager không thể quản lý Manager khác";
+                            }
+                            else if (userRoles.Contains("Staff") && currentUserRoles.Contains("Staff"))
+                            {
+                                reason = "Staff không thể quản lý Staff khác";
+                            }
+                            else
+                            {
+                                reason = "Bạn không có quyền quản lý người dùng này";
+                            }
+                            
+                            <span class="badge bg-secondary" data-bs-toggle="tooltip" data-bs-title="@reason" style="cursor: help;">
+                                <i class="fas fa-eye"></i> Chỉ xem
+                            </span>
+                        }
+                        else if (canDelete)
+                        {
+                            <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-info btn-sm" data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a asp-action="Update" asp-route-id="@user.Id" class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-title="Sửa">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a asp-controller="AdminRole" asp-action="ManageUserRoles" asp-route-userId="@user.Id" class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-title="Phân quyền">
+                                <i class="fas fa-user-shield"></i>
+                            </a>
+                            
+                            @if (user.Id != currentUserId)
+                            {
+                                <a asp-action="Delete" asp-route-id="@user.Id" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" data-bs-title="Xóa">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            }
+                            
+                            @if (canLock && user.Id != currentUserId)
+                            {
+                                @if (user.LockoutEnd == null || user.LockoutEnd < DateTime.UtcNow)
+                                {
+                                    <!-- Khóa có thời hạn -->
+                                    <form asp-action="Lock" asp-route-id="@user.Id" method="post" style="display:inline;" class="me-1">
+                                        <div class="input-group input-group-sm" style="width: 200px; display: inline-flex;">
+                                            <input type="number" name="amount" min="1" value="30" class="form-control" style="width:60px;" />
+                                            <select name="unit" class="form-select" style="width:80px;">
+                                                <option value="minutes">phút</option>
+                                                <option value="hours">giờ</option>
+                                                <option value="days" selected>ngày</option>
+                                            </select>
+                                            <button type="submit" class="btn btn-warning btn-sm" title="Khóa có thời hạn">
+                                                <i class="fas fa-lock"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+            
+                                    <!-- Khóa vĩnh viễn -->
+                                    <form asp-action="BanUser" asp-route-id="@user.Id" method="post" style="display:inline;" class="me-1">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Khóa vĩnh viễn" 
+                                                onclick="return confirm('Bạn có chắc muốn khóa vĩnh viễn tài khoản này?')">
+                                            <i class="fas fa-ban"></i> Ban
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form asp-action="Unlock" asp-route-id="@user.Id" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-success btn-sm" title="Mở khóa">
+                                            <i class="fas fa-unlock"></i> Mở khóa
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            <!-- Chỉ được xem -->
+                            <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-info btn-sm" data-bs-toggle="tooltip" data-bs-title="Chi tiết">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <span class="badge bg-warning text-dark ms-2">Chỉ xem</span>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+<script>
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = checkboxes.length;
+    
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('bulkActionsCard').style.display = count > 0 ? 'block' : 'none';
+}
+
+function getSelectedUserIds() {
+    const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function bulkDelete() {
+    const userIds = getSelectedUserIds();
+    if (userIds.length === 0) {
+        alert('Vui lòng chọn ít nhất một người dùng.');
+        return;
+    }
+    
+    if (userIds.length > 5) {
+        alert('Chỉ được xóa tối đa 5 tài khoản cùng lúc để đảm bảo an toàn.');
+        return;
+    }
+    
+    // Xác nhận lần 1
+    if (!confirm(`⚠️ CẢNH BÁO: Xóa ${userIds.length} tài khoản đã chọn?\n\nHành động này không thể hoàn tác!`)) {
+        return;
+    }
+    
+    // Yêu cầu nhập mật khẩu Admin
+    const password = prompt('🔐 Nhập mật khẩu Admin của bạn để xác nhận:');
+    if (!password || password.trim() === '') {
+        alert('Vui lòng nhập mật khẩu để xác nhận.');
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '@Url.Action("BulkDelete", "AdminUser")';
+    
+    // Thêm mật khẩu xác nhận
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'hidden';
+    passwordInput.name = 'confirmPassword';
+    passwordInput.value = password;
+    form.appendChild(passwordInput);
+    
+    // Thêm CSRF token
+    const token = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (token) {
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = '__RequestVerificationToken';
+        tokenInput.value = token.value;
+        form.appendChild(tokenInput);
+    }
+    
+    // Thêm userIds
+    userIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'userIds';
+        input.value = id;
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Tooltip Bootstrap
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+});
+</script>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        width: 100% !important; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary, .btn-success, .btn-warning, .btn-danger, .btn-info {
+        border-radius: 6px; 
+        padding: 6px 12px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    /* Statistics Cards */
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        transition: transform 0.2s;
+        border-left: 4px solid;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .stat-card:nth-child(1) { border-left-color: var(--primary-color); }
+    .stat-card:nth-child(2) { border-left-color: var(--success-color); }
+    .stat-card:nth-child(3) { border-left-color: var(--danger-color); }
+    .stat-card:nth-child(4) { border-left-color: var(--info-color); }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+    }
+
+    .stat-icon.bg-primary { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+    .stat-icon.bg-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stat-icon.bg-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+    .stat-icon.bg-info { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .filter-section .form-label {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .btn-info, .btn-warning, .btn-danger {
+        padding: 4px 8px; 
+        font-size: 0.8rem; 
+        min-width: 32px;
+    }
+
+    .btn-sm {
+        padding: 4px 8px;
+    }
+
+    .btn-info:hover, .btn-warning:hover, .btn-danger:hover, .btn-success:hover {
+        transform: translateY(-1px);
+    }
+
+    .table { 
+        background-color: #ffffff; 
+        border-radius: 8px; 
+        table-layout: fixed; 
+        width: 100%; 
+        font-size: 0.9rem; 
+    }
+    
+    .table th, .table td { 
+        border-color: #e5e7eb; 
+        vertical-align: middle; 
+        padding: 10px; 
+    }
+    
+    .table th { 
+        background-color: var(--primary-color); 
+        color: var(--text-light); 
+        font-weight: 500; 
+        text-transform: uppercase; 
+        font-size: 0.85rem; 
+    }
+    
+    .table-hover tbody tr:hover { 
+        background-color: #f1f5f9; 
+    }
+
+    .col-checkbox { width: 3%; min-width: 50px; }
+    .col-email { width: 20%; min-width: 180px; text-align: left; }
+    .col-fullname { width: 15%; min-width: 140px; text-align: left; }
+    .col-status { width: 12%; min-width: 120px; }
+    .col-role { width: 10%; min-width: 100px; }
+    .col-actions { width: 40%; min-width: 350px; }
+
+    .actions-cell { 
+        white-space: nowrap; 
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-dark);
+        border-radius: 6px 6px 0 0;
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom: 3px solid var(--primary-color);
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+    }
+
+    .alert {
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+</style>
+}

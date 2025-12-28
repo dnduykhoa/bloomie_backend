@@ -1,0 +1,299 @@
+@model Bloomie.Models.ViewModels.UserViewModel
+@{
+    ViewData["Title"] = "Đăng ký";
+    Layout = "~/Views/Shared/_IdentityLayout.cshtml";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+    body {
+        font-family: 'Lora', serif;
+        margin: 0;
+        min-height: 100vh; /* Đảm bảo body chiếm ít nhất toàn bộ chiều cao viewport */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(rgba(255, 250, 250, 0.8), rgba(255, 182, 193, 0.3)), url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .register-container {
+        max-width: 700px; /* Giảm max-width để vừa hơn với nội dung */
+        width: 100%;
+        margin: 20px auto; /* Căn giữa container */
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        display: flex;
+    }
+
+    .intro-section {
+        flex: 1;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(255, 182, 193, 0.3)), url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+        background-size: cover;
+        padding: 30px;
+        color: #ffe6e6;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 300px; /* Đảm bảo phần intro không quá hẹp */
+    }
+
+        .intro-section h2 {
+            font-size: 1.8rem; /* Giảm font-size để vừa hơn */
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .intro-section p {
+            font-size: 0.95rem; /* Giảm font-size để vừa hơn */
+            opacity: 0.9;
+        }
+
+    .register-section {
+        flex: 1.2; /* Tăng tỷ lệ cho phần form để cân đối */
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 350px; /* Đảm bảo phần form không quá hẹp */
+    }
+
+        .register-section h2 {
+            font-size: 1.6rem; /* Giảm font-size để vừa hơn */
+            font-weight: 600;
+            color: #ff6666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+    .social-login-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-google, .btn-facebook, .btn-twitter {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 25px;
+        padding: 10px 20px;
+        font-size: 0.9rem;
+        font-family: 'Lora', serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #b85454;
+        transition: background-color 0.3s ease;
+        text-decoration: none;
+        width: 100%; /* Match login form button width */
+    }
+
+        .btn-google img, .btn-facebook img, .btn-twitter img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .btn-google:hover, .btn-facebook:hover, .btn-twitter:hover {
+            background-color: #f1f1f1;
+            color: #b85454;
+        }
+
+    .form-control {
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        padding: 10px 40px 10px 10px; /* Giữ padding cho con mắt */
+        font-size: 0.9rem;
+        background: #fffafa;
+        transition: border-color 0.3s ease;
+        font-family: 'Lora', serif;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            border-color: #ffb6c1;
+            box-shadow: none;
+            background: white;
+        }
+
+    .form-label {
+        color: #cc7a7a;
+        font-size: 0.9rem;
+        font-family: 'Lora', serif;
+    }
+
+    .btn-primary {
+        background-color: #ff6666;
+        border: none;
+        border-radius: 25px;
+        padding: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Lora', serif;
+        color: #fff0f0;
+        transition: background-color 0.3s ease;
+        width: 100%; /* Đảm bảo nút chiếm toàn bộ chiều rộng */
+    }
+
+        .btn-primary:hover {
+            background-color: #ff4d4d;
+            color: #fff0f0;
+        }
+
+    .btn-google {
+        background-color: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 25px;
+        padding: 10px;
+        font-size: 0.9rem;
+        font-family: 'Lora', serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: #b85454;
+        transition: background-color 0.3s ease;
+        width: 100%; /* Đảm bảo nút Google chiếm toàn bộ chiều rộng */
+    }
+
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-google:hover {
+            background-color: #f1f1f1;
+            color: #b85454;
+        }
+
+    .text-links a {
+        color: #ffb6c1;
+        font-size: 0.85rem;
+        text-decoration: none;
+        font-family: 'Lora', serif;
+        margin: 0 10px;
+    }
+
+        .text-links a:hover {
+            color: #ff4d4d;
+        }
+
+    .input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #000000; /* Màu đen cho con mắt */
+        font-size: 1.2rem;
+        z-index: 1;
+    }
+
+    .form-text {
+        margin-top: 5px;
+    }
+</style>
+
+<section id="form">
+    <div class="register-container">
+        <!-- Introduction Section -->
+        <div class="intro-section">
+            <h2>Tham gia Bloomie ngay hôm nay</h2>
+            <p>Tạo tài khoản để khám phá những bó hoa tuyệt đẹp và những món quà ý nghĩa từ Bloomie - nơi lan tỏa sắc màu thiên nhiên.</p>
+        </div>
+
+        <!-- Registration Form Section -->
+        <div class="register-section">
+            <h2>Đăng ký</h2>
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <form asp-action="Register" asp-controller="Account" method="post">
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label">Tên đăng nhập</label>
+                    <input asp-for="UserName" class="form-control" autocomplete="username" aria-required="true" placeholder="Nhập tên đăng nhập" />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">Họ tên</label>
+                    <input asp-for="FullName" class="form-control" autocomplete="name" aria-required="true" placeholder="Nhập họ tên" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" aria-required="true" placeholder="Nhập email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">Mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input asp-for="Password" class="form-control" type="password" autocomplete="new-password" aria-required="true" placeholder="Nhập mật khẩu" id="password" />
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        Mật khẩu phải có ít nhất 12 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+                    </small>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label">Xác nhận mật khẩu</label>
+                    <div class="input-wrapper">
+                        <input asp-for="ConfirmPassword" class="form-control" type="password" autocomplete="new-password" aria-required="true" placeholder="Nhập lại mật khẩu" id="confirmPassword" />
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Đăng ký</button>
+            </form>
+            <div class="text-links text-center mt-3">
+                <a asp-action="Login" asp-controller="Account">Đã có tài khoản? Đăng nhập</a>
+            </div>
+            <div class="text-center mt-3">
+                <p>Hoặc đăng ký bằng</p>
+                <div class="social-login-buttons">
+                    <a asp-action="RegisterByGoogle" asp-controller="Account" class="btn-google">
+                        <img src="https://www.google.com/favicon.ico" alt="Google Logo">
+                    </a>
+                    <a asp-action="RegisterByFacebook" asp-controller="Account" class="btn-facebook">
+                        <img src="https://www.facebook.com/favicon.ico" alt="Facebook Logo">
+                    </a>
+                    <a asp-action="RegisterByTwitter" asp-controller="Account" class="btn-twitter">
+                        <img src="https://www.twitter.com/favicon.ico" alt="Twitter Logo">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove("fa-eye");
+                icon.classList.add("fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.remove("fa-eye-slash");
+                icon.classList.add("fa-eye");
+            }
+        }
+    </script>
+}
+
+

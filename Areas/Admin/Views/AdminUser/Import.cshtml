@@ -1,0 +1,655 @@
+@{
+    ViewData["Title"] = "Nhập dữ liệu Excel";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<style>
+:root {
+    --primary-color: #2563eb;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+    --text-dark: #1e293b;
+    --background-light: #f8fafc;
+    --border-color: #e2e8f0;
+}
+
+.page-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.step-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.step-item {
+    position: relative;
+    text-align: center;
+    padding: 1rem;
+}
+
+.step-item::after {
+    content: '';
+    position: absolute;
+    top: 35px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: #e2e8f0;
+    z-index: 0;
+}
+
+.step-item:last-child::after {
+    display: none;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #e2e8f0;
+    color: #94a3b8;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 auto 12px;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-number {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transform: scale(1.1);
+}
+
+.step-title {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.step-item.active .step-title {
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.modern-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.modern-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.modern-card-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    border-radius: 12px 12px 0 0;
+}
+
+.modern-card-body {
+    padding: 1.5rem;
+}
+
+.info-box {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-left: 4px solid var(--info-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.warning-box {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-left: 4px solid var(--warning-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.feature-list {
+    background: var(--background-light);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.feature-list .table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.badge-column {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.modern-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.modern-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.file-upload-area {
+    border: 3px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    background: var(--background-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+
+.file-upload-area input[type="file"] {
+    cursor: pointer;
+}
+
+.config-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.option-item {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.option-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.icon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 1.25rem;
+}
+
+.alert-modern {
+    border-radius: 8px;
+    border: none;
+    padding: 1rem;
+}
+</style>
+
+<div class="container-fluid mt-2 p-0">
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h2 class="fw-bold mb-2">
+                <i class="fas fa-file-import me-2"></i>Nhập danh sách người dùng từ Excel
+            </h2>
+            <p class="mb-0 opacity-90">Tải file mẫu, điền thông tin và upload để thêm nhiều người dùng cùng lúc</p>
+        </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="step-container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="step-item active">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Tải file mẫu</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Cấu hình & Upload</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Hoàn tất</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Download Template -->
+        <div class="col-lg-5 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header" style="background: linear-gradient(135deg, var(--primary-color) 0%, #1e40af 100%);">
+                    <h5 class="mb-0 text-white fw-bold">
+                        <i class="fas fa-download me-2"></i>Bước 1: Tải file mẫu Excel
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <div class="info-box">
+                        <div class="d-flex">
+                            <div class="icon-badge bg-primary text-white me-3">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">Hướng dẫn nhanh</h6>
+                                <ol class="mb-0 ps-3">
+                                    <li>Tải file mẫu Excel bên dưới</li>
+                                    <li>Điền thông tin người dùng vào file</li>
+                                    <li>Lưu file và upload ở bên phải</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a asp-action="DownloadUserTemplate" class="btn btn-primary modern-btn w-100 mb-4" style="padding: 1rem;">
+                        <i class="fas fa-file-download me-2"></i>Tải file mẫu người dùng
+                    </a>
+
+                    <div class="feature-list">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-table text-primary me-2"></i>Cấu trúc file Excel
+                        </h6>
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr style="background: white;">
+                                    <th style="width: 70px;">Cột</th>
+                                    <th>Tên trường</th>
+                                    <th style="width: 120px;">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody style="background: white;">
+                                <tr>
+                                    <td><span class="badge-column">A</span></td>
+                                    <td class="fw-semibold">Email</td>
+                                    <td><span class="badge bg-danger">Bắt buộc</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge-column">B</span></td>
+                                    <td class="fw-semibold">Họ tên</td>
+                                    <td><span class="badge bg-danger">Bắt buộc</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge-column">C</span></td>
+                                    <td class="fw-semibold">Số điện thoại</td>
+                                    <td><span class="badge bg-info">Tùy chọn</span></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge-column">D</span></td>
+                                    <td class="fw-semibold">Vai trò</td>
+                                    <td><span class="badge bg-info">Tùy chọn</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="mt-3 p-2 bg-white rounded" style="border: 1px solid var(--border-color);">
+                            <small class="text-muted">
+                                <i class="fas fa-magic text-primary me-1"></i>
+                                <strong>Tự động:</strong> Tên đăng nhập tạo từ email (không cần nhập)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="d-flex">
+                            <div class="icon-badge bg-warning text-white me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-2">Lưu ý quan trọng</h6>
+                                <ul class="mb-0 ps-3 small">
+                                    <li>Không xóa/sửa dòng tiêu đề (dòng 9)</li>
+                                    <li>Email phải duy nhất, không trùng lặp</li>
+                                    <li><strong>Username tự động:</strong> user@example.com → user</li>
+                                    <li>Vai trò: User, Staff, Manager (mặc định: User)</li>
+                                    <li>Chỉ chấp nhận định dạng .xlsx hoặc .xls</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Upload Form -->
+        <div class="col-lg-7 mb-4">
+            <div class="modern-card">
+                <div class="modern-card-header" style="background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);">
+                    <h5 class="mb-0 text-white fw-bold">
+                        <i class="fas fa-upload me-2"></i>Bước 2: Upload file và cấu hình
+                    </h5>
+                </div>
+                <div class="modern-card-body">
+                    <form asp-action="ImportUsers" method="post" enctype="multipart/form-data" id="importForm">
+                        
+                        <!-- File Upload Section -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3">
+                                <i class="fas fa-file-excel text-success me-2"></i>Chọn file Excel
+                            </label>
+                            <div class="file-upload-area">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <h6 class="fw-bold mb-2">Kéo thả file vào đây hoặc click để chọn</h6>
+                                <p class="text-muted small mb-3">Hỗ trợ định dạng: .xlsx, .xls (Tối đa 10MB)</p>
+                                <input type="file" name="File" class="form-control" id="fileInput" accept=".xlsx,.xls" required />
+                            </div>
+                            <div class="file-info mt-3" id="fileInfo" style="display:none;">
+                                <div class="alert-modern" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid var(--success-color);">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">File đã chọn</h6>
+                                            <div><span id="fileName" class="fw-semibold"></span></div>
+                                            <small class="text-muted">Kích thước: <span id="fileSize"></span></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4"/>
+
+                        <!-- Configuration Section -->
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-cog text-primary me-2"></i>Cấu hình nhập dữ liệu
+                        </h6>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-user-tag me-2 text-primary"></i>Vai trò mặc định
+                                </label>
+                                <select name="DefaultRole" class="form-select" style="border-radius: 8px; padding: 0.75rem;">
+                                    <option value="User" selected>👤 User (Người dùng)</option>
+                                    <option value="Staff">👔 Staff (Nhân viên)</option>
+                                    <option value="Manager">👨‍💼 Manager (Quản lý)</option>
+                                </select>
+                                <small class="form-text text-muted mt-1">
+                                    Áp dụng cho các dòng không chỉ định vai trò
+                                </small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-key me-2 text-primary"></i>Mật khẩu tạm thời
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" value="Auto-generate" readonly style="border-radius: 8px 0 0 8px; background: #f1f5f9;"/>
+                                    <button class="btn btn-outline-secondary" type="button" title="Mật khẩu sẽ được tạo tự động và gửi qua email" style="border-radius: 0 8px 8px 0;">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
+                                </div>
+                                <small class="form-text text-muted mt-1">
+                                    Hệ thống tự động tạo và gửi qua email
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="config-card mb-4">
+                            <h6 class="fw-bold mb-3">
+                                <i class="fas fa-sliders-h text-primary me-2"></i>Tùy chọn bổ sung
+                            </h6>
+                            
+                            <div class="option-item">
+                                <div class="form-check">
+                                    <input type="checkbox" name="RequirePasswordChange" class="form-check-input" id="requirePasswordChange" checked />
+                                    <label class="form-check-label" for="requirePasswordChange">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-key text-warning fa-lg me-3 mt-1"></i>
+                                            <div>
+                                                <div class="fw-semibold">Yêu cầu đổi mật khẩu khi đăng nhập lần đầu</div>
+                                                <small class="text-muted">Bảo mật cao hơn, người dùng phải đổi mật khẩu tạm</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-item">
+                                <div class="form-check">
+                                    <input type="checkbox" name="RequireEmailConfirmation" class="form-check-input" id="requireEmail" />
+                                    <label class="form-check-label" for="requireEmail">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-envelope-open-text text-info fa-lg me-3 mt-1"></i>
+                                            <div>
+                                                <div class="fw-semibold">Yêu cầu xác nhận email</div>
+                                                <small class="text-muted">Gửi email xác thực, người dùng phải xác nhận trước khi đăng nhập</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="option-item mb-0">
+                                <div class="form-check">
+                                    <input type="checkbox" name="SendWelcomeEmail" class="form-check-input" id="sendWelcome" checked />
+                                    <label class="form-check-label" for="sendWelcome">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-paper-plane text-primary fa-lg me-3 mt-1"></i>
+                                            <div>
+                                                <div class="fw-semibold">Gửi email chào mừng kèm thông tin đăng nhập</div>
+                                                <small class="text-muted">Thông báo tài khoản và mật khẩu tạm thời cho người dùng</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg modern-btn" id="submitBtn" disabled>
+                                <i class="fas fa-cloud-upload-alt me-2"></i>Bắt đầu nhập dữ liệu
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary modern-btn">
+                                <i class="fas fa-redo me-2"></i>Đặt lại
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert-modern mt-3" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid var(--success-color);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-1">Thành công!</h6>
+                            <div>@TempData["success"]</div>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert-modern mt-3" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid var(--danger-color);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle text-danger fa-2x me-3"></i>
+                        <div>
+                            <h6 class="fw-bold mb-1">Lỗi!</h6>
+                            <div>@TempData["error"]</div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <a asp-action="Index" class="btn btn-secondary modern-btn">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// File input handling with modern animations
+const fileInput = document.getElementById('fileInput');
+const submitBtn = document.getElementById('submitBtn');
+const fileInfo = document.getElementById('fileInfo');
+const fileUploadArea = fileInput.closest('.file-upload-area');
+
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    
+    if (file) {
+        // Validate file extension
+        const validExtensions = ['.xlsx', '.xls'];
+        const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        
+        if (!validExtensions.includes(fileExtension)) {
+            alert('⚠️ File không hợp lệ! Vui lòng chọn file Excel (.xlsx hoặc .xls)');
+            e.target.value = '';
+            fileInfo.style.display = 'none';
+            submitBtn.disabled = true;
+            fileUploadArea.style.borderColor = 'var(--danger-color)';
+            return;
+        }
+        
+        // Show file info with animation
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(2) + ' KB';
+        fileInfo.style.display = 'block';
+        fileInfo.style.animation = 'slideIn 0.3s ease';
+        
+        // Enable submit button
+        submitBtn.disabled = false;
+        submitBtn.style.animation = 'pulse 0.5s ease';
+        
+        // Update upload area style
+        fileUploadArea.style.borderColor = 'var(--success-color)';
+        fileUploadArea.style.background = '#d1fae5';
+    } else {
+        fileInfo.style.display = 'none';
+        submitBtn.disabled = true;
+        fileUploadArea.style.borderColor = 'var(--border-color)';
+        fileUploadArea.style.background = 'var(--background-light)';
+    }
+});
+
+// Drag and drop support
+fileUploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    fileUploadArea.style.borderColor = 'var(--primary-color)';
+    fileUploadArea.style.background = '#eff6ff';
+    fileUploadArea.style.transform = 'scale(1.02)';
+});
+
+fileUploadArea.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    fileUploadArea.style.borderColor = 'var(--border-color)';
+    fileUploadArea.style.background = 'var(--background-light)';
+    fileUploadArea.style.transform = 'scale(1)';
+});
+
+fileUploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event('change'));
+    }
+    fileUploadArea.style.borderColor = 'var(--border-color)';
+    fileUploadArea.style.background = 'var(--background-light)';
+    fileUploadArea.style.transform = 'scale(1)';
+});
+
+// Reset form
+document.getElementById('importForm').addEventListener('reset', function() {
+    fileInfo.style.display = 'none';
+    submitBtn.disabled = true;
+    fileUploadArea.style.borderColor = 'var(--border-color)';
+    fileUploadArea.style.background = 'var(--background-light)';
+});
+
+// Confirmation before submit with modern styling
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    const file = fileInput.files[0];
+    if (!confirm(`🚀 Xác nhận nhập dữ liệu\n\nFile: "${file.name}"\n\nHệ thống sẽ:\n✓ Tạo tài khoản người dùng\n✓ Gửi email thông báo\n✓ Áp dụng cấu hình đã chọn\n\nBạn có muốn tiếp tục?`)) {
+        e.preventDefault();
+    } else {
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
+        submitBtn.disabled = true;
+    }
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    .file-upload-area {
+        transition: all 0.3s ease;
+    }
+`;
+document.head.appendChild(style);
+</script>
+}

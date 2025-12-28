@@ -1,0 +1,465 @@
+@model Bloomie.Models.ViewModels.UserStatisticsViewModel
+@{
+    ViewData["Title"] = "Thống Kê Người Dùng Chi Tiết";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-chart-pie"></i> Thống Kê Người Dùng Chi Tiết</h2>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportStatistics()">
+                <i class="fas fa-download"></i> Xuất Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng Đăng Ký
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TotalRegistrations</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Email Đã Xác Thực
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.EmailConfirmedUsers</div>
+                            <div class="text-xs text-muted">
+                                @{
+                                    var emailConfirmRate = Model.TotalRegistrations > 0 ? (double)Model.EmailConfirmedUsers / Model.TotalRegistrations * 100 : 0;
+                                }
+                                (@emailConfirmRate.ToString("F1")% tỷ lệ xác thực)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-envelope-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Bật 2FA
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.TwoFactorEnabledUsers</div>
+                            <div class="text-xs text-muted">
+                                @{
+                                    var twoFactorRate = Model.TotalRegistrations > 0 ? (double)Model.TwoFactorEnabledUsers / Model.TotalRegistrations * 100 : 0;
+                                }
+                                (@twoFactorRate.ToString("F1")% tỷ lệ bảo mật)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shield-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Tăng Trưởng Tháng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var currentMonth = Model.UserGrowthChart.LastOrDefault();
+                                    var previousMonth = Model.UserGrowthChart.Count > 1 ? Model.UserGrowthChart[Model.UserGrowthChart.Count - 2] : null;
+                                    var growthRate = 0.0;
+                                    if (currentMonth != null && previousMonth != null && previousMonth.NewUsers > 0)
+                                    {
+                                        growthRate = ((double)(currentMonth.NewUsers - previousMonth.NewUsers) / previousMonth.NewUsers) * 100;
+                                    }
+                                }
+                                @growthRate.ToString("F1")%
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- User Growth Chart -->
+        <div class="col-xl-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Biểu Đồ Tăng Trưởng Người Dùng (12 tháng gần nhất)</h6>
+                    <div class="dropdown no-arrow">
+                        <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right shadow">
+                            <a class="dropdown-item" href="#" onclick="exportChart('userGrowthChart')">Xuất biểu đồ</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Distribution Pie Chart -->
+        <div class="col-xl-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Phân Bố Vai Trò</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="roleDistributionChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        @if (Model.RoleDistribution.Any())
+                        {
+                            @foreach (var role in Model.RoleDistribution)
+                            {
+                                <span class="mr-2">
+                                    <i class="fas fa-circle" style="color: @GetRoleColor(role.RoleName)"></i> @role.RoleName (@role.Percentage.ToString("F1")%)
+                                </span>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Active Users Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Người Dùng Hoạt Động Nhiều Nhất</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="topUsersTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Tên Đăng Nhập</th>
+                                    <th>Địa Chỉ Email</th>
+                                    <th>Số Lần Đăng Nhập</th>
+                                    <th>Đăng Nhập Cuối</th>
+                                    <th>Số Trang Đã Xem</th>
+                                    <th>Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.TopActiveUsers.Any())
+                                {
+                                    @foreach (var user in Model.TopActiveUsers)
+                                    {
+                                        <tr>
+                                            <td>@user.UserName</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                <span class="badge badge-success">@user.LoginCount</span>
+                                            </td>
+                                            <td>@user.LastLogin.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>
+                                                <span class="badge badge-info">@user.PageViews</span>
+                                            </td>
+                                            <td>
+                                                <a asp-controller="AdminUser" asp-action="Details" asp-route-id="@user.UserName" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Chi tiết
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">Không có dữ liệu</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Statistics Cards -->
+    <div class="row">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thống Kê Theo Tháng</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.UserGrowthChart.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tháng</th>
+                                        <th>Người Dùng Mới</th>
+                                        <th>Tổng Người Dùng</th>
+                                        <th>Tăng Trưởng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = Model.UserGrowthChart.Count - 1; i >= Math.Max(0, Model.UserGrowthChart.Count - 6); i--)
+                                    {
+                                        var month = Model.UserGrowthChart[i];
+                                        var prevMonth = i > 0 ? Model.UserGrowthChart[i - 1] : null;
+                                        var growth = prevMonth != null && prevMonth.NewUsers > 0 
+                                            ? ((double)(month.NewUsers - prevMonth.NewUsers) / prevMonth.NewUsers) * 100 
+                                            : 0;
+                                        
+                                        <tr>
+                                            <td>@month.Month</td>
+                                            <td>@month.NewUsers</td>
+                                            <td>@month.TotalUsers</td>
+                                            <td>
+                                                @if (growth > 0)
+                                                {
+                                                    <span class="text-success">
+                                                        <i class="fas fa-arrow-up"></i> @growth.ToString("F1")%
+                                                    </span>
+                                                }
+                                                else if (growth < 0)
+                                                {
+                                                    <span class="text-danger">
+                                                        <i class="fas fa-arrow-down"></i> @Math.Abs(growth).ToString("F1")%
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">0%</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Không có dữ liệu thống kê</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Phân Tích Nhanh</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">📈 Xu Hướng Tăng Trưởng</h6>
+                        <p class="text-sm text-muted">
+                            @{
+                                var recentGrowth = Model.UserGrowthChart.TakeLast(3).ToList();
+                                if (recentGrowth.Count >= 2)
+                                {
+                                    var avgGrowth = recentGrowth.Skip(1).Select((month, index) => 
+                                        recentGrowth[index].NewUsers > 0 ? 
+                                        ((double)(month.NewUsers - recentGrowth[index].NewUsers) / recentGrowth[index].NewUsers) * 100 : 0
+                                    ).Average();
+                                    
+                                    if (avgGrowth > 5)
+                                    {
+                                        <span class="text-success">Tăng trưởng mạnh (@avgGrowth.ToString("F1")% trung bình)</span>
+                                    }
+                                    else if (avgGrowth > 0)
+                                    {
+                                        <span class="text-info">Tăng trưởng ổn định (@avgGrowth.ToString("F1")% trung bình)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-warning">Tăng trưởng chậm lại</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa đủ dữ liệu để phân tích</span>
+                                }
+                            }
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-primary">🔒 Tình Trạng Bảo Mật</h6>
+                        <p class="text-sm text-muted">
+                            @{
+                                var securityScore = 0;
+                                if (emailConfirmRate > 80) securityScore += 40;
+                                else if (emailConfirmRate > 60) securityScore += 30;
+                                else if (emailConfirmRate > 40) securityScore += 20;
+                                
+                                if (twoFactorRate > 50) securityScore += 40;
+                                else if (twoFactorRate > 30) securityScore += 30;
+                                else if (twoFactorRate > 10) securityScore += 20;
+                                
+                                securityScore += 20; // Base score
+                            }
+                            
+                            @if (securityScore >= 80)
+                            {
+                                <span class="text-success">Tốt (@securityScore/100 điểm)</span>
+                            }
+                            else if (securityScore >= 60)
+                            {
+                                <span class="text-warning">Trung bình (@securityScore/100 điểm)</span>
+                            }
+                            else
+                            {
+                                <span class="text-danger">Cần cải thiện (@securityScore/100 điểm)</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-primary">💡 Khuyến Nghị</h6>
+                        <ul class="text-sm text-muted">
+                            @if (emailConfirmRate < 70)
+                            {
+                                <li>Cải thiện quy trình xác thực email</li>
+                            }
+                            @if (twoFactorRate < 30)
+                            {
+                                <li>Khuyến khích người dùng bật xác thực 2 yếu tố</li>
+                            }
+                            @if (Model.UserGrowthChart.Any() && Model.UserGrowthChart.Last().NewUsers < 10)
+                            {
+                                <li>Tăng cường marketing để thu hút người dùng mới</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // User Growth Chart
+    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+    const userGrowthChart = new Chart(userGrowthCtx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.UserGrowthChart.Select(x => x.Month))),
+            datasets: [{
+                label: 'Người Dùng Mới',
+                data: @Html.Raw(Json.Serialize(Model.UserGrowthChart.Select(x => x.NewUsers))),
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }, {
+                label: 'Tổng Người Dùng',
+                data: @Html.Raw(Json.Serialize(Model.UserGrowthChart.Select(x => x.TotalUsers))),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Role Distribution Chart
+    const roleCtx = document.getElementById('roleDistributionChart').getContext('2d');
+    const roleChart = new Chart(roleCtx, {
+        type: 'doughnut',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.RoleDistribution.Select(x => x.RoleName))),
+            datasets: [{
+                data: @Html.Raw(Json.Serialize(Model.RoleDistribution.Select(x => x.UserCount))),
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // Export functions
+    function exportStatistics() {
+        // Implementation for exporting statistics to Excel
+        alert('Tính năng xuất Excel sẽ được triển khai');
+    }
+
+    function exportChart(chartId) {
+        // Implementation for exporting chart
+        alert('Tính năng xuất biểu đồ sẽ được triển khai');
+    }
+</script>
+}
+
+@functions {
+    string GetRoleColor(string roleName)
+    {
+        return roleName switch
+        {
+            "Admin" => "#FF6384",
+            "Staff" => "#36A2EB", 
+            "User" => "#FFCE56",
+            _ => "#4BC0C0"
+        };
+    }
+}

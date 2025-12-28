@@ -1,0 +1,457 @@
+@model Bloomie.Models.ViewModels.PurchaseOrderViewModel
+@{
+    ViewData["Title"] = "Tạo phiếu nhập kho";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-file-import text-primary me-2"></i> Tạo phiếu nhập kho
+                </h2>
+            </div>
+
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                
+                <!-- Validation Summary -->
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-1"></i>
+                        <div asp-validation-summary="ModelOnly" class="d-inline"></div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                }
+
+                <!-- Thông tin chung -->
+                <div class="card mb-4 shadow-sm border">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin phiếu nhập</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="SupplierId" class="form-label fw-bold">
+                                    Nhà cung cấp <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="SupplierId" class="form-select" asp-items="@(new SelectList(ViewBag.Suppliers, "Id", "Name"))">
+                                    <option value="">-- Chọn nhà cung cấp --</option>
+                                </select>
+                                <span asp-validation-for="SupplierId" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="OrderDate" class="form-label fw-bold">
+                                    Ngày nhập <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="OrderDate" type="date" class="form-control" />
+                                <span asp-validation-for="OrderDate" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="Note" class="form-label fw-bold">Ghi chú</label>
+                                <input asp-for="Note" class="form-control" placeholder="Nhập ghi chú..." />
+                                <span asp-validation-for="Note" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chi tiết nhập kho -->
+                <div class="card mb-4 shadow-sm border">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list text-primary me-2"></i> Chi tiết nhập kho</h5>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addOrderDetail()">
+                            <i class="fas fa-plus me-1"></i> Thêm dòng
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="order-details" class="table-responsive">
+                            <!-- Dynamic rows will be added here -->
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0" id="empty-message">
+                            <i class="fas fa-info-circle me-1"></i> 
+                            Nhấn nút "Thêm dòng" để thêm sản phẩm vào phiếu nhập kho
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-end align-items-baseline gap-3">
+                            <h5 class="mb-0 fw-bold">Tổng tiền nhập hàng:</h5>
+                            <h4 class="mb-0 fw-bold text-danger" id="total-amount">0₫</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu phiếu nhập
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        let rowIndex = 0;
+
+        function addOrderDetail() {
+            var idx = rowIndex++;
+            var html = `
+            <div class="order-detail-row card mb-3 shadow-sm" data-index="${idx}">
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label fw-bold small">Loại hoa <span class="text-danger">*</span></label>
+                            <select class="form-select flower-type" onchange="setFlowerTypeId(this, ${idx}); loadVariants(this, ${idx})">
+                                <option value="">-- Chọn loại hoa --</option>
+                                @foreach (var type in ViewBag.FlowerTypes as List<Bloomie.Models.Entities.FlowerType>)
+                                {
+                                    <text><option value="@type.Id">@type.Name</option></text>
+                                }
+                            </select>
+                            <input type="hidden" name="Details[${idx}].FlowerTypeId" class="flower-type-id" value="" />
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label fw-bold small">Biến thể hoa <span class="text-danger">*</span></label>
+                            <select class="form-select flower-variant" name="Details[${idx}].FlowerVariantId">
+                                <option value="">-- Chọn biến thể --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label fw-bold small">Số lượng <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control quantity-input" name="Details[${idx}].Quantity" placeholder="0" min="1" required onchange="calculateRowTotal(this)" oninput="calculateRowTotal(this)" />
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label fw-bold small">Đơn giá (₫) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control price-input" data-name="Details[${idx}].UnitPrice" placeholder="0" required oninput="formatPriceInput(this)" />
+                            <input type="hidden" name="Details[${idx}].UnitPrice" class="price-hidden" value="0" />
+                        </div>
+                        <div class="col-md-2 mb-2">
+                            <label class="form-label fw-bold small">Thành tiền (₫)</label>
+                            <input type="text" class="form-control row-total" readonly style="background-color: #f3f4f6; font-weight: 600;" value="0₫" />
+                        </div>
+                        <div class="col-md-1 mb-2 text-center">
+                            <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeOrderDetail(this)" data-bs-toggle="tooltip" title="Xóa dòng">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.getElementById('order-details').insertAdjacentHTML('beforeend', html);
+            updateEmptyMessage();
+            
+            // Initialize tooltips for the new button
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+
+        function removeOrderDetail(button) {
+            button.closest('.order-detail-row').remove();
+            updateEmptyMessage();
+            calculateTotalAmount();
+        }
+
+        function updateEmptyMessage() {
+            const rowCount = document.querySelectorAll('.order-detail-row').length;
+            const emptyMessage = document.getElementById('empty-message');
+            if (rowCount === 0) {
+                emptyMessage.style.display = 'block';
+            } else {
+                emptyMessage.style.display = 'none';
+            }
+        }
+
+        function calculateRowTotal(input) {
+            const row = input.closest('.order-detail-row');
+            const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const priceHidden = row.querySelector('.price-hidden');
+            const price = parseFloat(priceHidden.value) || 0;
+            const total = quantity * price;
+            
+            const rowTotalInput = row.querySelector('.row-total');
+            rowTotalInput.value = formatCurrency(total);
+            
+            calculateTotalAmount();
+        }
+
+        function calculateTotalAmount() {
+            let grandTotal = 0;
+            const rows = document.querySelectorAll('.order-detail-row');
+            
+            rows.forEach(row => {
+                const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+                const priceHidden = row.querySelector('.price-hidden');
+                const price = parseFloat(priceHidden.value) || 0;
+                grandTotal += quantity * price;
+            });
+            
+            document.getElementById('total-amount').textContent = formatCurrency(grandTotal);
+        }
+
+        function formatPriceInput(input) {
+            // Remove all non-digit characters
+            let value = input.value.replace(/\D/g, '');
+            
+            // Update hidden input with raw value
+            const row = input.closest('.order-detail-row');
+            const hiddenInput = row.querySelector('.price-hidden');
+            hiddenInput.value = value;
+            
+            // Format display value with dots
+            if (value) {
+                input.value = parseInt(value).toLocaleString('vi-VN');
+            } else {
+                input.value = '';
+            }
+            
+            // Recalculate totals
+            calculateRowTotal(input);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { 
+                style: 'currency', 
+                currency: 'VND',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function setFlowerTypeId(select, idx) {
+            var value = select.value;
+            var hiddenInput = select.closest('.order-detail-row').querySelector('.flower-type-id');
+            hiddenInput.value = value;
+        }
+
+        function loadVariants(select, idx) {
+            var flowerTypeId = select.value;
+            var variantSelect = select.closest('.order-detail-row').querySelector('.flower-variant');
+            
+            if (!flowerTypeId) {
+                variantSelect.innerHTML = '<option value="">-- Chọn biến thể --</option>';
+                return;
+            }
+            
+            variantSelect.innerHTML = '<option value="">Đang tải...</option>';
+            variantSelect.disabled = true;
+            
+            fetch('/Admin/AdminFlowerVariant/GetVariantsByType?flowerTypeId=' + flowerTypeId)
+                .then(res => res.json())
+                .then(data => {
+                    variantSelect.innerHTML = '<option value="">-- Chọn biến thể --</option>';
+                    data.forEach(v => {
+                        variantSelect.innerHTML += `<option value="${v.id}">${v.name}</option>`;
+                    });
+                    variantSelect.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Error loading variants:', error);
+                    variantSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
+                    variantSelect.disabled = false;
+                });
+        }
+
+        // Auto add one detail row on load
+        document.addEventListener('DOMContentLoaded', function () {
+            updateEmptyMessage();
+            
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+}
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+
+    h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f9fafb !important;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-success, .btn-danger {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .btn-success:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border-left: 4px solid;
+        padding: 12px 16px;
+    }
+
+    .alert-danger {
+        border-left-color: var(--danger-color);
+        background-color: #fef2f2;
+        color: #991b1b;
+    }
+
+    .alert-info {
+        border-left-color: var(--info-color);
+        background-color: #eff6ff;
+        color: #1e40af;
+    }
+
+    .order-detail-row {
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .order-detail-row:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.1);
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .text-danger {
+        color: var(--danger-color) !important;
+    }
+
+    .card-footer {
+        padding: 15px 20px;
+        background-color: #f9fafb !important;
+        border-top: 2px solid #e5e7eb;
+        border-radius: 0 0 8px 8px !important;
+    }
+
+    .row-total {
+        color: #059669;
+        font-size: 0.95rem;
+    }
+
+    #total-amount {
+        font-size: 1.5rem;
+        color: var(--danger-color);
+    }
+</style>

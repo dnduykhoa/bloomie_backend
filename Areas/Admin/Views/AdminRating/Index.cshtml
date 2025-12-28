@@ -1,0 +1,1633 @@
+@model List<Bloomie.Models.Entities.Rating>
+
+@{
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Đánh giá và Phản hồi";
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var pageSize = ViewBag.PageSize ?? 10;
+    var totalItems = ViewBag.TotalItems ?? 0;
+}
+
+@Html.AntiForgeryToken()
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-star text-primary me-2"></i> Quản lý Đánh giá & Phản hồi
+                </h2>
+            </div>
+
+            <!-- Thống kê tổng quan -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Tổng đánh giá</div>
+                    <div class="stat-value">@ViewBag.TotalRatings</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Chưa trả lời</div>
+                    <div class="stat-value">@ViewBag.TotalUnreplied</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card stat-card-danger">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Báo cáo vi phạm</div>
+                    <div class="stat-value">@ViewBag.TotalReported</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Điểm trung bình</div>
+                    <div class="stat-value">@(Math.Round((double)ViewBag.AverageStar, 1))<small class="ms-1">/5</small></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Tabs -->
+    <ul class="nav nav-tabs mb-4" id="ratingTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" asp-action="Index">
+                <i class="fas fa-star"></i> Đánh giá
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" asp-action="Reports">
+                <i class="fas fa-flag"></i> Báo cáo vi phạm
+            </a>
+        </li>
+    </ul>
+
+    <!-- Biểu đồ phân bố sao & Top sản phẩm -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8">
+            <div class="stats-section">
+                <h5 class="mb-3 fw-bold">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>Phân bố đánh giá theo sao
+                </h5>
+                <div class="star-distribution">
+                        @for (int i = 5; i >= 1; i--)
+                        {
+                            var count = i == 5 ? ViewBag.Star5Count : 
+                                       i == 4 ? ViewBag.Star4Count :
+                                       i == 3 ? ViewBag.Star3Count :
+                                       i == 2 ? ViewBag.Star2Count : ViewBag.Star1Count;
+                            var percentage = ViewBag.TotalRatings > 0 ? (double)(count * 100.0 / ViewBag.TotalRatings) : 0.0;
+                            
+                            <div class="star-row mb-3">
+                                <div class="star-label">
+                                    <span class="star-number">@i</span>
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div class="star-progress">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: @(percentage)%" aria-valuenow="@percentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                                <div class="star-stats">
+                                    <span class="count-badge">@count</span>
+                                    <small class="text-muted">(@(Math.Round(percentage, 1))%)</small>
+                                </div>
+                            </div>
+                        }
+                    </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="stats-section">
+                <h5 class="mb-3 fw-bold">
+                    <i class="fas fa-trophy text-warning me-2"></i>Top sản phẩm được đánh giá
+                </h5>
+                    @if (ViewBag.TopProducts != null && ViewBag.TopProducts.Count > 0)
+                    {
+                        <div class="top-products-list">
+                            @foreach (var item in ViewBag.TopProducts)
+                            {
+                                <div class="top-product-item">
+                                    <div class="product-name">@item.ProductName</div>
+                                    <span class="badge bg-primary">@item.Count</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">Chưa có dữ liệu</p>
+                    }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top user đánh giá -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3 fw-bold">
+                <i class="fas fa-users text-success me-2"></i>Top người dùng đánh giá nhiều nhất
+            </h5>
+            @if (ViewBag.TopUsers != null && ViewBag.TopUsers.Count > 0)
+            {
+                <div class="row g-3">
+                            @foreach (var item in ViewBag.TopUsers)
+                            {
+                                <div class="col-lg-2 col-md-4 col-sm-6">
+                                    <div class="top-user-card">
+                                        <div class="user-avatar">
+                                            <i class="fas fa-user-circle"></i>
+                                        </div>
+                                        <div class="user-name">@item.UserName</div>
+                                        <span class="badge bg-success">@item.Count đánh giá</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center mb-0">Chưa có dữ liệu</p>
+                    }
+        </div>
+    </div>
+
+    <!-- Bộ lọc và tìm kiếm -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h5 class="mb-3 fw-bold">
+                <i class="fas fa-filter text-info me-2"></i>Bộ lọc và Tìm kiếm
+            </h5>
+            <div class="filter-section">
+                    <form method="get" class="row g-3">
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-box me-1"></i>Sản phẩm
+                            </label>
+                            <select name="productId" class="form-select">
+                                <option value="">Tất cả sản phẩm</option>
+                                @if (ViewBag.Products != null)
+                                {
+                                    foreach (var p in ViewBag.Products)
+                                    {
+                                        var isSelected = (ViewBag.ProductId != null && (int)ViewBag.ProductId == p.Id);
+                                        @:<option value="@p.Id" @(isSelected ? "selected" : "")>@p.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-star me-1"></i>Số sao
+                            </label>
+                            <select name="stars" class="form-select">
+                                <option value="">Tất cả</option>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i" selected="@(ViewBag.Stars == i)">@i sao</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-eye me-1"></i>Trạng thái
+                            </label>
+                            <select name="status" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="visible" selected="@(ViewBag.Status == "visible")">Hiển thị</option>
+                                <option value="hidden" selected="@(ViewBag.Status == "hidden")">Ẩn</option>
+                                <option value="reported" selected="@(ViewBag.Status == "reported")">Có báo cáo</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-reply me-1"></i>Phản hồi
+                            </label>
+                            <select name="hasReply" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="true" selected="@(ViewBag.HasReply == true)">Đã trả lời</option>
+                                <option value="false" selected="@(ViewBag.HasReply == false)">Chưa trả lời</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-calendar me-1"></i>Từ ngày - Đến ngày
+                            </label>
+                            <div class="input-group">
+                                <input type="date" name="fromDate" class="form-control" value="@ViewBag.FromDate">
+                                <input type="date" name="toDate" class="form-control" value="@ViewBag.ToDate">
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-search me-1"></i>Tìm kiếm
+                            </label>
+                            <input type="text" name="search" id="searchInput" class="form-control" placeholder="Tìm theo sản phẩm, người dùng..." value="@ViewBag.Search" autocomplete="off">
+                            <datalist id="searchSuggestions"></datalist>
+                        </div>
+                        <div class="col-lg-6 col-md-6 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary flex-fill">
+                                <i class="fas fa-search me-1"></i> Lọc
+                            </button>
+                            <a href="@Url.Action("Index")" class="btn btn-secondary flex-fill">
+                                <i class="fas fa-redo me-1"></i> Reset
+                            </a>
+                            <a href="@Url.Action("ExportToExcel")" class="btn btn-success flex-fill">
+                                <i class="fas fa-file-excel me-1"></i> Xuất Excel
+                            </a>
+                        </div>
+                    </form>
+            </div>
+            </div>
+    </div>
+
+            <!-- Product Table -->
+            <div class="table-responsive mt-4">
+                @if (Model != null && Model.Any())
+                {
+                    <table class="table table-hover table-bordered mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="col-star">Điểm đánh giá</th>
+                                <th class="col-content">Nội dung đánh giá</th>
+                                <th class="col-time">Thời gian</th>
+                                <th class="col-status">Trạng thái</th>
+                                <th class="col-actions">Thao tác</th>
+                            </tr>
+                        </thead>
+                            <tbody>
+                                @foreach (var rating in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (i <= rating.Star)
+                                                {
+                                                    <i class="fas fa-star text-warning me-1"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="far fa-star text-warning me-1"></i>
+                                                }
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (rating.IsPinned)
+                                            {
+                                                <i class="fas fa-thumbtack text-danger me-2" title="Đánh giá được ghim"></i>
+                                            }
+                                            <p>@rating.Comment</p>
+                                            <p class="text-muted"><strong>@rating.User?.FullName</strong> đánh giá sản phẩm <a href="@Url.Action("Details", "Product", new { id = rating.ProductId, area = "" })" class="text-decoration-none text-blue">@rating.Product?.Name</a></p>
+                                            @if (rating.Images != null && rating.Images.Any())
+                                            {
+                                                var imagesList = rating.Images.ToList();
+                                                <div class="rating-images mt-2">
+                                                    @for (int i = 0; i < Math.Min(3, imagesList.Count); i++)
+                                                    {
+                                                        var img = imagesList[i];
+                                                        <img src="@img.ImageUrl" class="img-thumbnail me-1 rating-image-thumb" style="width: 60px; height: 60px; object-fit: cover; cursor: pointer;"
+                                                             data-bs-toggle="modal" data-bs-target="#imageModal"
+                                                             data-image-index="@i"
+                                                             data-images='@Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(imagesList.Select(im => im.ImageUrl).ToList()))' />
+                                                    }
+                                                    @if (imagesList.Count > 3)
+                                                    {
+                                                        <span class="badge bg-secondary">+@(imagesList.Count - 3)</span>
+                                                    }
+                                                </div>
+                                            }
+                                            
+                                            @* Hiển thị phản hồi ngay trong ô nội dung *@
+                                            @if (rating.Replies != null && rating.Replies.Any())
+                                            {
+                                                <div class="mt-3">
+                                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#replies-@rating.Id">
+                                                        <i class="fas fa-comments"></i> Xem @rating.Replies.Count phản hồi
+                                                    </button>
+                                                    <div class="collapse mt-2" id="replies-@rating.Id">
+                                                        @foreach (var reply in rating.Replies)
+                                                        {
+                                                            <div class="reply-item border-start border-primary border-3 ps-3 mb-2 bg-light p-2 rounded">
+                                                                <p class="mb-1 small">@reply.Comment</p>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-user"></i> @reply.User?.FullName - @reply.ReplyDate.ToString("dd/MM/yyyy HH:mm")
+                                                                    <span class="badge @(reply.IsVisible ? "bg-success" : "bg-danger") ms-2">
+                                                                        @(reply.IsVisible ? "Hiển thị" : "Ẩn")
+                                                                    </span>
+                                                                </small>
+                                                                <div class="mt-1">
+                                                                    <button class="btn btn-xs btn-outline-primary edit-reply-btn" data-reply-id="@reply.Id" data-comment="@reply.Comment">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-xs btn-outline-danger delete-reply-btn" data-reply-id="@reply.Id">
+                                                                        <i class="fas fa-trash"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-xs btn-outline-@(reply.IsVisible ? "warning" : "success") toggle-reply-visibility" data-reply-id="@reply.Id">
+                                                                        <i class="fas fa-eye@(reply.IsVisible ? "-slash" : "")"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="text-muted small">
+                                                <i class="far fa-clock me-1"></i>
+                                                @rating.ReviewDate.ToString("dd/MM/yyyy HH:mm")
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if (rating.Reports != null && rating.Reports.Any(r => !r.IsResolved))
+                                            {
+                                                <span class="badge bg-warning view-reports" style="cursor: pointer;" data-rating-id="@rating.Id" data-bs-toggle="modal" data-bs-target="#reportModal">
+                                                    Vi phạm
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge @(rating.IsVisible ? "bg-success" : "bg-danger")">
+                                                    @(rating.IsVisible ? "Hiển thị" : "Ẩn")
+                                                </span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-wrap align-items-center justify-content-center gap-1">
+                                                <button class="btn btn-sm btn-@(rating.IsVisible ? "danger" : "success") toggle-visibility" data-rating-id="@rating.Id" title="@(rating.IsVisible ? "Ẩn" : "Hiển thị")">
+                                                    <i class="fas fa-eye@(rating.IsVisible ? "-slash" : "")"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-@(rating.IsPinned ? "secondary" : "primary") pin-rating" data-rating-id="@rating.Id" title="@(rating.IsPinned ? "Bỏ ghim" : "Ghim")">
+                                                    <i class="fas fa-thumbtack"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-info reply-toggle" data-rating-id="@rating.Id" title="Trả lời">
+                                                    <i class="fas fa-reply"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-warning send-default-reply" data-rating-id="@rating.Id" title="Gửi phản hồi mặc định">
+                                                    <i class="fas fa-star"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger delete-rating" data-rating-id="@rating.Id" title="Xóa">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- Reply form placed below the row -->
+                                    <tr class="reply-form-row d-none" data-rating-id="@rating.Id">
+                                        <td colspan="5">
+                                            <form class="submit-reply-form" data-rating-id="@rating.Id">
+                                                <div class="input-group reply-form-container">
+                                                    <textarea class="form-control reply-textarea" name="comment" rows="2" placeholder="Nhập phản hồi..." required></textarea>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Gửi</button>
+                                                </div>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">Không có đánh giá nào để hiển thị.</div>
+                    }
+                </div>
+
+                <!-- Modal để hiển thị báo cáo -->
+                        <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="reportModalLabel">Chi tiết Báo cáo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="reportDetails">
+                                            <!-- Nội dung báo cáo sẽ được tải bằng JavaScript -->
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal xem ảnh với điều hướng -->
+                        <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="imageModalLabel">Ảnh đánh giá</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center position-relative">
+                                        <button id="prevImageBtn" type="button" class="btn btn-secondary position-absolute top-50 start-0 translate-middle-y" style="z-index:2;left:10px;" tabindex="0"><i class="fas fa-chevron-left"></i></button>
+                                        <img id="modalImage" src="" class="img-fluid" style="max-height:70vh;" />
+                                        <button id="nextImageBtn" type="button" class="btn btn-secondary position-absolute top-50 end-0 translate-middle-y" style="z-index:2;right:10px;" tabindex="0"><i class="fas fa-chevron-right"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal chỉnh sửa reply -->
+                        <div class="modal fade" id="editReplyModal" tabindex="-1" aria-labelledby="editReplyModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editReplyModalLabel">Chỉnh sửa phản hồi</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <textarea id="editReplyComment" class="form-control" rows="4"></textarea>
+                                        <input type="hidden" id="editReplyId" />
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="button" class="btn btn-primary" id="saveEditReply">Lưu</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination Info & Controls -->
+                        <div class="pagination-section mt-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="pagination-info">
+                                    Hiển thị trang @currentPage/@((int)Math.Ceiling((double)totalItems / pageSize)), tổng @totalItems đánh giá
+                                </div>
+                            </div>
+                            <nav>
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, pageSize })">&laquo;</a>
+                                    </li>
+                                    @{
+                                        int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                                        int startPage = Math.Max(1, currentPage - 2);
+                                        int endPage = Math.Min(totalPages, currentPage + 2);
+
+                                        for (int i = startPage; i <= endPage; i++)
+                                        {
+                                            <li class="page-item @(i == currentPage ? "active" : "")">
+                                                <a class="page-link" href="@Url.Action("Index", new { page = i, pageSize })">@i</a>
+                                            </li>
+                                        }
+                                    }
+                                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, pageSize })">&raquo;</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal để hiển thị báo cáo -->
+            <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="reportModalLabel">Chi tiết Báo cáo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="reportDetails">
+                                <!-- Nội dung báo cáo sẽ được tải bằng JavaScript -->
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal xem ảnh với điều hướng -->
+            <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalLabel">Ảnh đánh giá</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center position-relative">
+                            <button id="prevImageBtn" type="button" class="btn btn-secondary position-absolute top-50 start-0 translate-middle-y" style="z-index:2;left:10px;" tabindex="0"><i class="fas fa-chevron-left"></i></button>
+                            <img id="modalImage" src="" class="img-fluid" style="max-height:70vh;" />
+                            <button id="nextImageBtn" type="button" class="btn btn-secondary position-absolute top-50 end-0 translate-middle-y" style="z-index:2;right:10px;" tabindex="0"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal chỉnh sửa reply -->
+            <div class="modal fade" id="editReplyModal" tabindex="-1" aria-labelledby="editReplyModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editReplyModalLabel">Chỉnh sửa phản hồi</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <textarea id="editReplyComment" class="form-control" rows="4"></textarea>
+                            <input type="hidden" id="editReplyId" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" class="btn btn-primary" id="saveEditReply">Lưu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Autocomplete cho ô tìm kiếm
+        const searchInput = document.getElementById('searchInput');
+        const searchSuggestions = document.getElementById('searchSuggestions');
+        let searchTimeout;
+
+        searchInput?.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                searchSuggestions.innerHTML = '';
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                // Fetch suggestions từ server
+                fetch(`/Admin/AdminRating/SearchSuggestions?query=${encodeURIComponent(query)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    searchSuggestions.innerHTML = '';
+                    if (data && data.length > 0) {
+                        // Hiển thị dropdown suggestions
+                        const dropdown = document.createElement('div');
+                        dropdown.className = 'autocomplete-dropdown';
+                        dropdown.style.cssText = 'position: absolute; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-height: 300px; overflow-y: auto; z-index: 1000; width: ' + searchInput.offsetWidth + 'px;';
+                        
+                        data.forEach(item => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.style.cssText = 'padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f0f0f0;';
+                            div.innerHTML = `<strong>${item.type}:</strong> ${item.label}`;
+                            div.addEventListener('mouseenter', () => div.style.backgroundColor = '#f8f9fa');
+                            div.addEventListener('mouseleave', () => div.style.backgroundColor = 'white');
+                            div.addEventListener('click', () => {
+                                searchInput.value = item.label;
+                                dropdown.remove();
+                            });
+                            dropdown.appendChild(div);
+                        });
+                        
+                        // Xóa dropdown cũ nếu có
+                        const oldDropdown = document.querySelector('.autocomplete-dropdown');
+                        if (oldDropdown) oldDropdown.remove();
+                        
+                        // Thêm dropdown mới
+                        searchInput.parentElement.style.position = 'relative';
+                        searchInput.parentElement.appendChild(dropdown);
+                        
+                        // Đóng dropdown khi click ra ngoài
+                        document.addEventListener('click', function closeDropdown(e) {
+                            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                                dropdown.remove();
+                                document.removeEventListener('click', closeDropdown);
+                            }
+                        });
+                    }
+                })
+                .catch(err => console.error('Error fetching suggestions:', err));
+            }, 300);
+        });
+
+        // Xử lý ẩn/hiện đánh giá
+        document.querySelectorAll('.toggle-visibility').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const statusElement = this.closest('tr').querySelector('td:nth-child(4) .badge');
+                const actionButton = this;
+
+                if (!statusElement || !actionButton) {
+                    console.error('Không tìm thấy phần tử trạng thái hoặc nút cho ratingId:', ratingId);
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.textContent = 'Đang xử lý...';
+
+                const formData = new FormData();
+                formData.append('ratingId', ratingId);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/ToggleRatingVisibility`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.className = `btn btn-sm btn-${data.isVisible ? 'danger' : 'success'} toggle-visibility me-2`;
+                    actionButton.textContent = data.isVisible ? 'Ẩn' : 'Hiển thị';
+
+                    if (data.success) {
+                        fetch(`/Admin/AdminRating/GetReportsByRating?ratingId=${ratingId}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(reports => {
+                            if (reports && reports.some(report => !report.isResolved)) {
+                                statusElement.className = 'badge bg-warning view-reports';
+                                statusElement.textContent = 'Vi phạm';
+                                statusElement.style.cursor = 'pointer';
+                                statusElement.setAttribute('data-rating-id', ratingId);
+                                statusElement.setAttribute('data-bs-toggle', 'modal');
+                                statusElement.setAttribute('data-bs-target', '#reportModal');
+                            } else {
+                                statusElement.className = `badge ${data.isVisible ? 'bg-success' : 'bg-danger'}`;
+                                statusElement.textContent = data.isVisible ? 'Hiển thị' : 'Ẩn';
+                                statusElement.style.cursor = '';
+                                statusElement.removeAttribute('data-rating-id');
+                                statusElement.removeAttribute('data-bs-toggle');
+                                statusElement.removeAttribute('data-bs-target');
+                            }
+                            alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        })
+                        .catch(err => {
+                            console.error('Lỗi khi kiểm tra báo cáo:', err);
+                            statusElement.className = `badge ${data.isVisible ? 'bg-success' : 'bg-danger'}`;
+                            statusElement.textContent = data.isVisible ? 'Hiển thị' : 'Ẩn';
+                            alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        });
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Ẩn';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý xem chi tiết báo cáo
+        document.querySelectorAll('.view-reports').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = parseInt(this.getAttribute('data-rating-id'));
+                const reportDetails = document.getElementById('reportDetails');
+
+                fetch(`/Admin/AdminRating/GetReportsByRating?ratingId=${ratingId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(reports => {
+                    if (reports && reports.length > 0) {
+                        let html = '<table class="table"><thead><tr><th>Người báo cáo</th><th>Lý do</th><th>Thời gian</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>';
+                        reports.forEach(report => {
+                            html += `<tr>
+                                <td>${report.reporter ? report.reporter.fullName : 'N/A'}</td>
+                                <td>${report.reason}</td>
+                                <td>${new Date(report.reportDate).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</td>
+                                <td><span class="badge ${report.isResolved ? 'bg-success' : 'bg-danger'}">${report.isResolved ? 'Đã xử lý' : 'Chưa xử lý'}</span></td>
+                                <td>
+                                    ${!report.isResolved ? `
+                                        <button class="btn btn-sm btn-primary resolve-report me-2" data-report-id="${report.id}" data-is-approved="true">Chấp thuận</button>
+                                        <button class="btn btn-sm btn-secondary resolve-report" data-report-id="${report.id}" data-is-approved="false">Từ chối</button>
+                                    ` : ''}
+                                </td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table>';
+                        reportDetails.innerHTML = html;
+
+                        document.querySelectorAll('.resolve-report').forEach(resolveButton => {
+                            resolveButton.addEventListener('click', function () {
+                                const reportId = this.getAttribute('data-report-id');
+                                const isApproved = this.getAttribute('data-is-approved') === 'true';
+                                const actionButton = this;
+                                const row = this.closest('tr');
+                                const statusBadge = row.querySelector('td:nth-child(4) .badge');
+
+                                actionButton.disabled = true;
+                                actionButton.textContent = 'Đang xử lý...';
+
+                                const formData = new FormData();
+                                formData.append('reportId', reportId);
+                                formData.append('isApproved', isApproved);
+                                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                                fetch(`/Admin/AdminRating/ResolveReport`, {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        throw new Error(`HTTP error! Status: ${response.status}`);
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    actionButton.disabled = false;
+                                    actionButton.textContent = isApproved ? 'Chấp thuận' : 'Từ chối';
+
+                                    if (data.success) {
+                                        statusBadge.className = 'badge bg-success';
+                                        statusBadge.textContent = 'Đã xử lý';
+                                        row.querySelector('td:nth-child(5)').innerHTML = '';
+
+                                        if (isApproved) {
+                                            const ratingRow = document.querySelector(`tr td .view-reports[data-rating-id="${ratingId}"]`)?.closest('tr');
+                                            if (ratingRow) {
+                                                const ratingStatus = ratingRow.querySelector('td:nth-child(4) .badge');
+                                                ratingStatus.className = 'badge bg-danger';
+                                                ratingStatus.textContent = 'Ẩn';
+                                                ratingStatus.style.cursor = '';
+                                                ratingStatus.removeAttribute('data-rating-id');
+                                                ratingStatus.removeAttribute('data-bs-toggle');
+                                                ratingStatus.removeAttribute('data-bs-target');
+                                            }
+                                        }
+
+                                        alert(data.message);
+                                    } else {
+                                        alert(data.message);
+                                    }
+                                })
+                                .catch(err => {
+                                    actionButton.disabled = false;
+                                    actionButton.textContent = isApproved ? 'Chấp thuận' : 'Từ chối';
+                                    alert('Có lỗi xảy ra: ' + err.message);
+                                });
+                            });
+                        });
+                    } else {
+                        reportDetails.innerHTML = '<p>Không có báo cáo nào cho đánh giá này.</p>';
+                    }
+                })
+                .catch(err => {
+                    reportDetails.innerHTML = '<p>Có lỗi khi tải báo cáo: ' + err.message + '</p>';
+                });
+            });
+        });
+
+        // Xử lý xóa đánh giá
+        document.querySelectorAll('.delete-rating').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const actionButton = this;
+
+                if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này không? Hành động này không thể hoàn tác.')) {
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.textContent = 'Đang xóa...';
+
+                const formData = new FormData();
+                formData.append('ratingId', ratingId);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/DeleteRating`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Xóa';
+
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.textContent = 'Xóa';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý gửi phản hồi mặc định khi nhấn sao
+        document.querySelectorAll('.send-default-reply').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const actionButton = this;
+
+                if (!confirm('Bạn có muốn gửi phản hồi mặc định cho đánh giá này không?')) {
+                    return;
+                }
+
+                actionButton.disabled = true;
+                actionButton.innerHTML = '<i class="fas fa-star"></i> Đang gửi...';
+
+                const formData = new FormData();
+                formData.append('ratingId', ratingId);
+                formData.append('comment', '');
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/SubmitReply`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    actionButton.disabled = false;
+                    actionButton.innerHTML = '<i class="fas fa-star"></i>';
+
+                    if (data.success) {
+                        alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => {
+                    actionButton.disabled = false;
+                    actionButton.innerHTML = '<i class="fas fa-star"></i>';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý gửi phản hồi từ form
+        document.querySelectorAll('.submit-reply-form').forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const ratingId = this.getAttribute('data-rating-id');
+                const comment = this.querySelector('textarea[name="comment"]').value;
+                const submitButton = this.querySelector('button[type="submit"]');
+                const replyToggle = document.querySelector(`.reply-toggle[data-rating-id="${ratingId}"]`);
+                const replyFormRow = this.closest('.reply-form-row');
+
+                const parsedRatingId = parseInt(ratingId);
+                if (!ratingId || isNaN(parsedRatingId) || parsedRatingId <= 0) {
+                    alert('ID đánh giá không hợp lệ. Vui lòng làm mới trang và thử lại.');
+                    if (replyToggle && replyFormRow) {
+                        replyFormRow.classList.add('d-none');
+                        replyToggle.textContent = 'Trả lời';
+                        this.querySelector('textarea').value = '';
+                    }
+                    return;
+                }
+
+                if (!comment.trim() && !confirm('Bạn có muốn gửi phản hồi mặc định không?')) {
+                    alert('Nội dung trả lời không được để trống hoặc xác nhận gửi phản hồi mặc định.');
+                    return;
+                }
+
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang gửi...';
+
+                const formData = new FormData();
+                formData.append('ratingId', parsedRatingId);
+                formData.append('comment', comment || '');
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/SubmitReply`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Gửi';
+                    if (replyToggle && replyFormRow) {
+                        replyFormRow.classList.add('d-none');
+                        replyToggle.textContent = 'Trả lời';
+                        this.querySelector('textarea').value = '';
+                    }
+
+                    if (data.success) {
+                        alert(`${data.message}\nVui lòng tải lại trang chi tiết sản phẩm để thấy thay đổi.`);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                        if (data.message === 'Không tìm thấy đánh giá.') {
+                            replyFormRow.closest('tr').remove();
+                            replyFormRow.remove();
+                        }
+                    }
+                })
+                .catch(err => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Gửi';
+                    alert('Có lỗi xảy ra: ' + err.message);
+                });
+            });
+        });
+
+        // Xử lý nút Trả lời để hiển thị form
+        document.querySelectorAll('.reply-toggle').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const replyFormRow = document.querySelector(`.reply-form-row[data-rating-id="${ratingId}"]`);
+                const textarea = replyFormRow?.querySelector('textarea');
+
+                if (replyFormRow.classList.contains('d-none')) {
+                    replyFormRow.classList.remove('d-none');
+                    this.innerHTML = 'Hủy';
+                    textarea?.focus();
+                } else {
+                    replyFormRow.classList.add('d-none');
+                    this.innerHTML = '<i class="fas fa-reply"></i>';
+                    if (textarea) textarea.value = '';
+                }
+            });
+        });
+
+        // Xử lý ghim/bỏ ghim đánh giá
+        document.querySelectorAll('.pin-rating').forEach(button => {
+            button.addEventListener('click', function () {
+                const ratingId = this.getAttribute('data-rating-id');
+                const actionButton = this;
+
+                const formData = new FormData();
+                formData.append('ratingId', ratingId);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/PinRating`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        actionButton.className = `btn btn-sm btn-${data.isPinned ? 'secondary' : 'primary'} pin-rating`;
+                        actionButton.title = data.isPinned ? 'Bỏ ghim' : 'Ghim';
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => alert('Có lỗi xảy ra: ' + err.message));
+            });
+        });
+
+        // Xử lý xem ảnh với điều hướng
+        let currentImageIndex = 0;
+        let currentImages = [];
+        const modalImage = document.getElementById('modalImage');
+        const prevImageBtn = document.getElementById('prevImageBtn');
+        const nextImageBtn = document.getElementById('nextImageBtn');
+
+        document.querySelectorAll('.rating-image-thumb').forEach(img => {
+            img.addEventListener('click', function () {
+                const images = JSON.parse(this.getAttribute('data-images'));
+                const index = parseInt(this.getAttribute('data-image-index'));
+                currentImages = images;
+                currentImageIndex = index;
+                updateModalImage();
+            });
+        });
+
+        function updateModalImage() {
+            if (!currentImages.length) return;
+            modalImage.src = currentImages[currentImageIndex];
+            prevImageBtn.style.display = currentImageIndex > 0 ? 'block' : 'none';
+            nextImageBtn.style.display = currentImageIndex < currentImages.length - 1 ? 'block' : 'none';
+        }
+
+        prevImageBtn?.addEventListener('click', function () {
+            if (currentImageIndex > 0) {
+                currentImageIndex--;
+                updateModalImage();
+            }
+        });
+        nextImageBtn?.addEventListener('click', function () {
+            if (currentImageIndex < currentImages.length - 1) {
+                currentImageIndex++;
+                updateModalImage();
+            }
+        });
+
+        // Đóng modal thì reset
+        document.getElementById('imageModal').addEventListener('hidden.bs.modal', function () {
+            modalImage.src = '';
+            currentImages = [];
+            currentImageIndex = 0;
+        });
+
+        // Xử lý edit reply
+        document.querySelectorAll('.edit-reply-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                const replyId = this.getAttribute('data-reply-id');
+                const comment = this.getAttribute('data-comment');
+                document.getElementById('editReplyId').value = replyId;
+                document.getElementById('editReplyComment').value = comment;
+                new bootstrap.Modal(document.getElementById('editReplyModal')).show();
+            });
+        });
+
+        document.getElementById('saveEditReply').addEventListener('click', function () {
+            const replyId = document.getElementById('editReplyId').value;
+            const comment = document.getElementById('editReplyComment').value;
+
+            if (!comment.trim()) {
+                alert('Nội dung phản hồi không được để trống.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('replyId', replyId);
+            formData.append('comment', comment);
+            formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+            fetch(`/Admin/AdminRating/EditReply`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => alert('Có lỗi xảy ra: ' + err.message));
+        });
+
+        // Xử lý xóa reply
+        document.querySelectorAll('.delete-reply-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                if (!confirm('Bạn có chắc chắn muốn xóa phản hồi này không?')) {
+                    return;
+                }
+
+                const replyId = this.getAttribute('data-reply-id');
+                const formData = new FormData();
+                formData.append('replyId', replyId);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                fetch(`/Admin/AdminRating/DeleteReply`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(err => alert('Có lỗi xảy ra: ' + err.message));
+            });
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #60a5fa;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #3b82f6;
+            --text-dark: #1e293b;
+            --text-light: #ffffff;
+            --background-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        
+        h2 { 
+            font-family: 'Inter', sans-serif; 
+            font-size: 1.75rem; 
+            font-weight: 600; 
+            color: var(--text-dark); 
+        }
+        
+        .container-fluid { 
+            padding: 0 !important; 
+            margin: 0 !important; 
+            width: 100% !important; 
+        }
+        
+        .card { 
+            width: 100% !important; 
+            border-radius: 12px; 
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+            background-color: #ffffff;
+            border: none;
+        }
+        
+        .card-body { 
+            padding: 1.5rem; 
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 1.5rem;
+            background: var(--background-light);
+            border-radius: 12px;
+            height: 100%;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            padding: 1.5rem;
+            background: var(--background-light);
+            border-radius: 12px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card-primary { border-left-color: var(--primary-color); }
+        .stat-card-warning { border-left-color: var(--warning-color); }
+        .stat-card-danger { border-left-color: var(--danger-color); }
+        .stat-card-success { border-left-color: var(--success-color); }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 1.75rem;
+            margin-right: 1rem;
+        }
+
+        .stat-card-primary .stat-icon {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: var(--primary-color);
+        }
+
+        .stat-card-warning .stat-icon {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: var(--warning-color);
+        }
+
+        .stat-card-danger .stat-icon {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: var(--danger-color);
+        }
+
+        .stat-card-success .stat-icon {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: var(--success-color);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .stat-value small {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #94a3b8;
+        }
+
+        /* Star Distribution */
+        .star-distribution {
+            padding: 0.5rem 0;
+        }
+
+        .star-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .star-label {
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .star-number {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .star-progress {
+            flex: 1;
+        }
+
+        .star-progress .progress {
+            height: 12px;
+            border-radius: 6px;
+            background-color: #f1f5f9;
+        }
+
+        .star-progress .progress-bar {
+            border-radius: 6px;
+            background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        .star-stats {
+            min-width: 120px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .count-badge {
+            font-weight: 600;
+            color: var(--text-dark);
+            background: var(--background-light);
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        /* Top Products */
+        .top-products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .top-product-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--background-light);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .top-product-item:hover {
+            background: #e2e8f0;
+            transform: translateX(4px);
+        }
+
+        .product-name {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        /* Top Users */
+        .top-user-card {
+            text-align: center;
+            padding: 1.25rem;
+            background: var(--background-light);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .top-user-card:hover {
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .user-avatar {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-label i {
+            color: var(--primary-color);
+        }
+
+        .btn-primary, .btn-success, .btn-secondary {
+            border-radius: 6px; 
+            padding: 6px 12px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        
+        .btn-primary:hover { 
+            background-color: #1d4ed8; 
+            border-color: #1d4ed8; 
+            transform: translateY(-1px); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+        }
+        
+        .btn-success { 
+            background-color: #28a745; 
+            border-color: #28a745; 
+        }
+        
+        .btn-success:hover { 
+            background-color: #218838; 
+            border-color: #218838; 
+            transform: translateY(-1px); 
+        }
+        
+        .btn-secondary { 
+            background-color: #6b7280; 
+            border-color: #6b7280; 
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #4b5563; 
+            border-color: #4b5563; 
+            transform: translateY(-1px); 
+        }
+
+        .btn-warning, .btn-danger, .btn-info {
+            border-radius: 6px; 
+            padding: 4px 8px; 
+            font-size: 0.8rem; 
+            min-width: 32px; 
+            transition: all 0.2s ease; 
+            margin-right: 4px;
+        }
+        
+        .btn-warning { 
+            background-color: #f59e0b; 
+            border-color: #f59e0b; 
+        }
+        
+        .btn-warning:hover { 
+            background-color: #d97706; 
+            transform: translateY(-1px); 
+        }
+        
+        .btn-danger { 
+            background-color: #ef4444; 
+            border-color: #ef4444; 
+            margin-right: 0; 
+        }
+        
+        .btn-danger:hover { 
+            background-color: #dc2626; 
+            transform: translateY(-1px); 
+        }
+
+        .btn-info { 
+            background-color: #0dcaf0; 
+            border-color: #0dcaf0; 
+        }
+        
+        .btn-info:hover { 
+            background-color: #0bb2d4; 
+            transform: translateY(-1px); 
+        }
+
+        .form-control, .form-select {
+            border-radius: 6px; 
+            border: 1px solid #d1d5db; 
+            padding: 8px; 
+            font-size: 0.9rem; 
+            transition: all 0.2s ease;
+        }
+        
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+            outline: none; 
+        }
+
+        .table { 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            table-layout: fixed; 
+            width: 100%; 
+            font-size: 0.9rem; 
+        }
+        
+        .table th, .table td { 
+            border-color: #e5e7eb; 
+            text-align: center; 
+            vertical-align: middle; 
+            padding: 10px; 
+        }
+        
+        .table th { 
+            background-color: var(--primary-color); 
+            color: var(--text-light); 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+        }
+        
+        .table-hover tbody tr:hover { 
+            background-color: #f1f5f9; 
+        }
+
+        .col-star { width: 12%; min-width: 110px; }
+        .col-content { width: 50%; min-width: 300px; }
+        .col-time { width: 12%; min-width: 110px; }
+        .col-status { width: 8%; min-width: 90px; }
+        .col-actions { width: 18%; min-width: 150px; }
+
+        .text-blue {
+            color: var(--primary-color) !important;
+        }
+
+        .text-blue:hover {
+            color: #1d4ed8 !important;
+        }
+
+        .reply-form-row {
+            background-color: #f8fafc;
+        }
+
+        .reply-form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        .reply-textarea {
+            resize: vertical;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        .pagination-section { 
+            padding: 12px 0; 
+            background-color: #f8fafc; 
+            border-top: 1px solid #e5e7eb; 
+        }
+        
+        .pagination-info { 
+            font-size: 0.85rem; 
+            color: #6b7280; 
+        }
+
+        .pagination .page-link {
+            color: var(--primary-color);
+            border-radius: 6px;
+            margin: 0 2px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .modal-content {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .reply-item {
+            background-color: #f8f9fa;
+            transition: all 0.2s ease;
+        }
+
+        .reply-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .btn-outline-secondary {
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .collapse {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Hiển thị số thứ tự rõ ràng cho top sản phẩm */
+        .list-group-numbered > .list-group-item::before {
+            color: #212529 !important;
+            font-weight: bold;
+            background: #e9ecef;
+            border-radius: 50%;
+            min-width: 2rem;
+            text-align: center;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+    </style>
+}

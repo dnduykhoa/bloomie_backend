@@ -1,0 +1,222 @@
+@{
+    ViewData["Title"] = "Tạo Flash Sale";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var promoCodes = ViewBag.PromotionCodes as List<Bloomie.Models.Entities.PromotionCode> ?? new List<Bloomie.Models.Entities.PromotionCode>();
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <h2 class="fw-bold text-dark mb-3">
+                <i class="fas fa-bolt text-danger me-2"></i> Tạo Flash Sale - Giảm Giá Giới Hạn
+            </h2>
+
+            <div class="alert alert-info" style="border-left: 4px solid #0dcaf0;">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Flash Sale:</strong> Voucher giảm giá trong khung giờ nhất định, số lượng có hạn. Users tranh nhau thu thập!
+            </div>
+
+            <form method="post" asp-action="CreateFlashSale">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Tên Flash Sale <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="VD: Flash Sale 11h - Giảm 50K">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Mô Tả</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="VD: Flash sale trong 1 giờ, số lượng giới hạn 100 voucher, nhanh tay kẻo lỡ!"></textarea>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Chọn Voucher Để Phát <span class="text-danger">*</span></label>
+                        <select name="promotionCodeId" class="form-select" required id="voucherSelect">
+                            <option value="">-- Chọn voucher --</option>
+                            @foreach (var pc in promoCodes)
+                            {
+                                var discountText = pc.IsPercent 
+                                    ? $"Giảm {pc.Value}%" + (pc.MaxDiscount.HasValue ? $" (tối đa {pc.MaxDiscount.Value:N0}đ)" : "")
+                                    : $"Giảm {(pc.Value ?? 0):N0}đ";
+                                <option value="@pc.Id" 
+                                        data-code="@pc.Code" 
+                                        data-discount="@discountText">
+                                    [@pc.Code] - @discountText
+                                </option>
+                            }
+                        </select>
+                        <small class="text-muted">Voucher này sẽ được phát cho users trong Flash Sale</small>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Thời Gian Bắt Đầu <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="startDate" class="form-control" required id="startDateInput">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Thời Gian Kết Thúc <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="endDate" class="form-control" required id="endDateInput">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Tổng Số Voucher <span class="text-danger">*</span></label>
+                        <input type="number" name="totalVouchers" class="form-control" required min="1" value="100" placeholder="VD: 100">
+                        <small class="text-muted">Tổng số voucher có thể phát trong Flash Sale</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Giới Hạn/User <span class="text-danger">*</span></label>
+                        <input type="number" name="maxVouchersPerUser" class="form-control" required min="1" max="10" value="1" placeholder="1">
+                        <small class="text-muted">Mỗi user thu thập tối đa bao nhiêu voucher</small>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning" style="border-left: 4px solid #ffc107;">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Lưu ý:</strong> Flash Sale có tính cạnh tranh cao. Voucher sẽ hết nhanh nếu có nhiều users tham gia!
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <a asp-action="CreateTypeSelect" asp-route-tab="program" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-bolt me-1"></i> Tạo Flash Sale
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div><style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-danger {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-danger {
+        background-color: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .btn-danger:hover {
+        background-color: #b91c1c;
+        border-color: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .alert {
+        border-radius: 6px;
+    }
+</style>
+
+<script>
+    // Set default start/end dates
+    const now = new Date();
+    const startInput = document.getElementById('startDateInput');
+    const endInput = document.getElementById('endDateInput');
+    
+    // Function to format datetime-local input (YYYY-MM-DDTHH:mm)
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Start: Ngay bây giờ (immediate start) - LOCAL TIME
+    startInput.value = formatDateTimeLocal(now);
+    
+    // End: 1 giờ sau (1 hour flash sale) - LOCAL TIME
+    const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+    endInput.value = formatDateTimeLocal(endTime);
+</script>

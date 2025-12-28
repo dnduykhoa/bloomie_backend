@@ -1,0 +1,462 @@
+@using Bloomie.Models.Entities
+@model Bloomie.Models.Entities.VoucherCampaign
+@{
+    ViewData["Title"] = "Chỉnh Sửa Chương Trình";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var config = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(Model.Config ?? "{}");
+    var spinsPerUser = config.TryGetProperty("SpinsPerUser", out var spinsElement) ? spinsElement.GetInt32() : 3;
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <h2 class="fw-bold text-dark mb-3">
+                <i class="fas fa-edit text-primary me-2"></i> Chỉnh Sửa Chương Trình @Model.Name
+            </h2>
+
+            <form asp-action="EditCampaign" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="row">
+                    <!-- Thông tin cơ bản -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3 fw-bold text-dark">Thông Tin Cơ Bản</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Tên Chiến Dịch <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" value="@Model.Name" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Mô Tả</label>
+                            <textarea name="description" class="form-control" rows="3">@Model.Description</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loại Chiến Dịch</label>
+                            <input type="text" class="form-control" value="@(Model.Type == CampaignType.FlashSale ? "Flash Sale" : "Vòng Quay May Mắn")" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Banner Image (URL)</label>
+                            <input type="url" name="bannerImage" class="form-control" value="@Model.BannerImage" placeholder="https://example.com/image.jpg">
+                        </div>
+                    </div>
+
+                    <!-- Thời gian -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3 fw-bold text-dark">Thời Gian Diễn Ra</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ngày Bắt Đầu <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="startDate" class="form-control" 
+                                   value="@Model.StartDate.ToString("yyyy-MM-ddTHH:mm")" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ngày Kết Thúc <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="endDate" class="form-control" 
+                                   value="@Model.EndDate.ToString("yyyy-MM-ddTHH:mm")" required>
+                        </div>
+
+                        @if (Model.Type == CampaignType.LuckyWheel)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Số Lượt Quay/User <span class="text-danger">*</span></label>
+                                <input type="number" name="spinsPerUser" class="form-control" 
+                                       value="@spinsPerUser" min="1" max="10" required>
+                                <small class="text-muted">Số lượt quay tối đa mỗi người dùng</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Cấu Hình Voucher & Tỷ Lệ</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#voucherConfigModal">
+                                    <i class="fas fa-cog me-1"></i>Cấu Hình Voucher
+                                </button>
+                                <input type="hidden" id="voucherRatesJson" name="voucherRatesJson" value="">
+                                <div id="voucherPreview" class="mt-2 small text-muted">
+                                    @if (config.TryGetProperty("VoucherRates", out var voucherRates))
+                                    {
+                                        <strong>Danh sách voucher hiện tại:</strong><br>
+                                        @foreach (var vr in voucherRates.EnumerateArray())
+                                        {
+                                            if (vr.TryGetProperty("Id", out var idEl) && vr.TryGetProperty("Rate", out var rateEl))
+                                            {
+                                                var isLucky = vr.TryGetProperty("IsLucky", out var luckyEl) && luckyEl.GetBoolean();
+                                                if (isLucky)
+                                                {
+                                                    <span class="badge bg-warning text-dark">🍀 Chúc May Mắn - Tỷ lệ: @((rateEl.GetDouble() * 100).ToString("0.0"))%</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info">ID: @idEl.GetInt32() - Tỷ lệ: @((rateEl.GetDouble() * 100).ToString("0.0"))%</span>
+                                                }
+                                            }
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Đã phát:</strong> @Model.CollectedCount voucher
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <a asp-action="ManageCampaigns" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .alert {
+        border-radius: 6px;
+    }
+
+    h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary:hover,
+    .btn-outline-warning:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-danger.btn-sm:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+    }
+
+    .modal-header {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .badge {
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-right: 4px;
+        margin-bottom: 4px;
+    }
+</style>
+
+<!-- Modal Cấu Hình Voucher -->
+@if (Model.Type == CampaignType.LuckyWheel)
+{
+    <div class="modal fade" id="voucherConfigModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fas fa-cog me-2"></i>Cấu Hình Voucher & Tỷ Lệ Trúng
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="voucherRatesContainer">
+                        @if (config.TryGetProperty("VoucherRates", out var existingRates))
+                        {
+                            int index = 0;
+                            foreach (var vr in existingRates.EnumerateArray())
+                            {
+                                if (vr.TryGetProperty("Id", out var idEl) && vr.TryGetProperty("Rate", out var rateEl))
+                                {
+                                    var isLucky = vr.TryGetProperty("IsLucky", out var luckyEl) && luckyEl.GetBoolean();
+                                    
+                                    if (isLucky)
+                                    {
+                                        // Lucky Slot
+                                        <div class="row mb-2 voucher-rate-row lucky-slot-row" style="background-color: #fff3cd; padding: 10px; border-radius: 5px;">
+                                            <div class="col-7">
+                                                <label class="form-label small mb-1">
+                                                    <i class="fas fa-clover text-warning me-1"></i>
+                                                    <strong>Ô "Chúc May Mắn Lần Sau"</strong>
+                                                </label>
+                                                <input type="text" class="form-control" value="Không trúng thưởng" disabled>
+                                                <input type="hidden" class="lucky-slot-marker" value="lucky">
+                                            </div>
+                                            <div class="col-4">
+                                                <label class="form-label small mb-1">Tỷ lệ (0-1)</label>
+                                                <input type="number" class="form-control rate-input" step="0.01" min="0" max="1" 
+                                                       value="@rateEl.GetDouble()" placeholder="Tỷ lệ (0-1)">
+                                            </div>
+                                            <div class="col-1">
+                                                <label class="form-label small mb-1 d-block">&nbsp;</label>
+                                                <button type="button" class="btn btn-danger btn-sm remove-voucher">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        // Regular Voucher
+                                        <div class="row mb-2 voucher-rate-row">
+                                            <div class="col-7">
+                                                <select class="form-select voucher-select">
+                                                    @foreach (var pc in ViewBag.PromotionCodes as List<PromotionCode>)
+                                                    {
+                                                        var discountDisplay = pc.IsPercent 
+                                                            ? $"{pc.Value}%" 
+                                                            : $"{pc.Value:N0}đ";
+                                                        <option value="@pc.Id" selected="@(pc.Id == idEl.GetInt32())">
+                                                            @pc.Code - @discountDisplay
+                                                        </option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="col-4">
+                                                <input type="number" class="form-control rate-input" step="0.01" min="0" max="1" 
+                                                       value="@rateEl.GetDouble()" placeholder="Tỷ lệ (0-1)">
+                                            </div>
+                                            <div class="col-1">
+                                                <button type="button" class="btn btn-danger btn-sm remove-voucher">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                    index++;
+                                }
+                            }
+                        }
+                    </div>
+                    <button type="button" class="btn btn-success btn-sm mt-2" id="addVoucherBtn">
+                        <i class="fas fa-plus-circle me-1"></i>Thêm Voucher
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm mt-2 ms-2" id="addLuckySlotBtn">
+                        <i class="fas fa-clover me-1"></i>Thêm Ô "Chúc May Mắn"
+                    </button>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Lưu ý:</strong> Tổng tỷ lệ nên = 1.0 (100%). Ví dụ: 0.3 + 0.4 + 0.3 = 1.0
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-warning" id="saveVoucherConfig">
+                        <i class="fas fa-check-circle me-1"></i>Áp Dụng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script>
+            const promoCodes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                ((List<PromotionCode>)ViewBag.PromotionCodes).Select(pc => new { 
+                    id = pc.Id, 
+                    display = $"{pc.Code} - {(pc.IsPercent ? $"{pc.Value}%" : $"{pc.Value:N0}đ")}"
+                })
+            ));
+
+            $('#addVoucherBtn').click(function() {
+                const row = $('<div class="row mb-2 voucher-rate-row">');
+                const selectCol = $('<div class="col-7">');
+                const select = $('<select class="form-select voucher-select">');
+                promoCodes.forEach(pc => {
+                    select.append($('<option>').val(pc.id).text(pc.display));
+                });
+                selectCol.append(select);
+                
+                const rateCol = $('<div class="col-4">');
+                rateCol.append($('<input type="number" class="form-control rate-input" step="0.01" min="0" max="1" placeholder="Tỷ lệ (0-1)">'));
+                
+                const btnCol = $('<div class="col-1">');
+                btnCol.append($('<button type="button" class="btn btn-danger btn-sm remove-voucher"><i class="fas fa-trash-alt"></i></button>'));
+                
+                row.append(selectCol, rateCol, btnCol);
+                $('#voucherRatesContainer').append(row);
+            });
+
+            $('#addLuckySlotBtn').click(function() {
+                const row = $('<div class="row mb-2 voucher-rate-row lucky-slot-row" style="background-color: #fff3cd; padding: 10px; border-radius: 5px;">');
+                
+                const labelCol = $('<div class="col-7">');
+                labelCol.append(`
+                    <label class="form-label small mb-1">
+                        <i class="fas fa-clover text-warning me-1"></i>
+                        <strong>Ô "Chúc May Mắn Lần Sau"</strong>
+                    </label>
+                    <input type="text" class="form-control" value="Không trúng thưởng" disabled>
+                    <input type="hidden" class="lucky-slot-marker" value="lucky">
+                    <small class="text-muted">User trúng ô này sẽ KHÔNG nhận được voucher</small>
+                `);
+                
+                const rateCol = $('<div class="col-4">');
+                rateCol.append(`
+                    <label class="form-label small mb-1">Tỷ lệ (0-1)</label>
+                    <input type="number" class="form-control rate-input" step="0.01" min="0" max="1" value="0.2" placeholder="Tỷ lệ (0-1)">
+                `);
+                
+                const btnCol = $('<div class="col-1">');
+                btnCol.append(`
+                    <label class="form-label small mb-1 d-block">&nbsp;</label>
+                    <button type="button" class="btn btn-danger btn-sm remove-voucher"><i class="fas fa-trash-alt"></i></button>
+                `);
+                
+                row.append(labelCol, rateCol, btnCol);
+                $('#voucherRatesContainer').append(row);
+            });
+
+            $(document).on('click', '.remove-voucher', function() {
+                $(this).closest('.voucher-rate-row').remove();
+            });
+
+            $('#saveVoucherConfig').click(function() {
+                const voucherRates = [];
+                $('.voucher-rate-row').each(function() {
+                    const rate = parseFloat($(this).find('.rate-input').val()) || 0;
+                    
+                    // Check if this is a lucky slot
+                    const isLuckySlot = $(this).find('.lucky-slot-marker').length > 0;
+                    
+                    if (isLuckySlot) {
+                        // Lucky slot (no prize)
+                        if (rate >= 0) {
+                            voucherRates.push({ Id: 0, Rate: rate, IsLucky: true });
+                        }
+                    } else {
+                        // Regular voucher slot
+                        const id = parseInt($(this).find('.voucher-select').val());
+                        if (id && rate >= 0) {
+                            voucherRates.push({ Id: id, Rate: rate, IsLucky: false });
+                        }
+                    }
+                });
+
+                // Tính tổng tỷ lệ
+                let totalRate = voucherRates.reduce((sum, vr) => sum + vr.Rate, 0);
+                totalRate = Math.round(totalRate * 100) / 100; // làm tròn 2 số thập phân
+
+                if (totalRate > 1) {
+                    alert('Tổng tỷ lệ vượt quá 100%. Vui lòng giảm lại!');
+                    return;
+                }
+                if (totalRate < 1 && voucherRates.length > 0) {
+                    // Tự động cộng phần thiếu vào entry cuối cùng
+                    const missing = Math.round((1 - totalRate) * 100) / 100;
+                    voucherRates[voucherRates.length - 1].Rate += missing;
+                    totalRate = 1;
+                    alert('Hệ thống đã tự động cộng phần thiếu vào entry cuối cùng để đủ 100%.');
+                }
+
+                $('#voucherRatesJson').val(JSON.stringify(voucherRates));
+                $('#voucherConfigModal').modal('hide');
+
+                // Preview
+                let preview = '<strong>Đã cấu hình:</strong><br>';
+                voucherRates.forEach(vr => {
+                    if (vr.IsLucky) {
+                        preview += `<span class="badge bg-warning text-dark">🍀 Chúc May Mắn - Tỷ lệ: ${(vr.Rate * 100).toFixed(1)}%</span> `;
+                    } else {
+                        preview += `<span class="badge bg-info">ID: ${vr.Id} - Tỷ lệ: ${(vr.Rate * 100).toFixed(1)}%</span> `;
+                    }
+                });
+                $('#voucherPreview').html(preview);
+            });
+        </script>
+    }
+}

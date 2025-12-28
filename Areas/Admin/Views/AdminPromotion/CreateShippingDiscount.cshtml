@@ -1,0 +1,905 @@
+@model Bloomie.Models.ViewModels.PromotionShippingDiscountVM
+@{
+    ViewData["Title"] = "Tạo mã miễn phí vận chuyển";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-truck text-primary me-2"></i> Tạo mã miễn phí vận chuyển
+                </h2>
+            </div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form asp-action="CreateShippingDiscount" method="post" id="promoForm">
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Mã khuyến mãi</div>
+                <div class="card-body row g-2 align-items-center">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input asp-for="Code" class="form-control" placeholder="VD: FREESHIP100" required id="Code" />
+                            <button type="button" class="btn btn-outline-secondary" id="btnRandomCode">Tạo mã ngẫu nhiên</button>
+                        </div>
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-2 text-center bg-light">
+                            <b id="previewCode">Mã khuyến mãi</b>
+                            <div class="small text-muted">Chưa có thông tin chi tiết</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Giá trị -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Giá trị</div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label>Giá trị khuyến mãi</label><br />
+                        <div id="shippingDiscountValueGroup">
+                            <div class="input-group mb-2 align-items-stretch" style="max-width:400px;">
+                                <div class="btn-group me-1" role="group" id="shippingDiscountTypeGroup">
+                                    <button type="button" class="btn btn-outline-primary active" id="btnShipMoney">Số tiền</button>
+                                    <button type="button" class="btn btn-outline-primary" id="btnShipPercent">%</button>
+                                </div>
+                                <input asp-for="ShippingDiscountValue" class="form-control text-center" type="number" min="0" required id="ShippingDiscountValueInput" style="max-width:150px; min-width:110px;" placeholder="Nhập số tiền" value="@Model.ShippingDiscountValue" />
+                                <span class="input-group-text" id="shippingUnitLabel">đ</span>
+                            </div>
+                            <input type="hidden" name="ShippingDiscountType" id="ShippingDiscountTypeHidden" value="@Model.ShippingDiscountType ?? "money"" />
+                            <span class="text-danger" id="shippingValueValidation"></span>
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="isFreeShipping" />
+                            <label class="form-check-label" for="isFreeShipping">Miễn phí vận chuyển</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label>Áp dụng cho</label><br />
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="ApplyScope" id="applyAll" value="all">
+                            <label class="form-check-label" for="applyAll">Tất cả</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="ApplyScope" id="applyWards" value="wards">
+                            <label class="form-check-label" for="applyWards">Phường/xã được chọn</label>
+                        </div>
+                        <div id="wardSelectWrapper" style="display:none; margin-top:8px;">
+                            <label>Chọn phường/xã</label>
+                            <div style="position:relative; max-width:600px;">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    <input type="text" class="form-control" id="wardSearchInput" placeholder="Tìm kiếm phường/xã..." autocomplete="off" />
+                                </div>
+                                <div id="wardSearchDropdown" class="list-group position-absolute bg-white shadow-sm" style="z-index:1000;max-height:220px;overflow:auto;display:none;width:100%;left:0;"></div>
+                            </div>
+                            <div id="wardSelectedBadges" class="d-flex flex-wrap gap-2 mt-2"></div>
+                            <input type="hidden" name="ApplyDistricts" id="wardSelectedHidden" value="@string.Join(",", Model.ApplyDistricts ?? new List<string>())" />
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label>Bán kính áp dụng</label>
+                        <div class="input-group" style="max-width:200px;">
+                            <input asp-for="ApplyRadiusKm" class="form-control text-center" min="0" placeholder="Nhập bán kính" id="ApplyRadiusKmInput" />
+                            <span class="input-group-text">km</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Điều kiện áp dụng -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Điều kiện áp dụng</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="None" id="condNone" checked />
+                        <label class="form-check-label" for="condNone">Không có</label>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="MinOrderValue" id="condMinOrderValue" />
+                        <label class="form-check-label" for="condMinOrderValue">Tổng giá trị đơn hàng tối thiểu</label>
+                        <div class="input-group mt-2 ms-4" id="groupMinOrderValue" style="display:none;max-width:220px;">
+                            <input asp-for="MinOrderValue" class="form-control" type="number" min="0" step="1000" id="inputMinOrderValue" placeholder="Nhập số tiền" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="MinProductValue" id="condMinProductValue" />
+                        <label class="form-check-label" for="condMinProductValue">Tổng giá trị sản phẩm được khuyến mãi tối thiểu</label>
+                        <div class="input-group mt-2 ms-4" id="groupMinProductValue" style="display:none;max-width:220px;">
+                            <input asp-for="MinProductValue" class="form-control" type="number" min="0" step="1000" id="inputMinProductValue" placeholder="Nhập số tiền" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                    <div class="form-check mb-1">
+                        <input asp-for="ConditionType" class="form-check-input" type="radio" value="MinProductQuantity" id="condMinProductQuantity" />
+                        <label class="form-check-label" for="condMinProductQuantity">Tổng số lượng sản phẩm được khuyến mãi tối thiểu</label>
+                        <div class="input-group mt-2 ms-4" id="groupMinProductQuantity" style="display:none;max-width:180px;">
+                            <input asp-for="MinProductQuantity" class="form-control" type="number" min="0" step="1" id="inputMinProductQuantity" placeholder="Nhập số lượng" />
+                            <span class="input-group-text">sản phẩm</span>
+                        </div>
+                    </div>
+                    <span asp-validation-for="ConditionValue" class="text-danger"></span>
+                    <span asp-validation-for="MinOrderValue" class="text-danger"></span>
+                    <span asp-validation-for="MinProductValue" class="text-danger"></span>
+                    <span asp-validation-for="MinProductQuantity" class="text-danger"></span>
+                </div>
+            </div>
+            <!-- Card: Giới hạn sử dụng -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Giới hạn sử dụng</div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input" id="limitUsageCheckbox" />
+                        <label class="form-check-label" for="limitUsageCheckbox">Giới hạn sử dụng</label>
+                    </div>
+                    <div class="mb-2" id="usageLimitInputWrapper" style="display:none;">
+                        <label class="form-label">Số lần sử dụng tối đa</label>
+                        <div class="input-group" style="max-width:200px;">
+                            <input asp-for="UsageLimit" class="form-control text-center" min="1" />
+                            <span class="input-group-text">lần</span>
+                        </div>
+                        <span asp-validation-for="UsageLimit" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input asp-for="LimitPerCustomer" class="form-check-input" type="checkbox" id="LimitPerCustomer" />
+                        <label class="form-check-label" for="LimitPerCustomer">Mỗi khách hàng chỉ được sử dụng mã giảm giá này 1 lần</label>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Kết hợp khuyến mãi -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Kết hợp khuyến mãi</div>
+                <div class="card-body">
+                    <div class="form-check">
+                        <input asp-for="AllowCombineOrder" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Giảm giá đơn hàng</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="AllowCombineProduct" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label">Giảm giá sản phẩm</label>
+                    </div>
+                </div>
+            </div>
+            <!-- Card: Thời gian -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">Thời gian</div>
+                <div class="card-body row g-2 align-items-center">
+                    <div class="col">
+                        <label class="form-label">Ngày bắt đầu</label>
+                        <input asp-for="StartDate" class="form-control" type="datetime-local"
+                            value="@(Model.StartDate == DateTime.MinValue ? "" : Model.StartDate.ToString("yyyy-MM-ddTHH:mm"))" />
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Ngày kết thúc</label>
+                        <input asp-for="EndDate" class="form-control" type="datetime-local" id="endDateInput" disabled />
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <input type="checkbox" id="noEndDate" class="form-check-input" checked />
+                        <label for="noEndDate" class="form-check-label">Không có ngày kết thúc</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Công khai -->
+            <div class="card mb-3 border-primary">
+                <div class="card-header bg-light">
+                    <i class="bi bi-globe text-primary me-2"></i>
+                    <span class="fw-bold">Công khai - Hiển thị trên trang Vouchers để users tự thu thập</span>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="IsPublic" value="true" class="form-check-input" id="isPublicCheck" role="switch" style="width: 3rem; height: 1.5rem; cursor: pointer;" />
+                        <input type="hidden" name="IsPublic" value="false" />
+                        <label class="form-check-label ms-2" for="isPublicCheck" style="cursor: pointer;">
+                            <span class="fw-semibold">Cho phép hiển thị công khai</span>
+                        </label>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0" style="border-left: 4px solid #0dcaf0;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>
+                            <strong>Lưu ý:</strong> Nếu chọn, mã này sẽ xuất hiện trên trang Vouchers công khai để users tự lưu vào ví của họ.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                <a asp-action="CreateTypeSelect" asp-route-tab="code" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Tạo mã khuyến mãi
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Cột Tổng quan -->
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Tổng quan khuyến mãi</div>
+            <div class="card-body" id="promoSummary">
+                <!-- Trạng thái trống -->
+                <div id="summaryEmpty" style="display:none;">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:270px;">
+                        <div style="position:relative;width:90%;max-width:320px;background:#fff;border-radius:18px;border:2px dashed #b6b6b6;box-shadow:0 2px 8px #0001;overflow:hidden;">
+                            <div style="background:#f5f5f5;border-bottom:1.5px dashed #b6b6b6;padding:10px 0 8px 0;text-align:center;font-weight:600;font-size:1.15rem;letter-spacing:1px;">
+                                Mã khuyến mãi
+                            </div>
+                            <div style="position:absolute;left:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="position:absolute;right:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="padding:24px 0 18px 0;text-align:center;min-height:110px;">
+                                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png" alt="voucher empty" style="width:70px;opacity:0.6;" />
+                                <div class="text-muted mt-2" style="font-size:1.05rem;">Chưa có thông tin chi tiết</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Trạng thái đã điền -->
+                <div id="summaryFilled" style="display:none;">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height:270px;">
+                        <div style="position:relative;width:90%;max-width:320px;background:#fff;border-radius:18px;border:2px dashed #b6b6b6;box-shadow:0 2px 8px #0001;overflow:hidden;">
+                            <div style="background:#f5f5f5;border-bottom:1.5px dashed #b6b6b6;padding:10px 0 8px 0;text-align:center;font-weight:600;font-size:1.15rem;letter-spacing:1px;">
+                                <span id="summaryCode"></span>
+                            </div>
+                            <div style="position:absolute;left:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="position:absolute;right:-12px;top:38px;width:24px;height:24px;background:#fff;border-radius:50%;border:2px dashed #b6b6b6;"></div>
+                            <div style="padding:18px 18px 12px 18px;text-align:left;min-height:110px;">
+                                <ul class="mb-2 ps-2" style="font-size:1.05rem;">
+                                    <li><b>Loại:</b> <span id="summaryType"></span></li>
+                                    <li><b>Giá trị khuyến mãi:</b> <span id="summaryValue"></span></li>
+                                    <li><b>Áp dụng cho:</b> <span id="summaryApply"></span></li>
+                                    <li><b>Bán kính áp dụng:</b> <span id="summaryRadius"></span></li>
+                                    <li><b>Điều kiện áp dụng:</b> <span id="summaryCondition"></span></li>
+                                    <li><b>Giới hạn sử dụng:</b> <span id="summaryUsageLimit"></span></li>
+                                    <li><b>Kết hợp khuyến mãi:</b> <span id="summaryCombine"></span></li>
+                                    <li><b>Thời gian:</b> <span id="summaryTime"></span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size:0.95em;">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Chương trình chưa được kích hoạt
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xem tất cả phường/xã -->
+<div class="modal fade" id="wardsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Phường/xã được áp dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-group" id="wardsModalList" style="color:#222; background:#fff;">
+                    <!-- Danh sách sẽ được JS thêm vào -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+// --- Hàm tiện ích ---
+function safeGet(id) {
+    const el = document.getElementById(id);
+    if (!el) console.error(`Element with ID '${id}' not found`);
+    return el;
+}
+
+// Biến toàn cục
+let allWards = [];
+let selectedWards = [];
+
+// --- Khởi tạo lại badge phường/xã nếu có dữ liệu khi load trang (tạo mới hoặc submit lỗi) ---
+document.addEventListener('DOMContentLoaded', function () {
+    const hidden = document.getElementById('wardSelectedHidden');
+    if (hidden && hidden.value) {
+        const values = hidden.value.split(',').filter(v => v);
+        loadWards().then(() => {
+            values.forEach(val => {
+                const ward = allWards.find(w => w.value === val);
+                if (ward && !selectedWards.some(s => s.value === val)) {
+                    selectedWards.push(ward);
+                }
+            });
+            renderWardBadges();
+            updateSummary();
+        });
+    }
+});
+
+// --- Random code ---
+const randomCode = (length = 8) => {
+    const chars = 'FREESHIP0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
+
+// --- Kiểm tra form đã điền chưa ---
+function isFormFilled() {
+    const code = safeGet('Code')?.value.trim();
+    const discountValue = safeGet('ShippingDiscountValueInput')?.value;
+    const isFree = safeGet('isFreeShipping')?.checked;
+    const applyScope = document.querySelector('input[name="ApplyScope"]:checked')?.value;
+    const wards = safeGet('wardSelectedHidden')?.value;
+    const radius = safeGet('ApplyRadiusKmInput')?.value;
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    const minOrder = safeGet('inputMinOrderValue')?.value;
+    const minProduct = safeGet('inputMinProductValue')?.value;
+    const minQty = safeGet('inputMinProductQuantity')?.value;
+    const limitUsage = safeGet('limitUsageCheckbox')?.checked;
+    const usageLimit = safeGet('UsageLimit')?.value;
+    const limitPerCustomer = safeGet('LimitPerCustomer')?.checked;
+    const allowCombineOrder = safeGet('AllowCombineOrder')?.checked;
+    const allowCombineProduct = safeGet('AllowCombineProduct')?.checked;
+    const start = safeGet('StartDate')?.value;
+    const end = safeGet('endDateInput')?.value;
+
+    return (
+        code ||
+        (discountValue && !isFree) ||
+        isFree ||
+        applyScope ||
+        wards ||
+        radius ||
+        (condType && condType !== 'None') ||
+        minOrder || minProduct || minQty ||
+        limitUsage || usageLimit ||
+        limitPerCustomer ||
+        allowCombineOrder || allowCombineProduct ||
+        start || end
+    );
+}
+
+// --- Cập nhật Tổng quan ---
+function updateSummary() {
+    const summaryEmpty = safeGet('summaryEmpty');
+    const summaryFilled = safeGet('summaryFilled');
+
+    if (!isFormFilled()) {
+        if (summaryEmpty) summaryEmpty.style.display = '';
+        if (summaryFilled) summaryFilled.style.display = 'none';
+        return;
+    }
+
+    if (summaryEmpty) summaryEmpty.style.display = 'none';
+    if (summaryFilled) summaryFilled.style.display = '';
+
+    // Mã
+    const code = safeGet('Code')?.value.trim() || 'Mã khuyến mãi';
+    safeGet('summaryCode').innerText = code;
+
+    // Loại - Mặc định hiển thị "Khuyến mãi vận chuyển"
+    safeGet('summaryType').innerText = 'Khuyến mãi vận chuyển';
+
+    const discountType = safeGet('ShippingDiscountTypeHidden')?.value;
+    const value = safeGet('ShippingDiscountValueInput')?.value;
+    let valueText = 'Chưa cập nhật';
+    
+    if (discountType === 'free' && safeGet('isFreeShipping')?.checked) {
+        valueText = 'Miễn phí vận chuyển';
+    } else if ((discountType === 'money' || discountType === 'percent') && value) {
+        if (discountType === 'money') {
+            valueText = `${parseInt(value).toLocaleString()} đ`;
+        } else {
+            valueText = `${value} %`;
+        }
+    }
+    safeGet('summaryValue').innerText = valueText;
+
+    // Áp dụng cho
+    let applyText = 'Chưa cập nhật';
+    const applyScope = document.querySelector('input[name="ApplyScope"]:checked')?.value;
+    const applyEl = safeGet('summaryApply');
+
+    if (applyScope === 'wards') {
+        const selectedNames = selectedWards.map(w => w.label);
+        if (selectedNames.length > 0) {
+            if (selectedNames.length > 3) {
+                const visible = selectedNames.slice(0, 2).join(', ');
+                const hiddenCount = selectedNames.length - 2;
+                applyText = `${visible} và ${hiddenCount} phường/xã khác <span class="text-primary fw-bold" style="cursor:pointer; text-decoration:underline;" onclick="showAllWards()">Xem thêm</span>`;
+            } else {
+                applyText = selectedNames.join(', ');
+            }
+        } else {
+            applyText = 'Chưa chọn phường/xã';
+        }
+    } else if (applyScope === 'all') {
+        applyText = 'Tất cả';
+    }
+    applyEl.innerHTML = applyText; // Dùng innerHTML để hỗ trợ <span>
+
+    // Bán kính
+    const radius = safeGet('ApplyRadiusKmInput')?.value;
+    safeGet('summaryRadius').innerText = radius ? `${radius} km` : 'Chưa cập nhật';
+
+    // Điều kiện áp dụng
+    let condText = 'Không có';
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    if (condType === 'MinOrderValue') {
+        const val = safeGet('inputMinOrderValue')?.value;
+        condText = val ? `Đơn hàng từ ${Number(val).toLocaleString('vi-VN')}đ` : 'Chưa nhập giá trị đơn hàng';
+    } else if (condType === 'MinProductValue') {
+        const val = safeGet('inputMinProductValue')?.value;
+        condText = val ? `Sản phẩm khuyến mãi từ ${Number(val).toLocaleString('vi-VN')}đ` : 'Chưa nhập giá trị sản phẩm';
+    } else if (condType === 'MinProductQuantity') {
+        const val = safeGet('inputMinProductQuantity')?.value;
+        condText = val ? `Tối thiểu ${val} sản phẩm` : 'Chưa nhập số lượng';
+    }
+    safeGet('summaryCondition').innerText = condText;
+
+    // Giới hạn sử dụng
+    const limitChecked = safeGet('limitUsageCheckbox')?.checked;
+    const usageLimit = safeGet('UsageLimit')?.value;
+    const limitPerCustomer = safeGet('LimitPerCustomer')?.checked;
+    
+    let usageLimitText = 'Chưa cập nhật';
+    const limitParts = [];
+    
+    // Thêm số lần sử dụng
+    if (limitChecked && usageLimit) {
+        limitParts.push(`${usageLimit} lần sử dụng`);
+    } else if (limitChecked) {
+        limitParts.push('Có giới hạn');
+    }
+    
+    // Thêm giới hạn mỗi khách hàng
+    if (limitPerCustomer) {
+        limitParts.push('Mỗi khách hàng chỉ được dùng 1 lần');
+    }
+    
+    if (limitParts.length > 0) {
+        usageLimitText = limitParts.join(', ');
+    }
+    
+    safeGet('summaryUsageLimit').innerText = usageLimitText;
+
+    // Kết hợp khuyến mãi
+    const combine = [];
+    if (safeGet('AllowCombineOrder')?.checked) combine.push('Đơn hàng');
+    if (safeGet('AllowCombineProduct')?.checked) combine.push('Sản phẩm');
+    const combineText = combine.length ? `${combine.join(', ')}` : 'Không có';
+    safeGet('summaryCombine').innerText = combineText;
+
+    // Thời gian
+    let timeText = '';
+    const start = safeGet('StartDate')?.value;
+    const end = safeGet('endDateInput')?.value;
+    const noEndDate = safeGet('noEndDate')?.checked;
+    if (start) {
+        const [date, time] = start.split('T');
+        const [y, m, d] = date.split('-');
+        timeText = `${d}/${m}/${y} ${time || ''}`;
+        
+        if (noEndDate) {
+            timeText += ' → Không có ngày kết thúc';
+        } else if (end) {
+            const [dateEnd, timeEnd] = end.split('T');
+            const [yEnd, mEnd, dEnd] = dateEnd.split('-');
+            timeText += ` → ${dEnd}/${mEnd}/${yEnd} ${timeEnd || ''}`;
+        }
+    }
+    
+    if (!timeText) timeText = 'Chưa cập nhật';
+    safeGet('summaryTime').innerText = timeText;
+}
+
+// Hàm hiển thị modal tất cả phường/xã
+function showAllWards() {
+    const modalList = document.getElementById('wardsModalList');
+    modalList.innerHTML = selectedWards.map(w => 
+        `<li class="list-group-item" style="color:#222; background:#fff;">${w.label}</li>`
+    ).join('');
+    new bootstrap.Modal(document.getElementById('wardsModal')).show();
+}
+
+// --- Đổi loại giảm giá (tiền / %) ---
+const setShippingType = (type) => {
+    const btnMoney = safeGet('btnShipMoney');
+    const btnPercent = safeGet('btnShipPercent');
+    const typeHidden = safeGet('ShippingDiscountTypeHidden');
+    const unitLabel = safeGet('shippingUnitLabel');
+    const valueBox = safeGet('ShippingDiscountValueInput');
+
+    typeHidden.value = type;
+    btnMoney.classList.toggle('active', type === 'money');
+    btnMoney.classList.toggle('btn-primary', type === 'money');
+    btnMoney.classList.toggle('btn-outline-primary', type !== 'money');
+    btnPercent.classList.toggle('active', type === 'percent');
+    btnPercent.classList.toggle('btn-primary', type === 'percent');
+    btnPercent.classList.toggle('btn-outline-primary', type !== 'percent');
+
+    if (type === 'money') {
+        unitLabel.innerText = 'đ';
+        valueBox.placeholder = 'Nhập số tiền';
+    } else {
+        unitLabel.innerText = '%';
+        valueBox.placeholder = 'Nhập %';
+    }
+};
+
+// --- Cập nhật điều kiện ---
+const updateConditionInputs = () => {
+    const condType = document.querySelector('input[name="ConditionType"]:checked')?.value;
+    safeGet('groupMinOrderValue').style.display = condType === 'MinOrderValue' ? '' : 'none';
+    safeGet('groupMinProductValue').style.display = condType === 'MinProductValue' ? '' : 'none';
+    safeGet('groupMinProductQuantity').style.display = condType === 'MinProductQuantity' ? '' : 'none';
+};
+
+// --- Fix placeholder khi focus ---
+const setupPlaceholderFix = (input) => {
+    input.addEventListener('focus', function () {
+        this.dataset.oldPlaceholder = this.placeholder;
+        this.placeholder = '';
+    });
+    input.addEventListener('blur', function () {
+        this.placeholder = this.dataset.oldPlaceholder || '';
+    });
+};
+
+// --- Tải danh sách phường/xã ---
+const loadWards = async () => {
+    try {
+        const res = await fetch('https://provinces.open-api.vn/api/v2/p/79?depth=2');
+        const data = await res.json();
+        if (data && data.wards) {
+            allWards = data.wards.map(w => ({
+                value: String(w.code), // ⭐ LƯU WARD CODE thay vì tên
+                label: w.name + (w.parent_name ? ' (' + w.parent_name + ')' : '')
+            }));
+        }
+    } catch (e) {
+        allWards = [];
+    }
+};
+
+// === KHỞI CHẠY KHI DOM SẴN SÀNG ===
+document.addEventListener('DOMContentLoaded', function () {
+    const limitUsageCheckbox = safeGet('limitUsageCheckbox');
+    const usageLimitInputWrapper = safeGet('usageLimitInputWrapper');
+    const input = safeGet('wardSearchInput');
+    const dropdown = safeGet('wardSearchDropdown');
+    const hidden = safeGet('wardSelectedHidden');
+    const badgeBox = safeGet('wardSelectedBadges');
+    const radiusBox = safeGet('ApplyRadiusKmInput');
+    const btnMoney = safeGet('btnShipMoney');
+    const btnPercent = safeGet('btnShipPercent');
+    const group = safeGet('shippingDiscountValueGroup');
+    const isFree = safeGet('isFreeShipping');
+    const valueBox = safeGet('ShippingDiscountValueInput');
+    const wrapper = safeGet('wardSelectWrapper');
+
+    // 1. Giới hạn sử dụng
+    if (limitUsageCheckbox && usageLimitInputWrapper) {
+        limitUsageCheckbox.addEventListener('change', function () {
+            usageLimitInputWrapper.style.display = this.checked ? '' : 'none';
+            updateSummary();
+        });
+    }
+
+    // 2. Autocomplete + Badge phường/xã
+    function renderWardBadges() {
+        badgeBox.innerHTML = selectedWards.map(w =>
+            `<span class="badge rounded-pill bg-primary text-white d-flex align-items-center" style="font-size:1em;padding:8px 16px 8px 14px;gap:6px;">
+                ${w.label}
+                <button type="button" class="btn btn-sm btn-close ms-2 p-0" aria-label="Xóa" data-value="${w.value}" style="filter:invert(1);opacity:0.7;"></button>
+            </span>`
+        ).join('');
+        hidden.value = selectedWards.map(w => w.value).join(',');
+        updateSummary();
+    }
+
+    if (input && dropdown && hidden && badgeBox) {
+        input.addEventListener('input', function () {
+            const q = input.value.trim().toLowerCase();
+            if (!q || allWards.length === 0) { dropdown.style.display = 'none'; return; }
+            const filtered = allWards.filter(w => 
+                w.label.toLowerCase().includes(q) && 
+                !selectedWards.some(s => s.value === w.value)
+            );
+            if (filtered.length === 0) { dropdown.style.display = 'none'; return; }
+            dropdown.innerHTML = filtered.map(w => 
+                `<div class='list-group-item' data-value="${w.value}">${w.label}</div>`
+            ).join('');
+            dropdown.style.display = '';
+        });
+
+        dropdown.addEventListener('mousedown', function (e) {
+            if (e.target.classList.contains('list-group-item')) {
+                const value = e.target.getAttribute('data-value');
+                const label = e.target.textContent;
+                if (!selectedWards.some(w => w.value === value)) {
+                    selectedWards.push({ value, label });
+                    renderWardBadges();
+                }
+                input.value = '';
+                dropdown.style.display = 'none';
+            }
+        });
+
+        badgeBox.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-close')) {
+                const value = e.target.getAttribute('data-value');
+                selectedWards = selectedWards.filter(w => w.value !== value);
+                renderWardBadges();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none';
+        });
+
+        renderWardBadges();
+    }
+
+    // 3. Placeholder fix
+    if (radiusBox) setupPlaceholderFix(radiusBox);
+
+    // 4. Loại giảm giá + miễn phí
+    if (btnMoney && btnPercent && valueBox) {
+        btnMoney.onclick = () => { setShippingType('money'); updateSummary(); };
+        btnPercent.onclick = () => { setShippingType('percent'); updateSummary(); };
+        setupPlaceholderFix(valueBox);
+
+        isFree.addEventListener('change', function () {
+            if (this.checked) {
+                group.style.display = 'none';
+                safeGet('ShippingDiscountTypeHidden').value = 'free';
+                valueBox.value = '';
+            } else {
+                group.style.display = '';
+                setShippingType(safeGet('ShippingDiscountTypeHidden').value === 'percent' ? 'percent' : 'money');
+            }
+            updateSummary();
+        });
+
+        // Khôi phục trạng thái
+        if (isFree.checked) {
+            group.style.display = 'none';
+            safeGet('ShippingDiscountTypeHidden').value = 'free';
+        } else {
+            group.style.display = '';
+        }
+        setShippingType('money');
+    }
+
+    // 5. Điều kiện áp dụng
+    document.querySelectorAll('input[name="ConditionType"]').forEach(radio => {
+        radio.addEventListener('change', () => { updateConditionInputs(); updateSummary(); });
+    });
+    updateConditionInputs();
+
+    // 6. Áp dụng cho (all/wards)
+    document.querySelectorAll('input[name="ApplyScope"]').forEach(r => {
+        r.addEventListener('change', function () {
+            wrapper.style.display = this.value === 'wards' ? '' : 'none';
+            updateSummary();
+        });
+    });
+
+    // 6.1. Không có ngày kết thúc
+    const noEndDate = safeGet('noEndDate');
+    const endDateInput = safeGet('endDateInput');
+    if (noEndDate && endDateInput) {
+        noEndDate.addEventListener('change', function () {
+            endDateInput.disabled = this.checked;
+            if (this.checked) endDateInput.value = '';
+            updateSummary();
+        });
+        if (noEndDate.checked) endDateInput.disabled = true;
+    }
+
+    // 7. Tạo mã ngẫu nhiên
+    safeGet('btnRandomCode').onclick = function () {
+        const code = randomCode();
+        safeGet('Code').value = code;
+        safeGet('previewCode').innerText = code;
+        updateSummary();
+    };
+
+    // 8. Cập nhật khi nhập mã
+    safeGet('Code').oninput = function () {
+        safeGet('previewCode').innerText = this.value || 'Mã khuyến mãi';
+        updateSummary();
+    };
+
+    // 9. Theo dõi TẤT CẢ các trường thay đổi
+    const watchedSelectors = [
+        '#Code', '#ShippingDiscountValueInput', '#ApplyRadiusKmInput',
+        '#inputMinOrderValue', '#inputMinProductValue', '#inputMinProductQuantity',
+        '#UsageLimit', '#StartDate', '#endDateInput', '#wardSelectedHidden',
+        'input[name="ApplyScope"]', 'input[name="ConditionType"]',
+        '#isFreeShipping', '#limitUsageCheckbox', '#LimitPerCustomer',
+        '#AllowCombineOrder', '#AllowCombineProduct', '#noEndDate'
+    ];
+
+    watchedSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') {
+                el.addEventListener('change', updateSummary);
+            } else {
+                el.addEventListener('input', updateSummary);
+                el.addEventListener('change', updateSummary);
+            }
+        });
+    });
+
+    // Theo dõi thay đổi badge phường/xã
+    badgeBox.addEventListener('click', updateSummary);
+
+    // Theo dõi thay đổi hidden input phường
+    if (hidden) {
+        const observer = new MutationObserver(updateSummary);
+        observer.observe(hidden, { attributes: true, attributeFilter: ['value'] });
+    }
+
+    // Cập nhật ban đầu
+    updateSummary();
+
+    // Tải phường/xã
+    loadWards();
+});
+</script>
+
+    <style>
+        #wardSelectedBadges .badge {
+            background: #1976d2;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 0.55rem;
+            padding: 0 6px;
+            margin-bottom: 1px;
+            line-height: 1.1;
+            font-weight: 400;
+        }
+        #wardSelectedBadges .btn-close {
+            width: 0.7em;
+            height: 0.7em;
+            margin-left: 2px;
+            opacity: 0.7;
+            filter: invert(1);
+        }
+        #wardSearchDropdown {
+            border: 1.5px solid #b6d4fe;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.07);
+            padding: 4px 0;
+        }
+        #wardSearchDropdown .list-group-item {
+            cursor: pointer;
+            background: #fff;
+            color: #222;
+            font-size: 0.9em;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 0;
+            transition: background 0.15s, color 0.15s;
+        }
+        #wardSearchDropdown .list-group-item.active,
+        #wardSearchDropdown .list-group-item:hover {
+            background: #e3f0ff;
+            color: #1976d2;
+            font-weight: 500;
+        }
+        #wardsModal .list-group-item {
+            font-size: 0.95rem;
+        }
+        #summaryApply .text-primary:hover {
+            opacity: 0.8;
+        }
+    </style>
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}
+</div>
+</div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+</style>

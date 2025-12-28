@@ -1,0 +1,452 @@
+@model Bloomie.Models.ViewModels.ProductDiscountVM
+@{
+    ViewData["Title"] = "Chỉnh Sửa Chương Trình Giảm Giá";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-edit text-primary me-2"></i> Chỉnh Sửa Chương Trình Giảm Giá Sản Phẩm
+                </h2>
+            </div>
+
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row">
+                    <!-- Cột Trái -->
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i>Thông Tin Cơ Bản</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                            <label asp-for="Name" class="form-label">
+                                <i class="fas fa-tag"></i> Tên Chương Trình <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="VD: Giảm giá mùa hè" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">
+                                <i class="fas fa-align-left"></i> Mô Tả
+                            </label>
+                            <textarea asp-for="Description" class="form-control" rows="3" 
+                                      placeholder="Mô tả chi tiết về chương trình giảm giá"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DiscountType" class="form-label">
+                                    <i class="fas fa-percentage"></i> Loại Giảm Giá <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="DiscountType" class="form-select" id="discountType">
+                                    <option value="">-- Chọn loại --</option>
+                                    <option value="percent">📊 Giảm Theo %</option>
+                                    <option value="fixed_amount">💰 Giảm Số Tiền</option>
+                                </select>
+                                <span asp-validation-for="DiscountType" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DiscountValue" class="form-label">
+                                    <i class="fas fa-coins"></i> Giá Trị Giảm <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="DiscountValue" type="number" step="0.01" class="form-control" 
+                                       placeholder="VD: 20" />
+                                <span asp-validation-for="DiscountValue" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="maxDiscountContainer" style="display: none;">
+                            <label asp-for="MaxDiscount" class="form-label">
+                                <i class="fas fa-hand-holding-usd"></i> Giảm Tối Đa (VNĐ)
+                            </label>
+                            <input asp-for="MaxDiscount" type="number" step="1000" class="form-control" 
+                                   placeholder="VD: 100000" />
+                            <small class="text-muted">Áp dụng cho giảm theo %, để trống nếu không giới hạn</small>
+                            <span asp-validation-for="MaxDiscount" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Priority" class="form-label">
+                                    <i class="fas fa-sort-numeric-down"></i> Độ Ưu Tiên
+                                    <i class="fas fa-info-circle text-info" data-bs-toggle="tooltip" 
+                                       title="1-10: Cao nhất (Flash Sale) | 11-50: Trung bình | 51-100: Thấp nhất"></i>
+                                </label>
+                                <input asp-for="Priority" type="number" class="form-control" min="1" max="100" 
+                                       placeholder="VD: 10" />
+                                <small class="text-muted">Số nhỏ = ưu tiên cao hơn</small>
+                                <span asp-validation-for="Priority" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch mt-2">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" 
+                                           role="switch" id="isActive" style="width: 3em; height: 1.5em;" />
+                                    <label class="form-check-label ms-2" for="isActive">
+                                        <strong>Kích hoạt</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="StartDate" class="form-label">
+                                <i class="fas fa-calendar-check"></i> Ngày Bắt Đầu
+                            </label>
+                            <input asp-for="StartDate" type="datetime-local" class="form-control" />
+                            <small class="text-muted">Để trống = bắt đầu ngay lập tức</small>
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="EndDate" class="form-label">
+                                <i class="fas fa-calendar-times"></i> Ngày Kết Thúc
+                            </label>
+                            <input asp-for="EndDate" type="datetime-local" class="form-control" />
+                            <small class="text-muted">Để trống = không giới hạn thời gian</small>
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cột Phải -->
+                    <div class="col-md-6">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-bullseye text-primary me-2"></i>Phạm Vi Áp Dụng</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                            <label asp-for="ApplyTo" class="form-label">
+                                <i class="fas fa-bullseye"></i> Áp Dụng Cho <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="ApplyTo" class="form-select" id="applyTo">
+                                <option value="">-- Chọn phạm vi --</option>
+                                <option value="all">🌐 Tất Cả Sản Phẩm</option>
+                                <option value="products">📦 Sản Phẩm Cụ Thể</option>
+                                <option value="categories">📁 Danh Mục Cụ Thể</option>
+                            </select>
+                            <span asp-validation-for="ApplyTo" class="text-danger"></span>
+                        </div>
+
+                        <!-- Chọn sản phẩm -->
+                        <div id="productSelection" style="display: none;">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-box"></i> Chọn Sản Phẩm <span class="text-danger">*</span>
+                            </label>
+                            <div class="selection-container">
+                                @if (Model.AvailableProducts != null && Model.AvailableProducts.Any())
+                                {
+                                    @foreach (var product in Model.AvailableProducts)
+                                    {
+                                        var isChecked = Model.SelectedProductIds != null && Model.SelectedProductIds.Contains(product.Id);
+                                        <div class="selection-item">
+                                            <input class="form-check-input" type="checkbox" name="SelectedProductIds" 
+                                                   value="@product.Id" id="product_@product.Id" @(isChecked ? "checked" : "") />
+                                            <label class="form-check-label" for="product_@product.Id">
+                                                <strong>@product.Name</strong>
+                                                <span class="text-danger">@product.Price.ToString("N0")đ</span>
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Không có sản phẩm nào</p>
+                                }
+                            </div>
+                            <span asp-validation-for="SelectedProductIds" class="text-danger"></span>
+                        </div>
+
+                        <!-- Chọn danh mục -->
+                        <div id="categorySelection" style="display: none;">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-folder-open"></i> Chọn Danh Mục <span class="text-danger">*</span>
+                            </label>
+                            <div class="selection-container">
+                                @if (Model.AvailableCategories != null && Model.AvailableCategories.Any())
+                                {
+                                    @foreach (var category in Model.AvailableCategories)
+                                    {
+                                        var isChecked = Model.SelectedCategoryIds != null && Model.SelectedCategoryIds.Contains(category.Id);
+                                        <div class="selection-item">
+                                            <input class="form-check-input" type="checkbox" name="SelectedCategoryIds" 
+                                                   value="@category.Id" id="category_@category.Id" @(isChecked ? "checked" : "") />
+                                            <label class="form-check-label" for="category_@category.Id">
+                                                <strong>@category.Name</strong>
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted">Không có danh mục nào</p>
+                                }
+                            </div>
+                            <span asp-validation-for="SelectedCategoryIds" class="text-danger"></span>
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a asp-controller="ManagerPromotion" asp-action="ManageCampaigns" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu Thay Đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="alert alert-info">
+            <i class="fas fa-lightbulb"></i> <strong>Gợi ý:</strong>
+            <ul class="mb-0 mt-2">
+                <li><strong>Độ ưu tiên:</strong> Số nhỏ = ưu tiên cao. VD: Flash Sale (1-10), Giảm giá thường (50-100)</li>
+                <li><strong>Loại giảm giá:</strong> % thường dùng cho sale lớn, số tiền cố định cho voucher nhỏ</li>
+                <li><strong>Thời gian:</strong> Để trống ngày bắt đầu = kích hoạt ngay, để trống ngày kết thúc = vô thời hạn</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --text-dark: #1e293b;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label i {
+        color: var(--primary-color);
+        margin-right: 4px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 10px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+        border-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-secondary {
+        background-color: #6b7280;
+        border-color: #6b7280;
+    }
+
+    .btn-secondary:hover {
+        background-color: #4b5563;
+        border-color: #4b5563;
+        transform: translateY(-1px);
+    }
+
+    .selection-container {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        height: 350px;
+        max-height: 350px;
+        overflow-y: auto;
+        background-color: #f9fafb;
+    }
+
+    .selection-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .selection-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .selection-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+    .selection-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .selection-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        background-color: #ffffff;
+        border-radius: 6px;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+
+    .selection-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .selection-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .selection-item .form-check-input {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .selection-item .form-check-label {
+        cursor: pointer;
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .selection-item .form-check-label strong {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .selection-item .form-check-label .text-danger {
+        flex-shrink: 0;
+        font-size: 0.85rem;
+    }
+
+    .form-check-switch .form-check-input {
+        cursor: pointer;
+    }
+
+    .alert-info {
+        border-radius: 8px;
+        border-left: 4px solid #3b82f6;
+        background-color: #eff6ff;
+        color: #1e40af;
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+    }
+
+    hr {
+        margin: 1.5rem 0;
+        border-color: #e5e7eb;
+    }
+</style>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Enable Bootstrap tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Hiển thị MaxDiscount khi chọn percent
+            $('#discountType').change(function() {
+                if ($(this).val() === 'percent') {
+                    $('#maxDiscountContainer').slideDown();
+                } else {
+                    $('#maxDiscountContainer').slideUp();
+                }
+            });
+
+            // Hiển thị selection dựa vào ApplyTo
+            $('#applyTo').change(function() {
+                var value = $(this).val();
+                $('#productSelection, #categorySelection').hide();
+                
+                if (value === 'products') {
+                    $('#productSelection').slideDown();
+                } else if (value === 'categories') {
+                    $('#categorySelection').slideDown();
+                }
+            });
+
+            // Trigger initial states
+            $('#discountType').trigger('change');
+            $('#applyTo').trigger('change');
+        });
+    </script>
+}

@@ -1,0 +1,639 @@
+@model Bloomie.Models.ViewModels.SystemHealthViewModel
+@using System.IO
+@using System.Diagnostics
+@{
+    ViewData["Title"] = "Tình Trạng Hệ Thống";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    var daysSinceBackup = (DateTime.UtcNow - Model.LastBackup).Days;
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-heartbeat"></i> Tình Trạng Hệ Thống</h2>
+        <div>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            </a>
+            <button class="btn btn-outline-success" onclick="refreshSystemHealth()">
+                <i class="fas fa-sync-alt"></i> Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- System Status Overview -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-@(Model.DatabaseStatus == "Healthy" ? "success" : "danger") shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-@(Model.DatabaseStatus == "Healthy" ? "success" : "danger") text-uppercase mb-1">
+                                Database
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.DatabaseStatus</div>
+                            <div class="text-xs text-muted">Kích thước: @FormatBytes(Model.DatabaseSize)</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-@(Model.EmailServiceStatus == "Healthy" ? "success" : "danger") shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-@(Model.EmailServiceStatus == "Healthy" ? "success" : "danger") text-uppercase mb-1">
+                                Email Service
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.EmailServiceStatus</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-envelope fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Active Sessions
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.ActiveSessions</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Last Backup
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @daysSinceBackup ngày trước
+                            </div>
+                            <div class="text-xs text-muted">@Model.LastBackup.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-save fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="row mb-4">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">CPU Usage</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-3">
+                            <div class="text-lg font-weight-bold">@Model.CpuUsage.ToString("F1")%</div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="progress">
+                                <div class="progress-bar @GetProgressBarClass(Model.CpuUsage)" 
+                                     role="progressbar" 
+                                     style="width: @Model.CpuUsage%"
+                                     aria-valuenow="@Model.CpuUsage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-muted">
+                        @if (Model.CpuUsage < 50)
+                        {
+                            <span class="text-success">Tình trạng tốt</span>
+                        }
+                        else if (Model.CpuUsage < 80)
+                        {
+                            <span class="text-warning">Cần theo dõi</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Cảnh báo cao</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Memory Usage</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="mr-3">
+                            <div class="text-lg font-weight-bold">@Model.MemoryUsage.ToString("F1")%</div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="progress">
+                                <div class="progress-bar @GetProgressBarClass(Model.MemoryUsage)" 
+                                     role="progressbar" 
+                                     style="width: @Model.MemoryUsage%"
+                                     aria-valuenow="@Model.MemoryUsage" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-muted">
+                        @if (Model.MemoryUsage < 60)
+                        {
+                            <span class="text-success">Tình trạng tốt</span>
+                        }
+                        else if (Model.MemoryUsage < 85)
+                        {
+                            <span class="text-warning">Cần theo dõi</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger">Cảnh báo cao</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Alerts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Cảnh Báo Hệ Thống</h6>
+                    <button class="btn btn-sm btn-outline-primary" onclick="clearAllAlerts()">
+                        <i class="fas fa-broom"></i> Xóa tất cả
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (Model.SystemAlerts.Any())
+                    {
+                        @foreach (var alert in Model.SystemAlerts.OrderByDescending(a => a.Timestamp))
+                        {
+                            <div class="alert alert-@GetAlertClass(alert.Severity) alert-dismissible fade show" role="alert">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>@GetAlertIcon(alert.Type) @alert.Type</strong>
+                                        <p class="mb-1">@alert.Message</p>
+                                        <small class="text-muted">@alert.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</small>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5>Hệ thống hoạt động bình thường</h5>
+                            <p>Không có cảnh báo nào cần chú ý</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="row mb-4">
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông Tin Hệ Thống</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless table-sm">
+                        <tr>
+                            <td><strong>Server Time:</strong></td>
+                            <td>@DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss") (GMT+7)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Uptime:</strong></td>
+                            <td>
+                                @{
+                                    try
+                                    {
+                                        var uptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
+                                        <text>@uptime.Days ngày, @uptime.Hours giờ, @uptime.Minutes phút</text>
+                                    }
+                                    catch
+                                    {
+                                        <text>Không xác định</text>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Environment:</strong></td>
+                            <td>
+                                @{
+                                    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
+                                }
+                                <span class="badge badge-@(env == "Development" ? "warning" : "success")">@env</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>.NET Version:</strong></td>
+                            <td>@Environment.Version</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Machine Name:</strong></td>
+                            <td>@Environment.MachineName</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OS Version:</strong></td>
+                            <td>@Environment.OSVersion</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Kiểm Tra Dịch Vụ</h6>
+                </div>
+                <div class="card-body">
+                    <div class="service-check mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-database"></i> Database Connection</span>
+                            <span class="badge badge-@(Model.DatabaseStatus == "Healthy" ? "success" : "danger")">
+                                @Model.DatabaseStatus
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="service-check mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-envelope"></i> Email Service</span>
+                            <span class="badge badge-@(Model.EmailServiceStatus == "Healthy" ? "success" : "danger")">
+                                @Model.EmailServiceStatus
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="service-check mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-cloud"></i> External APIs</span>
+                            <span class="badge badge-success">Healthy</span>
+                        </div>
+                    </div>
+
+                    <div class="service-check mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-lock"></i> Security Services</span>
+                            <span class="badge badge-success">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="service-check mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="fas fa-file-alt"></i> Logging Service</span>
+                            <span class="badge badge-success">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="runHealthCheck()">
+                            <i class="fas fa-stethoscope"></i> Chạy Kiểm Tra Toàn Diện
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage and Backup Information -->
+    <div class="row mb-4">
+        <div class="col-xl-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông Tin Lưu Trữ & Backup</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-secondary">Database Storage</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Kích thước Database:</span>
+                                    <strong>@FormatBytes(Model.DatabaseSize)</strong>
+                                </div>
+                                <div class="progress mt-2">
+                                    @{
+                                        var dbUsagePercent = Math.Min((Model.DatabaseSize / (1024.0 * 1024 * 1024 * 10)) * 100, 100); // Assume 10GB limit
+                                    }
+                                    <div class="progress-bar @GetProgressBarClass(dbUsagePercent)" 
+                                         style="width: @dbUsagePercent%"></div>
+                                </div>
+                                <small class="text-muted">Giới hạn: 10 GB</small>
+                            </div>
+
+                            <h6 class="text-secondary">File Storage</h6>
+                            <div class="mb-3">
+                                @{
+                                    long uploadsSize = 0;
+                                    double fileUsagePercent = 0;
+                                    try
+                                    {
+                                        var uploadsPath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                                        uploadsSize = Directory.Exists(uploadsPath) ?
+                                            Directory.GetFiles(uploadsPath, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length) : 0;
+                                        fileUsagePercent = Math.Min((uploadsSize / (1024.0 * 1024 * 1024 * 5)) * 100, 100);
+                                    }
+                                    catch
+                                    {
+                                        uploadsSize = 0L;
+                                        fileUsagePercent = 0;
+                                    }
+                                }
+                                <div class="d-flex justify-content-between">
+                                    <span>File uploads:</span>
+                                    <strong>@FormatBytes(uploadsSize)</strong>
+                                </div>
+                                <div class="progress mt-2">
+                                    <div class="progress-bar @GetProgressBarClass(fileUsagePercent)"
+                                         style="width: @fileUsagePercent%"></div>
+                                </div>
+                                <small class="text-muted">Giới hạn: 5 GB</small>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-secondary">Backup Status</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Backup cuối:</span>
+                                    <span class="badge badge-@(daysSinceBackup <= 1 ? "success" : daysSinceBackup <= 7 ? "warning" : "danger")">
+                                        @daysSinceBackup ngày trước
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Tự động backup:</span>
+                                    <span class="badge badge-success">Đang bật</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>Backup tiếp theo:</span>
+                                    <span class="text-muted">@Model.LastBackup.AddDays(1).ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button class="btn btn-outline-success btn-sm me-2" onclick="createBackup()">
+                                    <i class="fas fa-save"></i> Tạo Backup Ngay
+                                </button>
+                                <button class="btn btn-outline-info btn-sm" onclick="viewBackupHistory()">
+                                    <i class="fas fa-history"></i> Lịch Sử
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thao Tác Nhanh</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="clearCache()">
+                            <i class="fas fa-broom"></i> Xóa Cache
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="restartServices()">
+                            <i class="fas fa-redo"></i> Restart Services
+                        </button>
+                        <button class="btn btn-outline-info" onclick="viewLogs()">
+                            <i class="fas fa-file-alt"></i> Xem Logs
+                        </button>
+                        <button class="btn btn-outline-success" onclick="optimizeDatabase()">
+                            <i class="fas fa-database"></i> Tối Ưu Database
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="downloadSystemReport()">
+                            <i class="fas fa-download"></i> Tải Báo Cáo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Health Score -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Điểm Sức Khỏe Hệ Thống</h6>
+                </div>
+                <div class="card-body text-center">
+                    @{
+                        var healthScore = CalculateHealthScore(Model);
+                    }
+                    <div class="mb-3">
+                        <div class="display-4 font-weight-bold text-@GetHealthScoreClass(healthScore)">
+                            @healthScore
+                        </div>
+                        <div class="text-muted">/ 100</div>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-@GetHealthScoreClass(healthScore)" 
+                             style="width: @healthScore%"></div>
+                    </div>
+                    <p class="text-@GetHealthScoreClass(healthScore) font-weight-bold">
+                        @GetHealthScoreText(healthScore)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Auto refresh every 30 seconds
+    setInterval(function() {
+        refreshSystemHealth();
+    }, 30000);
+
+    function refreshSystemHealth() {
+        location.reload();
+    }
+
+    function clearAllAlerts() {
+        if (confirm('Bạn có chắc muốn xóa tất cả cảnh báo?')) {
+            // Implementation for clearing alerts
+            $('.alert').fadeOut();
+        }
+    }
+
+    function runHealthCheck() {
+        // Implementation for comprehensive health check
+        alert('Đang chạy kiểm tra toàn diện...');
+    }
+
+    function createBackup() {
+        if (confirm('Tạo backup ngay bây giờ?')) {
+            // Implementation for creating backup
+            alert('Đang tạo backup...');
+        }
+    }
+
+    function viewBackupHistory() {
+        // Implementation for viewing backup history
+        alert('Tính năng xem lịch sử backup sẽ được triển khai');
+    }
+
+    function clearCache() {
+        if (confirm('Xóa cache hệ thống?')) {
+            // Implementation for clearing cache
+            alert('Đang xóa cache...');
+        }
+    }
+
+    function restartServices() {
+        if (confirm('Restart các dịch vụ? Điều này có thể gây gián đoạn tạm thời.')) {
+            // Implementation for restarting services
+            alert('Đang restart services...');
+        }
+    }
+
+    function viewLogs() {
+        // Implementation for viewing logs
+        window.open('/Admin/Logs', '_blank');
+    }
+
+    function optimizeDatabase() {
+        if (confirm('Tối ưu database? Quá trình này có thể mất vài phút.')) {
+            // Implementation for database optimization
+            alert('Đang tối ưu database...');
+        }
+    }
+
+    function downloadSystemReport() {
+        // Implementation for downloading system report
+        alert('Đang tạo báo cáo hệ thống...');
+    }
+</script>
+}
+
+@functions {
+    string GetProgressBarClass(double percentage)
+    {
+        if (percentage < 50) return "bg-success";
+        if (percentage < 80) return "bg-warning";
+        return "bg-danger";
+    }
+
+    string GetAlertClass(string severity)
+    {
+        return severity.ToLower() switch
+        {
+            "critical" => "danger",
+            "high" => "warning",
+            "medium" => "info",
+            "low" => "secondary",
+            _ => "primary"
+        };
+    }
+
+    string GetAlertIcon(string type)
+    {
+        return type.ToLower() switch
+        {
+            "database" => "🗄️",
+            "email" => "📧",
+            "security" => "🔒",
+            "performance" => "⚡",
+            "storage" => "💾",
+            _ => "ℹ️"
+        };
+    }
+
+    string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    int CalculateHealthScore(Bloomie.Models.ViewModels.SystemHealthViewModel model)
+    {
+        int score = 100;
+        
+        // Database health
+        if (model.DatabaseStatus != "Healthy") score -= 20;
+        
+        // Email service health
+        if (model.EmailServiceStatus != "Healthy") score -= 15;
+        
+        // CPU usage
+        if (model.CpuUsage > 80) score -= 15;
+        else if (model.CpuUsage > 60) score -= 10;
+        
+        // Memory usage
+        if (model.MemoryUsage > 85) score -= 15;
+        else if (model.MemoryUsage > 70) score -= 10;
+        
+        // Backup freshness
+        var daysSinceBackup = (DateTime.UtcNow - model.LastBackup).Days;
+        if (daysSinceBackup > 7) score -= 15;
+        else if (daysSinceBackup > 3) score -= 10;
+        
+        // System alerts
+        score -= model.SystemAlerts.Count(a => a.Severity == "Critical") * 5;
+        score -= model.SystemAlerts.Count(a => a.Severity == "High") * 3;
+        
+        return Math.Max(0, score);
+    }
+
+    string GetHealthScoreClass(int score)
+    {
+        if (score >= 80) return "success";
+        if (score >= 60) return "warning";
+        return "danger";
+    }
+
+    string GetHealthScoreText(int score)
+    {
+        if (score >= 90) return "Xuất sắc";
+        if (score >= 80) return "Tốt";
+        if (score >= 70) return "Khá";
+        if (score >= 60) return "Trung bình";
+        if (score >= 40) return "Yếu";
+        return "Nguy hiểm";
+    }
+}

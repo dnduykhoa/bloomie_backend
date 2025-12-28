@@ -1,0 +1,1080 @@
+@using Bloomie.Data
+@model ApplicationUser
+
+@{
+    ViewData["Title"] = "Hồ sơ người dùng";
+    Layout = "~/Views/Shared/_IdentityLayout.cshtml";
+}
+
+<div class="profile-wrapper">
+    <div class="profile-card">
+        <div class="profile-header text-center">
+            <h2 class="profile-title">Hồ sơ người dùng</h2>
+            <p class="profile-subtitle">Quản lý thông tin cá nhân của bạn</p>
+        </div>
+        <div class="profile-content">
+            <div class="avatar-section text-center mb-4">
+                <img src="@(string.IsNullOrEmpty(Model.ProfileImageUrl) ? "/images/profiles/default-avatar.png" : Model.ProfileImageUrl)" alt="Ảnh đại diện" class="avatar-img" id="current-avatar" />
+                <div class="mt-3">
+                    <form asp-action="UpdateProfileImage" asp-controller="Account" method="post" enctype="multipart/form-data" class="d-inline" id="profileImageForm">
+                        <input type="file" name="ProfileImage" id="fileInput" class="d-none" accept="image/*" onchange="previewImage(event)" />
+                        <div class="mb-2">
+                            <img id="imagePreview" alt="Xem trước ảnh" class="avatar-preview d-none" />
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openImageOptions()">Thay đổi ảnh</button>
+                        <button type="submit" class="btn btn-primary btn-sm d-none" id="submitButton">Lưu ảnh</button>
+                    </form>
+                </div>
+            </div>
+            <div class="profile-details mb-4">
+                <div class="detail-item">
+                    <span class="label">Tên người dùng:</span>
+                    <span class="value">@Model.UserName</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Email:</span>
+                    <span class="value">
+                        @Model.Email
+                        @if (ViewBag.EmailConfirmed != null)
+                        {
+                            if (ViewBag.EmailConfirmed)
+                            {
+                                <span class="badge badge-success ml-2">
+                                    <i class="fas fa-check-circle"></i> Đã xác thực
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-warning ml-2">
+                                    <i class="fas fa-exclamation-triangle"></i> Chưa xác thực
+                                </span>
+                                <form asp-action="ResendEmailConfirmation" asp-controller="Account" method="post" class="d-inline ml-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-paper-plane"></i> Gửi lại email xác thực
+                                    </button>
+                                </form>
+                            }
+                        }
+                    </span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Họ và tên:</span>
+                    <span class="value">@(Model.FullName ?? "Chưa cập nhật")</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Số điện thoại:</span>
+                    <span class="value">@(Model.PhoneNumber ?? "Chưa cập nhật")</span>
+                </div>
+            </div>
+            <div class="security-section mb-4">
+                <div class="section-title">Bảo mật</div>
+                <div class="security-item">
+                    <span class="label">Xác thực hai bước:</span>
+                    <div class="toggle-container">
+                        <label class="switch">
+                            <input type="checkbox" id="twoFactorToggle" @(ViewBag.TwoFactorEnabled ? "checked" : "") onchange="toggleTwoFactor()">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-status ml-2">@(ViewBag.TwoFactorEnabled ? "Đã bật" : "Đã tắt")</span>
+                    </div>
+                </div>
+                <div class="section-title mt-3">Lịch sử đăng nhập gần đây</div>
+                <div class="login-history">
+                    <ul class="login-history-list">
+                        @if (ViewBag.RecentLoginHistory != null)
+                        {
+                            foreach (var login in ViewBag.RecentLoginHistory)
+                            {
+                                <li class="login-history-item">
+                                    <div class="login-info">
+                                        <div class="device-info">
+                                            <i class="fas fa-@(login.Device.ToLower().Contains("mobile") ? "mobile-alt" : "desktop") mr-2"></i>
+                                            <strong>@login.Device</strong>
+                                            @if (login.IsNewDevice)
+                                            {
+                                                <span class="badge badge-warning ml-2">Thiết bị mới</span>
+                                            }
+                                        </div>
+                                        <div class="text-muted small mt-1">
+                                            <i class="fas fa-clock mr-1"></i> @login.LoginTime.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                    </div>
+                                    @if (login.SessionId != null)
+                                    {
+                                        <a href="@Url.Action("LogoutDeviceFromEmail", "Account", new { sessionId = login.SessionId, token = login.SecurityToken })" 
+                                           class="btn btn-outline-danger btn-sm logout-btn"
+                                           onclick="return confirm('Bạn có chắc muốn đăng xuất khỏi thiết bị này không?')"
+                                           title="Đăng xuất khỏi thiết bị này">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </a>
+                                    }
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="login-history-item text-muted">
+                                <span>Không có dữ liệu đăng nhập gần đây</span>
+                            </li>
+                        }
+                    </ul>
+                    @if (ViewBag.LoginHistory?.Count > 3)
+                    {
+                        <a href="#" onclick="openLoginHistoryModal()" class="view-more-link">Xem thêm</a>
+                    }
+                </div>
+            </div>
+            <div class="profile-actions text-center mt-4">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-secondary btn-lg">Quay về trang chủ</a>
+                <a asp-action="UpdateAccount" asp-controller="Account" class="btn btn-primary btn-lg">Chỉnh sửa thông tin</a>
+                <form asp-action="DeleteAccount" asp-controller="Account" method="get" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-lg">Xóa tài khoản</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chọn tùy chọn -->
+<div id="imageOptionsModal" class="modal">
+    <div class="modal-content">
+        <h4 class="modal-title">Thay đổi ảnh đại diện</h4>
+        <button class="btn btn-outline-secondary mb-2" onclick="selectFile()">Chọn ảnh từ thiết bị</button>
+        <button class="btn btn-outline-secondary mb-2" onclick="openCameraModal()">Chụp ảnh mới</button>
+        <button class="btn btn-outline-danger mb-2" onclick="deleteProfileImage()">
+            <i class="fas fa-trash"></i> Xóa ảnh đại diện
+        </button>
+        <button class="btn btn-danger" onclick="closeModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- Modal camera -->
+<div id="cameraModal" class="modal">
+    <div class="modal-content camera-modal-content">
+        <h4 class="modal-title">Chụp ảnh đại diện</h4>
+        <div id="cameraSection">
+            <video id="video" autoplay playsinline class="camera-video"></video>
+            <img id="capturedImage" class="camera-captured d-none" alt="Ảnh đã chụp" />
+            <div class="camera-actions mt-3">
+                <button id="captureBtn" class="btn btn-primary" onclick="capturePhoto()">Chụp ảnh</button>
+                <button id="saveBtn" class="btn btn-success d-none" onclick="savePhoto()">Lưu</button>
+                <button id="cancelBtn" class="btn btn-danger d-none" onclick="cancelPhoto()">Hủy</button>
+                <button class="btn btn-secondary" onclick="closeCameraModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal lịch sử đăng nhập -->
+<div id="loginHistoryModal" class="modal">
+    <div class="modal-content login-history-modal">
+        <h4 class="modal-title">Lịch sử đăng nhập</h4>
+        <div class="login-history-container">
+            <ul class="login-history-list">
+                @if (ViewBag.LoginHistory != null && ViewBag.LoginHistory.Count > 0)
+                {
+                    foreach (var login in ViewBag.LoginHistory)
+                    {
+                        <li class="login-history-item">
+                            <div class="login-info">
+                                <div class="device-info">
+                                    <i class="fas fa-@(login.Device.ToLower().Contains("mobile") ? "mobile-alt" : "desktop") mr-2"></i>
+                                    <strong>@login.Device</strong>
+                                    @if (login.IsNewDevice)
+                                    {
+                                        <span class="badge badge-warning ml-2">Thiết bị mới</span>
+                                    }
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fas fa-clock mr-1"></i> @login.LoginTime.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="fas fa-globe mr-1"></i> @login.Platform
+                                    <span class="ml-2">
+                                    <i class="fab @(login.Browser.Contains("Chrome") ? "fa-chrome" : 
+                                                    login.Browser.Contains("Firefox") ? "fa-firefox" : 
+                                                    login.Browser.Contains("Safari") ? "fa-safari" : 
+                                                    login.Browser.Contains("Edge") ? "fa-edge" : 
+                                                    login.Browser.Contains("Opera") ? "fa-opera" : 
+                                                    "fa-globe") mr-1"></i>
+                                                @login.Browser
+                                    </span>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <span class="ml-2">
+                                        <i class="fas fa-map-marker-alt mr-1"></i> 
+                                        <span class="location-text">@(string.IsNullOrEmpty(login.Location) ? "Không xác định" : login.Location)</span>
+                                    </span>
+                                </div>
+                            </div>
+                            @if (login.SessionId != null)
+                            {
+                                <a href="@Url.Action("LogoutDeviceFromEmail", "Account", new { sessionId = login.SessionId, token = login.SecurityToken })" 
+                                   class="btn btn-outline-danger btn-sm logout-btn"
+                                   onclick="return confirm('Bạn có chắc muốn đăng xuất khỏi thiết bị này không?')"
+                                   title="Đăng xuất khỏi thiết bị này">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </a>
+                            }
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="login-history-item text-muted">
+                        <span>Không có dữ liệu đăng nhập</span>
+                    </li>
+                }
+            </ul>
+        </div>
+        <form asp-action="LogoutAllSessions" asp-controller="Account" method="post" class="mt-3">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất khỏi tất cả thiết bị?')">
+                <i class="fas fa-sign-out-alt"></i> Đăng xuất tất cả phiên
+            </button>
+        </form>
+        <button class="btn btn-secondary mt-3" onclick="closeLoginHistoryModal()">Đóng</button>
+    </div>
+</div>
+
+<style>
+    /* General Styling */
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(rgba(255, 250, 250, 0.8), rgba(255, 182, 193, 0.3)), url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .profile-wrapper {
+        max-width: 1100px;
+        margin: 15px;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 95%;
+    }
+
+    .profile-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-title {
+        font-size: 30px;
+        color: #D0021B;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 8px;
+    }
+
+    .profile-title::after {
+        content: '';
+        width: 40px;
+        height: 3px;
+        background: #D0021B;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .profile-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-top: 6px;
+    }
+
+    /* Avatar Section */
+    .avatar-section {
+        position: relative;
+    }
+
+    .avatar-img {
+        width: 150px;
+        height: 150px;
+        border: 4px solid #fff;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        object-fit: cover;
+    }
+
+    .avatar-img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .avatar-preview {
+        width: 120px;
+        height: 120px;
+        border: 3px solid #D0021B;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-top: 10px;
+    }
+
+    /* Security Section */
+    .security-section {
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #D0021B;
+        margin-bottom: 12px;
+    }
+
+    .security-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        margin-bottom: 10px;
+    }
+
+    .toggle-container {
+        display: flex;
+        align-items: center;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+    }
+
+    input:checked + .slider {
+        background-color: #17a2b8;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    .slider.round {
+        border-radius: 24px;
+    }
+
+    .toggle-status {
+        font-size: 14px;
+        color: #2c3e50;
+    }
+
+    /* Login History Section */
+    .login-history {
+        background: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    }
+
+    .login-history-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .login-history-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid #f1f1f1;
+        transition: background-color 0.2s ease;
+    }
+
+    .login-history-item:hover {
+        background-color: #f9f9f9;
+    }
+
+    .login-history-item:last-child {
+        border-bottom: none;
+    }
+
+    .login-info {
+        flex-grow: 1;
+        text-align: left; /* Căn trái toàn bộ nội dung trong login-info */
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-info .text-muted {
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left; /* Căn trái nội dung */
+    }
+
+    .device-info {
+        display: flex;
+        align-items: center;
+        font-size: 15px;
+        font-weight: 600;
+        color: #2c3e50;
+        text-align: left;
+    }
+
+    /* Tùy chỉnh cho các icon và nội dung */
+    .login-info .text-muted i {
+        font-size: 12px;
+        color: #6c757d;
+        margin-right: 5px;
+    }
+
+    /* Đảm bảo các span trong text-muted căn trái */
+    .login-info .text-muted span {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .login-history-item .text-muted {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .login-history-item .text-muted i {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .logout-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+        background-color: #dc3545;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .view-more-link {
+        display: block;
+        text-align: center;
+        color: #D0021B;
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 12px;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .view-more-link:hover {
+        color: #F5A623;
+        text-decoration: underline;
+    }
+
+    /* Profile Details */
+    .profile-details {
+        display: grid;
+        gap: 12px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 10px;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        transition: transform 0.3s ease;
+    }
+
+    .detail-item:hover {
+        transform: translateX(4px);
+    }
+
+    .label {
+        font-weight: 600;
+        color: #34495e;
+        min-width: 150px;
+        font-size: 16px;
+    }
+
+    .value {
+        color: #2c3e50;
+        font-size: 16px;
+        font-weight: 400;
+    }
+
+    .badge {
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-warning {
+        background-color: #ffc107;
+        color: #212529;
+    }
+
+    .badge i {
+        margin-right: 3px;
+    }
+
+    .btn-sm {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .btn-outline-primary {
+        border-color: #007bff;
+        color: #007bff;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Profile Actions */
+    .profile-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .profile-actions .btn {
+        padding: 10px 25px;
+        font-size: 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .profile-actions .btn-primary {
+        background-color: #D0021B;
+        border: none;
+        box-shadow: 0 3px 8px rgba(208, 2, 27, 0.2);
+    }
+
+    .profile-actions .btn-primary:hover {
+        background-color: #F5A623;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4);
+    }
+
+    .profile-actions .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        box-shadow: 0 3px 8px rgba(108, 117, 125, 0.2);
+    }
+
+    .profile-actions .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(90, 98, 104, 0.4);
+    }
+
+    .profile-actions .btn-danger {
+        background-color: #e74c3c;
+        border: none;
+        box-shadow: 0 3px 8px rgba(231, 76, 60, 0.2);
+    }
+
+    .profile-actions .btn-danger:hover {
+        background-color: #c0392b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(192, 57, 43, 0.4);
+    }
+
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+    .btn-outline-danger {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: #fff;
+    }
+
+    .btn-outline-danger i {
+        margin-right: 5px;
+    }
+
+    /* Modal Styling */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        max-width: 400px;
+        width: 90%;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .login-history-modal {
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .login-history-container {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+
+    .login-history-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .login-history-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .login-history-container::-webkit-scrollbar-thumb {
+        background: #D0021B;
+        border-radius: 4px;
+    }
+
+    .login-history-container::-webkit-scrollbar-thumb:hover {
+        background: #F5A623;
+    }
+
+    .camera-modal-content {
+        max-width: 650px;
+        width: 90%;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        color: #D0021B;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .camera-video,
+    .camera-captured {
+        width: 100%;
+        max-width: 550px;
+        height: auto;
+        border-radius: 10px;
+        border: 3px solid #D0021B;
+        background: #000;
+        margin: 0 auto;
+        display: block;
+    }
+
+    .camera-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
+
+    .d-none {
+        display: none;
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .profile-wrapper {
+            margin: 10px;
+            padding: 15px;
+        }
+
+        .security-item,
+        .detail-item,
+        .login-history-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .label {
+            min-width: 100%;
+            margin-bottom: 4px;
+        }
+
+        .logout-btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .camera-video,
+        .camera-captured {
+            max-width: 100%;
+        }
+
+        .profile-actions .btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .login-history-modal {
+            max-width: 90%;
+        }
+    }
+</style>
+
+<script>
+    let profileStream = null;
+    let capturedBlob = null;
+
+    // Mở modal tùy chọn ảnh
+    function openImageOptions() {
+        document.getElementById('imageOptionsModal').style.display = 'flex';
+    }
+
+    // Đóng modal tùy chọn ảnh
+    function closeModal() {
+        document.getElementById('imageOptionsModal').style.display = 'none';
+    }
+
+    // Mở input chọn file
+    function selectFile() {
+        document.getElementById('fileInput').click();
+        closeModal();
+    }
+
+    // Mở modal camera
+    function openCameraModal() {
+        const cameraModal = document.getElementById('cameraModal');
+        const video = document.getElementById('video');
+        const capturedImage = document.getElementById('capturedImage');
+        const captureBtn = document.getElementById('captureBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        capturedBlob = null;
+        capturedImage.classList.add('d-none');
+        video.classList.remove('d-none');
+        captureBtn.classList.remove('d-none');
+        saveBtn.classList.add('d-none');
+        cancelBtn.classList.add('d-none');
+
+        cameraModal.style.display = 'flex';
+        closeModal();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Trình duyệt không hỗ trợ camera. Vui lòng thử trình duyệt khác.");
+            closeCameraModal();
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                profileStream = stream;
+                video.srcObject = stream;
+                video.play().catch(err => {
+                    console.error("Lỗi khi phát luồng video: ", err);
+                    alert("Không thể phát luồng video: " + err.message);
+                    closeCameraModal();
+                });
+            })
+            .catch(err => {
+                console.error("Lỗi khi truy cập camera: ", err);
+                if (err.name === "NotAllowedError") {
+                    alert("Quyền truy cập camera bị từ chối. Vui lòng cấp quyền trong cài đặt trình duyệt.");
+                } else if (err.name === "NotFoundError") {
+                    alert("Không tìm thấy camera. Vui lòng kiểm tra thiết bị.");
+                } else {
+                    alert("Không thể mở camera. Chi tiết lỗi: " + err.message);
+                }
+                closeCameraModal();
+            });
+    }
+
+    // Chụp ảnh từ camera
+    function capturePhoto() {
+        const video = document.getElementById('video');
+        const capturedImage = document.getElementById('capturedImage');
+        const captureBtn = document.getElementById('captureBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(blob => {
+            if (!blob) {
+                alert("Không thể tạo ảnh từ video. Vui lòng thử lại.");
+                return;
+            }
+
+            capturedBlob = blob;
+            capturedImage.src = URL.createObjectURL(blob);
+            capturedImage.classList.remove('d-none');
+            video.classList.add('d-none');
+            captureBtn.classList.add('d-none');
+            saveBtn.classList.remove('d-none');
+            cancelBtn.classList.remove('d-none');
+
+            stopCameraStream();
+        }, 'image/jpeg', 0.9);
+    }
+
+    // Lưu ảnh đã chụp
+    function savePhoto() {
+        if (!capturedBlob) {
+            alert("Không có ảnh để lưu. Vui lòng chụp lại.");
+            return;
+        }
+
+        const file = new File([capturedBlob], 'photo.jpg', { type: 'image/jpeg' });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        const form = document.getElementById('profileImageForm');
+        form.querySelector('#fileInput').files = dataTransfer.files;
+
+        const preview = document.getElementById('imagePreview');
+        const currentAvatar = document.getElementById('current-avatar');
+        preview.src = URL.createObjectURL(capturedBlob);
+        preview.classList.remove('d-none');
+        currentAvatar.classList.add('d-none');
+
+        form.submit();
+        closeCameraModal();
+    }
+
+    // Hủy ảnh đã chụp và quay lại camera
+    function cancelPhoto() {
+        const video = document.getElementById('video');
+        const capturedImage = document.getElementById('capturedImage');
+        const captureBtn = document.getElementById('captureBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+
+        capturedBlob = null;
+        capturedImage.classList.add('d-none');
+        video.classList.remove('d-none');
+        captureBtn.classList.remove('d-none');
+        saveBtn.classList.add('d-none');
+        cancelBtn.classList.add('d-none');
+
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                profileStream = stream;
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Lỗi khi truy cập lại camera: ", err);
+                alert("Không thể mở lại camera. Vui lòng thử lại.");
+                closeCameraModal();
+            });
+    }
+
+    // Dừng luồng camera
+    function stopCameraStream() {
+        if (profileStream) {
+            profileStream.getTracks().forEach(track => track.stop());
+            profileStream = null;
+        }
+    }
+
+    // Đóng modal camera
+    function closeCameraModal() {
+        const cameraModal = document.getElementById('cameraModal');
+        const video = document.getElementById('video');
+        stopCameraStream();
+        video.srcObject = null;
+        cameraModal.style.display = 'none';
+    }
+
+    // Xem trước ảnh được chọn từ thiết bị
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('imagePreview');
+        const currentAvatar = document.getElementById('current-avatar');
+        const submitButton = document.getElementById('submitButton');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                currentAvatar.classList.add('d-none');
+                submitButton.classList.remove('d-none');
+            };
+            reader.onerror = function(err) {
+                console.error("Lỗi khi đọc file ảnh: ", err);
+                alert("Không thể đọc file ảnh. Vui lòng thử lại.");
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('d-none');
+            currentAvatar.classList.remove('d-none');
+            submitButton.classList.add('d-none');
+        }
+    }
+
+    // Xóa ảnh đại diện
+    function deleteProfileImage() {
+        if (confirm('Bạn có chắc muốn xóa ảnh đại diện? Ảnh sẽ được thay bằng ảnh mặc định.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Account/DeleteProfileImage';
+            
+            const token = document.querySelector('input[name="__RequestVerificationToken"]');
+            if (token) {
+                const tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '__RequestVerificationToken';
+                tokenInput.value = token.value;
+                form.appendChild(tokenInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+        closeModal();
+    }
+
+    // Bật/tắt 2FA
+    function toggleTwoFactor() {
+        const toggle = document.getElementById('twoFactorToggle');
+        const status = document.querySelector('.toggle-status');
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Account/EnableTwoFactor';
+        
+        const token = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (token) {
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = token.value;
+            form.appendChild(tokenInput);
+        }
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'enable';
+        input.value = toggle.checked;
+        form.appendChild(input);
+        
+        document.body.appendChild(form);
+        status.textContent = toggle.checked ? 'Đã bật' : 'Đã tắt';
+        form.submit();
+    }
+
+    // Mở modal lịch sử đăng nhập
+    function openLoginHistoryModal() {
+        document.getElementById('loginHistoryModal').style.display = 'flex';
+    }
+
+    // Đóng modal lịch sử đăng nhập
+    function closeLoginHistoryModal() {
+        document.getElementById('loginHistoryModal').style.display = 'none';
+    }
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+}

@@ -1,0 +1,912 @@
+@using Bloomie.Models.Entities
+@using Bloomie.Models.ViewModels
+@model ManageCampaignsVM
+@{
+    ViewData["Title"] = "Quản Lý Chương Trình Khuyến Mãi";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header and Buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-tags text-primary me-2"></i> Quản lý khuyến mãi
+                </h2>
+                <a class="btn btn-primary shadow-sm" asp-action="CreateTypeSelect" asp-route-tab="program">
+                    <i class="fas fa-plus me-2"></i> Tạo Khuyến Mãi
+                </a>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Chương Trình</div>
+                            <div class="stat-value">@Model.TotalCampaigns</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Giảm Giá Sản Phẩm</div>
+                            <div class="stat-value">@Model.TotalProductDiscounts</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-icon">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Cửa Hàng Điểm</div>
+                            <div class="stat-value">@Model.TotalPointRewards</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Hoạt Động</div>
+                            <div class="stat-value">@Model.ActiveCount</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index", "AdminPromotion")">
+                        <i class="fas fa-ticket-alt"></i> Mã khuyến mãi
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="@Url.Action("ManageCampaigns", "AdminPromotion")">
+                        <i class="fas fa-bullhorn"></i> Chương trình khuyến mãi
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Filter Section -->
+            <div class="filter-section mb-4">
+                <form method="get" class="filter-form">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tìm kiếm</label>
+                            <input type="text" name="searchString" class="form-control" placeholder="Tên chương trình..." value="@ViewBag.SearchString" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Loại chương trình</label>
+                            <select name="typeFilter" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="FlashSale" selected="@(ViewBag.TypeFilter == "FlashSale")">Flash Sale</option>
+                                <option value="LuckyWheel" selected="@(ViewBag.TypeFilter == "LuckyWheel")">Vòng Quay</option>
+                                <option value="ProductDiscount" selected="@(ViewBag.TypeFilter == "ProductDiscount")">Giảm giá sản phẩm</option>
+                                <option value="PointReward" selected="@(ViewBag.TypeFilter == "PointReward")">Point Shop</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Trạng thái</label>
+                            <select name="statusFilter" class="form-select">
+                                <option value="">Tất cả</option>
+                                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Đang hoạt động</option>
+                                <option value="upcoming" selected="@(ViewBag.StatusFilter == "upcoming")">Chưa bắt đầu</option>
+                                <option value="ended" selected="@(ViewBag.StatusFilter == "ended")">Đã kết thúc</option>
+                                <option value="paused" selected="@(ViewBag.StatusFilter == "paused")">Tạm dừng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-actions mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i>Lọc
+                        </button>
+                        <a asp-action="ManageCampaigns" class="btn btn-secondary">
+                            <i class="fas fa-redo me-1"></i>Xóa lọc
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle me-2"></i>@TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!Model.Promotions.Any())
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-inbox me-2"></i>
+                    Chưa có chương trình khuyến mãi nào. Hãy tạo Flash Sale, Giảm giá sản phẩm hoặc Point Shop!
+                </div>
+            }
+            else
+            {
+                <!-- Promotion Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th class="col-type">Loại</th>
+                                <th class="col-name">Tên Chương Trình</th>
+                                <th class="col-value">Giá Trị</th>
+                                <th class="col-applies">Áp Dụng</th>
+                                <th class="col-start-date">Ngày bắt đầu</th>
+                                <th class="col-end-date">Ngày kết thúc</th>
+                                <th class="col-status">Trạng Thái</th>
+                                <th class="col-stats">Thống Kê</th>
+                                <th class="col-actions">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var promo in Model.Promotions)
+                            {
+                                <tr>
+                                    <td class="type-cell">
+                                        @if (promo.SubType == "FlashSale")
+                                        {
+                                            <span class="promo-type-badge type-flashsale">
+                                                <i class="fas fa-bolt"></i>
+                                                <span>Flash Sale</span>
+                                            </span>
+                                        }
+                                        else if (promo.SubType == "LuckyWheel")
+                                        {
+                                            <span class="promo-type-badge type-luckywheel">
+                                                <i class="fas fa-dharmachakra"></i>
+                                                <span>Vòng Quay</span>
+                                            </span>
+                                        }
+                                        else if (promo.Type == "ProductDiscount")
+                                        {
+                                            <span class="promo-type-badge type-discount">
+                                                <i class="fas fa-tags"></i>
+                                                <span>Giảm Giá</span>
+                                            </span>
+                                        }
+                                        else if (promo.Type == "PointReward")
+                                        {
+                                            <span class="promo-type-badge type-pointshop">
+                                                <i class="fas fa-gift"></i>
+                                                <span>Point Shop</span>
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="promotion-name">
+                                        <strong>@promo.Name</strong>
+                                        @if (!string.IsNullOrEmpty(promo.Description))
+                                        {
+                                            <br><small class="text-muted">@promo.Description</small>
+                                        }
+                                    </td>
+                                    <td class="value-cell">
+                                        <strong class="text-primary">@promo.Value</strong>
+                                    </td>
+                                    <td class="applies-cell">
+                                        <small>
+                                            @if (promo.Type == "ProductDiscount")
+                                            {
+                                                @promo.AppliesTo
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">Không áp dụng</span>
+                                            }
+                                        </small>
+                                    </td>
+                                    <td class="date-cell">
+                                        <small>
+                                            @if (promo.Type == "PointReward")
+                                            {
+                                                <span class="text-muted fst-italic">Không giới hạn</span>
+                                            }
+                                            else
+                                            {
+                                                @(promo.StartDate.HasValue ? promo.StartDate.Value.ToString("dd/MM/yyyy HH:mm") : "-")
+                                            }
+                                        </small>
+                                    </td>
+                                    <td class="date-cell">
+                                        <small>
+                                            @if (promo.Type == "PointReward")
+                                            {
+                                                <span class="text-muted fst-italic">Không giới hạn</span>
+                                            }
+                                            else
+                                            {
+                                                @(promo.EndDate.HasValue ? promo.EndDate.Value.ToString("dd/MM/yyyy HH:mm") : "Không giới hạn")
+                                            }
+                                        </small>
+                                    </td>
+                                    <td class="status-cell">
+                                        <span class="badge bg-@promo.StatusClass">@promo.Status</span>
+                                    </td>
+                                    <td class="stats-cell">
+                                        <small>@promo.Stats</small>
+                                    </td>
+                                    <td class="actions-cell">
+                                        @if (promo.Type == "Campaign")
+                                        {
+                                            <a asp-action="EditCampaign" asp-route-id="@promo.Id"
+                                               class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-action="ToggleCampaignActive" asp-route-id="@promo.Id"
+                                                  method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                    <button type="submit"
+                                                            class="btn btn-sm @(promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "btn-secondary" : "btn-success")"
+                                                            data-bs-toggle="tooltip" 
+                                                            data-bs-title="@(promo.Status == "Đã kết thúc" ? "Đã kết thúc" : (promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "Tạm dừng" : "Kích hoạt"))"
+                                                            @(promo.Status == "Đã kết thúc" ? "disabled" : "")>
+                                                        <i class="fas fa-@(promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "pause" : "play")"></i>
+                                                    </button>
+                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteCampaignModal_@promo.Id"
+                                                    data-bs-toggle="tooltip" data-bs-title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+                                        else if (promo.Type == "ProductDiscount")
+                                        {
+                                            <a asp-area="Admin" asp-controller="AdminProductDiscount" asp-action="Edit" asp-route-id="@promo.Id"
+                                               class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-area="Admin" asp-controller="AdminProductDiscount" asp-action="ToggleActive" asp-route-id="@promo.Id"
+                                                  method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm @(promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "btn-secondary" : "btn-success")"
+                                                        data-bs-toggle="tooltip" 
+                                                        data-bs-title="@(promo.Status == "Đã kết thúc" ? "Đã kết thúc" : (promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "Tạm dừng" : "Kích hoạt"))"
+                                                        @(promo.Status == "Đã kết thúc" ? "disabled" : "")>
+                                                    <i class="fas fa-@(promo.Status == "Đang hoạt động" || promo.Status == "Chưa bắt đầu" ? "pause" : "play")"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteProductDiscountModal_@promo.Id"
+                                                    data-bs-toggle="tooltip" data-bs-title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+                                        else if (promo.Type == "PointReward")
+                                        {
+                                            <a asp-action="EditPointReward" asp-route-id="@promo.Id"
+                                               class="btn btn-warning btn-sm" data-bs-toggle="tooltip" data-bs-title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form asp-action="TogglePointRewardActive" asp-route-id="@promo.Id"
+                                                  method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit"
+                                                        class="btn btn-sm @(promo.Status == "Đang hoạt động" ? "btn-secondary" : "btn-success")"
+                                                        data-bs-toggle="tooltip" 
+                                                        data-bs-title="@(promo.Status == "Hết hàng" ? "Hết hàng" : (promo.Status == "Đang hoạt động" ? "Tạm dừng" : "Kích hoạt"))"
+                                                        @(promo.Status == "Hết hàng" ? "disabled" : "")>
+                                                    <i class="fas fa-@(promo.Status == "Đang hoạt động" ? "pause" : "play")"></i>
+                                                </button>
+                                            </form>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deletePointRewardModal_@promo.Id"
+                                                    data-bs-toggle="tooltip" data-bs-title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        }
+
+                                        <!-- Delete Modals for each type -->
+                                        @if (promo.Type == "Campaign")
+                                        {
+                                            <div class="modal fade" id="deleteCampaignModal_@promo.Id" tabindex="-1">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title">Xác Nhận Xóa</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="mb-0">
+                                                                Bạn có chắc chắn muốn xóa chiến dịch
+                                                                <strong>"@promo.Name"</strong>?
+                                                            </p>
+                                                            <p class="text-danger mb-0 mt-2">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                                Hành động này không thể hoàn tác!
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                            <form asp-action="DeleteCampaign" asp-route-id="@promo.Id" method="post" style="display:inline;">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <i class="bi bi-trash-fill me-1"></i>Xóa
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (promo.Type == "ProductDiscount")
+                                        {
+                                            <div class="modal fade" id="deleteProductDiscountModal_@promo.Id" tabindex="-1">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title">Xác Nhận Xóa</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="mb-0">
+                                                                Bạn có chắc chắn muốn xóa khuyến mãi sản phẩm
+                                                                <strong>"@promo.Name"</strong>?
+                                                            </p>
+                                                            <p class="text-danger mb-0 mt-2">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                                Hành động này không thể hoàn tác!
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                            <form asp-area="Admin" asp-controller="AdminProductDiscount" asp-action="Delete" asp-route-id="@promo.Id" method="post" style="display:inline;">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <i class="bi bi-trash-fill me-1"></i>Xóa
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (promo.Type == "PointReward")
+                                        {
+                                            <div class="modal fade" id="deletePointRewardModal_@promo.Id" tabindex="-1">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title">Xác Nhận Xóa</h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="mb-0">
+                                                                Bạn có chắc chắn muốn xóa phần thưởng điểm
+                                                                <strong>"@promo.Name"</strong>?
+                                                            </p>
+                                                            <p class="text-danger mb-0 mt-2">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                                Hành động này không thể hoàn tác!
+                                                            </p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                                            <form asp-action="DeletePointReward" asp-route-id="@promo.Id" method="post" style="display:inline;">
+                                                                @Html.AntiForgeryToken()
+                                                                <button type="submit" class="btn btn-danger">
+                                                                    <i class="bi bi-trash-fill me-1"></i>Xóa
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        width: 100% !important; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    /* Buttons */
+    .btn-primary, .btn-success, .btn-secondary, .btn-warning, .btn-danger {
+        border-radius: 6px; 
+        padding: 6px 12px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+    
+    .btn-success { 
+        background-color: #28a745; 
+        border-color: #28a745; 
+    }
+    
+    .btn-success:hover { 
+        background-color: #218838; 
+        border-color: #218838; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-warning { 
+        background-color: #ffc107; 
+        border-color: #ffc107; 
+        color: #000; 
+    }
+    
+    .btn-warning:hover { 
+        background-color: #e0a800; 
+        border-color: #e0a800; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-danger { 
+        background-color: #dc3545; 
+        border-color: #dc3545; 
+    }
+    
+    .btn-danger:hover { 
+        background-color: #c82333; 
+        border-color: #bd2130; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        border-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    /* Form Controls */
+    .form-control, .form-select {
+        border-radius: 6px; 
+        border: 1px solid #d1d5db; 
+        padding: 8px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus { 
+        border-color: var(--primary-color); 
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+        outline: none; 
+    }
+
+    /* Stat Cards */
+    .stat-card {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card-primary { border-left-color: var(--primary-color); }
+    .stat-card-success { border-left-color: #10b981; }
+    .stat-card-warning { border-left-color: #f59e0b; }
+    .stat-card-danger { border-left-color: #ef4444; }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.75rem;
+        margin-right: 1rem;
+    }
+
+    .stat-card-primary .stat-icon {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: var(--primary-color);
+    }
+
+    .stat-card-success .stat-icon {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #10b981;
+    }
+
+    .stat-card-warning .stat-icon {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #f59e0b;
+    }
+
+    .stat-card-danger .stat-icon {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #ef4444;
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e5e7eb;
+    }
+    .filter-form .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* Table Styles */
+    .table { 
+        background-color: #ffffff; 
+        border-radius: 8px; 
+        table-layout: fixed; 
+        width: 100%; 
+        font-size: 0.9rem; 
+    }
+    
+    .table th, .table td { 
+        border-color: #e5e7eb; 
+        text-align: center; 
+        vertical-align: middle; 
+        padding: 10px; 
+    }
+    
+    .table th { 
+        background-color: var(--primary-color); 
+        color: var(--text-light); 
+        font-weight: 500; 
+        text-transform: uppercase; 
+        font-size: 0.85rem; 
+    }
+    
+    .table-hover tbody tr:hover { 
+        background-color: #f1f5f9; 
+    }
+
+    /* Column Widths */
+    .col-type { width: 10%; min-width: 120px; }
+    .col-name { width: 16%; min-width: 160px; }
+    .col-value { width: 9%; min-width: 90px; }
+    .col-applies { width: 9%; min-width: 90px; }
+    .col-start-date { width: 11%; min-width: 120px; }
+    .col-end-date { width: 11%; min-width: 120px; }
+    .col-status { width: 9%; min-width: 100px; }
+    .col-stats { width: 13%; min-width: 130px; }
+    .col-actions { width: 12%; min-width: 120px; }
+
+    /* Cell Styles */
+    .promotion-name { 
+        white-space: normal; 
+        overflow-wrap: break-word; 
+        max-width: 100%; 
+        line-height: 1.4; 
+        text-align: left !important; 
+    }
+    
+    .type-cell, .value-cell, .applies-cell, .date-cell, .status-cell, .stats-cell { 
+        white-space: normal; 
+        overflow-wrap: break-word; 
+        text-align: center; 
+    }
+    
+    .actions-cell { 
+        white-space: nowrap; 
+    }
+
+    /* Action Buttons */
+    .btn-warning.btn-sm, .btn-danger.btn-sm, .btn-info.btn-sm, .btn-secondary.btn-sm, .btn-success.btn-sm {
+        border-radius: 6px; 
+        padding: 4px 8px; 
+        font-size: 0.8rem; 
+        min-width: 32px; 
+        transition: all 0.2s ease; 
+        margin-right: 4px;
+    }
+    
+    .btn-warning.btn-sm { 
+        background-color: #f59e0b; 
+        border-color: #f59e0b; 
+    }
+    
+    .btn-warning.btn-sm:hover { 
+        background-color: #d97706; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-danger.btn-sm { 
+        background-color: #ef4444; 
+        border-color: #ef4444; 
+    }
+    
+    .btn-danger.btn-sm:hover { 
+        background-color: #dc2626; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-info.btn-sm { 
+        background-color: #3b82f6; 
+        border-color: #3b82f6; 
+    }
+    
+    .btn-info.btn-sm:hover { 
+        background-color: #2563eb; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-secondary.btn-sm { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary.btn-sm:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-success.btn-sm { 
+        background-color: #10b981; 
+        border-color: #10b981; 
+    }
+    
+    .btn-success.btn-sm:hover { 
+        background-color: #059669; 
+        transform: translateY(-1px); 
+    }
+
+    /* Disabled buttons */
+    .btn:disabled,
+    .btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        pointer-events: none;
+    }
+
+    /* Badges */
+    .badge { 
+        font-size: 0.75rem; 
+        padding: 0.35em 0.65em; 
+        display: inline-block;
+        text-align: center;
+        border-radius: 6px;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-dark);
+        border-radius: 6px 6px 0 0;
+        padding: 12px 20px;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        font-weight: 600;
+        border-bottom: 3px solid var(--primary-color);
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-color);
+    }
+
+    /* Promo Type Badge - New Design */
+    .promo-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .promo-type-badge i {
+        font-size: 1.2rem;
+    }
+
+    .type-flashsale {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    .type-flashsale:hover {
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .type-luckywheel {
+        background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        color: #000;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .type-luckywheel:hover {
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .type-discount {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    }
+
+    .type-discount:hover {
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .type-pointshop {
+        background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .type-pointshop:hover {
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        transform: translateY(-2px);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #e5e7eb;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e5e7eb;
+    }
+
+    /* Alert */
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    /* Dropdown Menu */
+    .dropdown-menu {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 8px;
+        min-width: 250px;
+    }
+
+    .dropdown-header {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #6b7280;
+        padding: 8px 12px;
+        margin-bottom: 4px;
+    }
+
+    .dropdown-item {
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f1f5f9;
+        color: var(--primary-color);
+    }
+
+    .dropdown-item i {
+        width: 20px;
+        font-size: 1rem;
+    }
+
+    .dropdown-divider {
+        margin: 8px 0;
+        border-color: #e5e7eb;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize Bootstrap tooltips
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+        });
+    </script>
+}

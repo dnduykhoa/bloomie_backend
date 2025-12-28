@@ -1,0 +1,884 @@
+@model List<Bloomie.Models.Entities.VoucherCampaign>
+@{
+    ViewData["Title"] = "Vòng Quay May Mắn";
+    var userSpins = ViewBag.UserSpins as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var totalCampaigns = Model.Count();
+    var activeCampaigns = Model.Count(c => c.IsActive);
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("VoucherCampaigns", "Promotion")">Khuyến mãi</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Vòng Quay May Mắn</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-gift me-2"></i>
+                Vòng Quay May Mắn
+            </h1>
+            <p class="header-subtitle">Quay và nhận voucher giảm giá hấp dẫn!</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+
+<style>
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    .campaign-card {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .campaign-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(255, 193, 7, 0.3);
+    }
+    
+    .campaign-banner {
+        height: 200px;
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .campaign-banner::before {
+        content: '';
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+        animation: pulse 3s ease-in-out infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { transform: translate(-50%, -50%) scale(1); }
+        50% { transform: translate(-50%, -50%) scale(1.2); }
+    }
+    
+    .campaign-icon {
+        font-size: 80px;
+        color: white;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        position: relative;
+        z-index: 1;
+        animation: rotate 4s linear infinite;
+    }
+    
+    @@keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .spins-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255,255,255,0.95);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        color: #ff9800;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 2;
+    }
+    
+    .time-badge {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 10px;
+        font-size: 12px;
+        display: inline-block;
+    }
+    
+    .ended-badge {
+        background: linear-gradient(135deg, #dc3545 0%, #e67e22 100%);
+    }
+    
+    .play-button {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: bold;
+        color: white;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+    }
+    
+    .play-button:hover:not(:disabled) {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+        background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+    }
+    
+    .play-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #6c757d;
+    }
+
+    /* Wheel Modal Styles */
+    .wheel-container {
+        position: relative;
+        width: 500px;
+        height: 500px;
+        margin: 0 auto;
+    }
+    
+    .wheel-canvas {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+    }
+    
+    .wheel-pointer {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 20px solid transparent;
+        border-right: 20px solid transparent;
+        border-top: 40px solid #dc3545;
+        z-index: 10;
+        filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+    }
+    
+    .spin-button-wheel {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, #ffc107, #ff9800);
+        border: 5px solid white;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        font-size: 18px;
+        transition: all 0.3s;
+    }
+    
+    .spin-button-wheel:hover:not(:disabled) {
+        transform: translate(-50%, -50%) scale(1.1);
+        box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+    }
+    
+    .spin-button-wheel:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #6c757d;
+    }
+</style>
+
+<div class="container py-5">
+    @if (!isAuthenticated)
+    {
+        <div class="alert alert-warning text-center shadow-sm" style="border-radius: 15px;">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong>Vui lòng <a asp-controller="Account" asp-action="Login" class="alert-link fw-bold text-decoration-underline">đăng nhập</a> để tham gia vòng quay!</strong>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 100px; color: #dee2e6;"></i>
+            <h4 class="mt-3 text-muted">Chưa có chương trình vòng quay nào!</h4>
+            <p class="text-muted">Hãy quay lại sau nhé!</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var campaign in Model)
+            {
+                var now = DateTime.Now;
+                var isRunning = campaign.IsActive && campaign.StartDate <= now && campaign.EndDate >= now;
+                var isEnded = campaign.EndDate < now;
+                var spinsLeft = userSpins.ContainsKey(campaign.Id) ? userSpins[campaign.Id] : 0;
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="card campaign-card">
+                        <div class="campaign-banner d-flex align-items-center justify-content-center">
+                            <i class="bi bi-gift-fill campaign-icon"></i>
+                            @if (isAuthenticated && isRunning)
+                            {
+                                <div class="spins-badge">
+                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                    <strong>@spinsLeft</strong> lượt
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            <h4 class="card-title fw-bold mb-3">@campaign.Name</h4>
+                            
+                            @if (!string.IsNullOrEmpty(campaign.Description))
+                            {
+                                <p class="card-text text-muted mb-3">@campaign.Description</p>
+                            }
+                            
+                            <div class="mb-3">
+                                @if (isEnded)
+                                {
+                                    <span class="time-badge ended-badge">
+                                        <i class="bi bi-x-circle me-1"></i>Đã kết thúc
+                                    </span>
+                                }
+                                else if (isRunning)
+                                {
+                                    <span class="time-badge">
+                                        <i class="bi bi-check-circle me-1"></i>Đang diễn ra
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="time-badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                                        <i class="bi bi-clock me-1"></i>Sắp diễn ra
+                                    </span>
+                                }
+                            </div>
+                            
+                            <div class="small text-muted mb-3">
+                                <div class="mb-1">
+                                    <i class="bi bi-calendar-check me-2"></i>
+                                    <strong>Từ:</strong> @campaign.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                                <div>
+                                    <i class="bi bi-calendar-x me-2"></i>
+                                    <strong>Đến:</strong> @campaign.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                @if (!isAuthenticated)
+                                {
+                                    <a asp-controller="Account" asp-action="Login" class="btn play-button">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập để chơi
+                                    </a>
+                                }
+                                else if (isEnded)
+                                {
+                                    <button class="btn play-button" disabled>
+                                        <i class="bi bi-x-circle me-2"></i>Đã kết thúc
+                                    </button>
+                                }
+                                else if (!isRunning)
+                                {
+                                    <button class="btn play-button" disabled>
+                                        <i class="bi bi-clock me-2"></i>Chưa bắt đầu
+                                    </button>
+                                }
+                                else if (spinsLeft <= 0)
+                                {
+                                    <button class="btn play-button" disabled>
+                                        <i class="bi bi-x-circle me-2"></i>Hết lượt quay
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn play-button" onclick="openWheelModal(@campaign.Id, '@campaign.Name', @spinsLeft)">
+                                        <i class="bi bi-play-circle-fill me-2"></i>Quay ngay!
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Wheel Modal -->
+<div class="modal fade" id="wheelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 20px; border: none;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-warning" id="wheelModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-3">
+                    <span class="badge bg-warning text-dark px-3 py-2" id="spinsLeftBadge"></span>
+                </div>
+                
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheelCanvas" class="wheel-canvas"></canvas>
+                    <button id="spinButton" class="spin-button-wheel">QUAY</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0" style="border-radius: 20px;">
+            <div class="modal-body p-0">
+                <div class="card border-0 shadow-lg" style="border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3 btn-close-white" data-bs-dismiss="modal"></button>
+                    <div class="card-body p-5 text-white text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-trophy-fill" style="font-size: 80px; color: #ffd700; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+                        </div>
+                        <h2 class="fw-bold mb-4">🎉 Chúc Mừng Bạn! 🎉</h2>
+                        <div class="bg-white text-dark p-4 rounded-4 mb-4 shadow">
+                            <h4 class="fw-bold text-warning mb-2" id="spinResultCode"></h4>
+                            <h5 class="mb-0 text-success" id="spinResultDiscount"></h5>
+                        </div>
+                        <p class="mb-4 opacity-75 fs-5">Voucher đã được lưu vào tài khoản của bạn</p>
+                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                            <a asp-controller="Promotion" asp-action="MyVouchers" class="btn btn-light btn-lg rounded-pill px-4">
+                                <i class="bi bi-ticket-perforated me-2"></i>Xem voucher
+                            </a>
+                            <a asp-controller="Product" asp-action="Index" class="btn btn-warning btn-lg rounded-pill px-4">
+                                <i class="bi bi-bag-check me-2"></i>Mua sắm ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        const campaignVouchers = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CampaignVouchers ?? new Dictionary<int, List<object>>()));
+        
+        let currentCampaignId = 0;
+        let currentSpinsLeft = 0;
+        let wheelCanvas, ctx, spinButton;
+        let isSpinning = false;
+        let currentRotation = 0;
+        let lastTickAngle = 0; // Để phát âm thanh tick
+        let lightOffset = 0; // Để tạo hiệu ứng ánh sáng chạy
+
+        // Tạo âm thanh (sử dụng Web Audio API)
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTickSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800; // Tần số cao cho âm "tick"
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.05);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.05);
+        }
+        
+        function playWinSound() {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+        
+        function fireConfetti(isLucky) {
+            if (isLucky) {
+                // Nếu trúng ô "Chúc may mắn" - ít pháo hơn
+                confetti({
+                    particleCount: 50,
+                    spread: 60,
+                    origin: { y: 0.6 }
+                });
+            } else {
+                // Trúng voucher thật - bắn pháo hoành tráng
+                const duration = 3000;
+                const end = Date.now() + duration;
+                
+                (function frame() {
+                    confetti({
+                        particleCount: 3,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+                    });
+                    confetti({
+                        particleCount: 3,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff']
+                    });
+                    
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                })();
+            }
+        }
+
+        function openWheelModal(campaignId, campaignName, spinsLeft) {
+            currentCampaignId = campaignId;
+            currentSpinsLeft = spinsLeft;
+            lastTickAngle = 0; // Reset
+            
+            document.getElementById('wheelModalTitle').textContent = campaignName;
+            updateSpinsBadge();
+            
+            const modal = new bootstrap.Modal(document.getElementById('wheelModal'));
+            modal.show();
+            
+            // Initialize wheel after modal is shown
+            setTimeout(() => {
+                initWheel(campaignId);
+            }, 300);
+        }
+
+        function updateSpinsBadge() {
+            document.getElementById('spinsLeftBadge').textContent = `Còn ${currentSpinsLeft} lượt quay`;
+        }
+
+        function initWheel(campaignId) {
+            wheelCanvas = document.getElementById('wheelCanvas');
+            ctx = wheelCanvas.getContext('2d');
+            spinButton = document.getElementById('spinButton');
+            
+            wheelCanvas.width = 500;
+            wheelCanvas.height = 500;
+            
+            // Bắt đầu animation loop cho hiệu ứng ánh sáng
+            function animateLights() {
+                if (!isSpinning) {
+                    drawWheel(campaignId);
+                }
+                requestAnimationFrame(animateLights);
+            }
+            animateLights();
+            
+            spinButton.onclick = () => spinWheel(campaignId);
+        }
+
+        function drawWheel(campaignId) {
+            const prizes = campaignVouchers[campaignId] ? campaignVouchers[campaignId].map(v => v.text) : ['LUCKY'];
+            const numPrizes = prizes.length;
+            const arc = (2 * Math.PI) / numPrizes;
+            const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181', '#AA96DA', '#FCBAD3', '#FFFFD2', '#A8D8EA', '#FFAAA7'];
+            
+            ctx.clearRect(0, 0, 500, 500);
+            ctx.save();
+            ctx.translate(250, 250);
+            ctx.rotate(currentRotation);
+            
+            // Kim chỉ ở phía TRÊN (góc -90° = 12h)
+            // Để ô đầu tiên (index 0) có GIỮA nằm đúng ở kim:
+            // Bắt đầu vẽ từ: -90° - arc/2 (để giữa ô 0 = -90°)
+            const pointerAngle = -Math.PI / 2; // Kim ở 12h
+            const startAngle = pointerAngle - arc / 2; // Ô 0 bắt đầu
+            
+            // Tính ô nào đang ở dưới kim chỉ
+            // currentRotation là góc đã xoay, kim luôn ở -π/2
+            // Ô 0 có giữa ở startAngle + arc/2, sau khi xoay currentRotation
+            // Ô i có giữa ở: startAngle + (i + 0.5) * arc + currentRotation
+            // Ô đang ở kim khi: startAngle + (i + 0.5) * arc + currentRotation ≈ pointerAngle (mod 2π)
+            
+            let currentSlotIndex = -1;
+            for (let i = 0; i < numPrizes; i++) {
+                const slotMiddleAngle = startAngle + (i + 0.5) * arc;
+                // Góc tuyệt đối của giữa ô sau khi xoay
+                const absoluteAngle = slotMiddleAngle + currentRotation;
+                // Normalize về [0, 2π]
+                const normalized = ((absoluteAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                const pointerNormalized = ((pointerAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                
+                // Kiểm tra xem ô này có gần kim không (trong phạm vi arc/2)
+                let diff = Math.abs(normalized - pointerNormalized);
+                if (diff > Math.PI) diff = 2 * Math.PI - diff; // Xử lý wrap-around
+                
+                if (diff < arc / 2) {
+                    currentSlotIndex = i;
+                    break;
+                }
+            }
+            
+            for (let i = 0; i < numPrizes; i++) {
+                const angle1 = startAngle + i * arc;
+                const angle2 = startAngle + (i + 1) * arc;
+                
+                let fillColor = colors[i % colors.length];
+                
+                // Nếu đang quay và là ô hiện tại - làm sáng màu gốc lên
+                if (isSpinning && i === currentSlotIndex) {
+                    // Chuyển hex sang RGB rồi làm sáng
+                    const hex = fillColor.replace('#', '');
+                    let r = parseInt(hex.substr(0, 2), 16);
+                    let g = parseInt(hex.substr(2, 2), 16);
+                    let b = parseInt(hex.substr(4, 2), 16);
+                    
+                    // Tăng độ sáng bằng cách nhân lên (giữ màu đậm hơn)
+                    const brightMultiplier = 1.5; // Sáng gấp 1.5 lần
+                    r = Math.min(255, Math.round(r * brightMultiplier));
+                    g = Math.min(255, Math.round(g * brightMultiplier));
+                    b = Math.min(255, Math.round(b * brightMultiplier));
+                    
+                    fillColor = `rgb(${r}, ${g}, ${b})`;
+                }
+                
+                ctx.beginPath();
+                ctx.fillStyle = fillColor;
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, 240, angle1, angle2);
+                ctx.lineTo(0, 0);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Hiệu ứng spotlight khi đang quay - chỉ làm tối các ô khác
+                if (isSpinning && i !== currentSlotIndex) {
+                    // Các ô khác - chìm xuống
+                    ctx.beginPath();
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, 240, angle1, angle2);
+                    ctx.lineTo(0, 0);
+                    ctx.fill();
+                }
+                
+                ctx.save();
+                ctx.rotate(startAngle + (i + 0.5) * arc);
+                
+                // Đổi màu chữ: Đen khi ô đang sáng, Trắng khi bình thường hoặc chìm
+                if (isSpinning && i === currentSlotIndex) {
+                    ctx.fillStyle = '#000'; // Chữ đen khi ô sáng
+                } else {
+                    ctx.fillStyle = '#fff'; // Chữ trắng bình thường
+                }
+                
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(prizes[i], 150, 10);
+                ctx.restore();
+            }
+            
+            ctx.restore();
+            
+            // Vẽ hiệu ứng ánh sáng LED chạy quanh vòng
+            drawLights();
+        }
+        
+        function drawLights() {
+            const numLights = 24; // Số lượng đèn LED
+            const radius = 250; // Bán kính vòng sáng
+            
+            for (let i = 0; i < numLights; i++) {
+                const angle = (i / numLights) * Math.PI * 2;
+                const x = 250 + Math.cos(angle) * radius;
+                const y = 250 + Math.sin(angle) * radius;
+                
+                // Tạo hiệu ứng chạy bằng cách thay đổi độ sáng theo lightOffset
+                const brightness = Math.abs(Math.sin((i + lightOffset) * 0.5));
+                
+                // Gradient cho mỗi đèn
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, 8);
+                gradient.addColorStop(0, `rgba(255, 215, 0, ${brightness})`);
+                gradient.addColorStop(0.5, `rgba(255, 193, 7, ${brightness * 0.7})`);
+                gradient.addColorStop(1, `rgba(255, 152, 0, 0)`);
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Vẽ viền sáng
+                if (brightness > 0.7) {
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${brightness})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+            
+            // Tăng offset để tạo hiệu ứng chạy
+            lightOffset += 0.15;
+        }
+
+        function spinWheel(campaignId) {
+            if (isSpinning || currentSpinsLeft <= 0) return;
+            
+            isSpinning = true;
+            spinButton.disabled = true;
+            
+            $.ajax({
+                url: '@Url.Action("SpinLuckyWheel", "Promotion")',
+                method: 'POST',
+                data: { 
+                    campaignId: campaignId,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const wonIndex = response.wonIndex || 0;
+                        const prizes = campaignVouchers[campaignId] || [];
+                        const numPrizes = prizes.length;
+                        const arc = (2 * Math.PI) / numPrizes;
+                        
+                        const spins = 5;
+                        
+                        // Kim ở -90° (12h). Ô wonIndex có giữa ở: -90° + wonIndex * arc
+                        const pointerAngle = -Math.PI / 2;
+                        const middleOfWonSlot = pointerAngle + wonIndex * arc;
+                        
+                        // Xoay để giữa ô wonIndex về vị trí kim
+                        // Ta cần: middleOfWonSlot + targetRotation = pointerAngle (mod 2π)
+                        // => targetRotation = pointerAngle - middleOfWonSlot + 5 vòng
+                        const targetRotation = currentRotation + (spins * 2 * Math.PI) + (pointerAngle - middleOfWonSlot);
+                        
+                        animateSpin(campaignId, targetRotation, () => {
+                            currentSpinsLeft--;
+                            updateSpinsBadge();
+                            
+                            // Ẩn modal vòng quay
+                            const wheelModal = bootstrap.Modal.getInstance(document.getElementById('wheelModal'));
+                            wheelModal.hide();
+                            
+                            // Hiển thị kết quả trong modal riêng
+                            setTimeout(() => {
+                                const modalBody = document.querySelector('#resultModal .card-body');
+                                
+                                // Thay đổi nội dung dựa trên isLucky
+                                if (response.isLucky) {
+                                    // Trúng ô "Chúc may mắn" - không có thưởng
+                                    modalBody.innerHTML = `
+                                        <button type="button" class="btn-close position-absolute top-0 end-0 m-3 btn-close-white" data-bs-dismiss="modal"></button>
+                                        <div class="mb-3">
+                                            <i class="bi bi-emoji-smile" style="font-size: 80px; color: #ffc107; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+                                        </div>
+                                        <h2 class="fw-bold mb-4">${response.voucherCode}</h2>
+                                        <div class="bg-white bg-opacity-25 text-white p-4 rounded-4 mb-4">
+                                            <h5 class="mb-0">${response.voucherDiscount}</h5>
+                                        </div>
+                                        <p class="mb-4 opacity-75 fs-6">
+                                            ${currentSpinsLeft > 0 
+                                                ? 'Bạn còn ' + currentSpinsLeft + ' lượt quay, thử lại nhé!' 
+                                                : 'Hẹn gặp lại bạn trong chiến dịch tiếp theo!'}
+                                        </p>
+                                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                            <button type="button" class="btn btn-light btn-lg rounded-pill px-4" data-bs-dismiss="modal">
+                                                <i class="bi bi-x-circle me-2"></i>Đóng
+                                            </button>
+                                            <a href="/Product/Index" class="btn btn-warning btn-lg rounded-pill px-4">
+                                                <i class="bi bi-bag-check me-2"></i>Xem sản phẩm
+                                            </a>
+                                        </div>
+                                    `;
+                                } else {
+                                    // Trúng voucher thật
+                                    modalBody.innerHTML = `
+                                        <button type="button" class="btn-close position-absolute top-0 end-0 m-3 btn-close-white" data-bs-dismiss="modal"></button>
+                                        <div class="mb-3">
+                                            <i class="bi bi-trophy-fill" style="font-size: 80px; color: #ffd700; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));"></i>
+                                        </div>
+                                        <h2 class="fw-bold mb-4">🎉 Chúc Mừng Bạn! 🎉</h2>
+                                        <div class="bg-white text-dark p-4 rounded-4 mb-4 shadow">
+                                            <h4 class="fw-bold text-warning mb-2">${response.voucherCode}</h4>
+                                            <h5 class="mb-0 text-success">${response.voucherDiscount}</h5>
+                                        </div>
+                                        <p class="mb-4 opacity-75 fs-5">Voucher đã được lưu vào tài khoản của bạn</p>
+                                        <div class="d-flex gap-2 justify-content-center flex-wrap">
+                                            <a href="/Promotion/MyVouchers" class="btn btn-light btn-lg rounded-pill px-4">
+                                                <i class="bi bi-ticket-perforated me-2"></i>Xem voucher
+                                            </a>
+                                            <a href="/Product/Index" class="btn btn-warning btn-lg rounded-pill px-4">
+                                                <i class="bi bi-bag-check me-2"></i>Mua sắm ngay
+                                            </a>
+                                        </div>
+                                    `;
+                                }
+                                
+                                const resultModal = new bootstrap.Modal(document.getElementById('resultModal'));
+                                resultModal.show();
+                                
+                                // Bắn pháo hoa khi modal hiển thị
+                                setTimeout(() => {
+                                    fireConfetti(response.isLucky);
+                                }, 300);
+                                
+                                // Reload trang sau khi đóng modal kết quả để cập nhật số lượt quay
+                                document.getElementById('resultModal').addEventListener('hidden.bs.modal', function () {
+                                    location.reload();
+                                }, { once: true });
+                            }, 500);
+                            
+                            spinButton.disabled = currentSpinsLeft <= 0;
+                            isSpinning = false;
+                        });
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra!');
+                        isSpinning = false;
+                        spinButton.disabled = false;
+                    }
+                },
+                error: function() {
+                    alert('Lỗi kết nối!');
+                    isSpinning = false;
+                    spinButton.disabled = false;
+                }
+            });
+        }
+
+        function animateSpin(campaignId, targetRotation, callback) {
+            const duration = 4000;
+            const startRotation = currentRotation;
+            const startTime = Date.now();
+            const prizes = campaignVouchers[campaignId] || [];
+            const numPrizes = prizes.length;
+            const arc = (2 * Math.PI) / numPrizes;
+            
+            lastTickAngle = Math.floor(currentRotation / arc); // Reset tick counter
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
+                
+                // Phát âm thanh tick khi qua mỗi ô (chỉ khi đang quay nhanh)
+                const currentTickAngle = Math.floor(currentRotation / arc);
+                if (currentTickAngle !== lastTickAngle && progress < 0.9) {
+                    playTickSound();
+                    lastTickAngle = currentTickAngle;
+                }
+                
+                drawWheel(campaignId);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentRotation = targetRotation;
+                    while (currentRotation < 0) currentRotation += 2 * Math.PI;
+                    while (currentRotation >= 2 * Math.PI) currentRotation -= 2 * Math.PI;
+                    
+                    drawWheel(campaignId);
+                    playWinSound(); // Phát âm thanh chiến thắng
+                    callback();
+                }
+            }
+            
+            animate();
+        }
+    </script>
+}
+
+@Html.AntiForgeryToken()

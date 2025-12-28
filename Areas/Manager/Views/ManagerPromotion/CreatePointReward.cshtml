@@ -1,0 +1,295 @@
+@{
+    ViewData["Title"] = "Thêm phần quà mới";
+    Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+    var promotionCodes = ViewBag.PromotionCodes as List<Bloomie.Models.Entities.PromotionCode>;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-plus-circle"></i> Thêm phần quà mới</h2>
+        <a asp-action="ManagePointRewards" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form asp-action="CreatePointReward" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="row">
+                    <!-- Cột trái -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-tag"></i> Tên phần quà <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="name" required 
+                                   placeholder="VD: Voucher giảm 50.000đ">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-align-left"></i> Mô tả</label>
+                            <textarea class="form-control" name="description" rows="3" 
+                                      placeholder="Mô tả chi tiết về phần quà"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-coins"></i> Số điểm cần thiết <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="pointsCost" required min="1" value="100"
+                                   placeholder="Nhập số điểm">
+                            <small class="text-muted">User cần bao nhiêu điểm để đổi phần quà này</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-list"></i> Loại voucher <span class="text-danger">*</span></label>
+                            <select class="form-select" id="promotionTypeFilter" required>
+                                <option value="">-- Chọn loại voucher --</option>
+                                <option value="0">📦 Giảm giá đơn hàng</option>
+                                <option value="1">🏷️ Giảm giá sản phẩm</option>
+                                <option value="2">🚚 Miễn phí vận chuyển</option>
+                                <option value="3">🎁 Mua X tặng Y</option>
+                            </select>
+                            <small class="text-muted">Chọn loại voucher để lọc danh sách mã khuyến mãi</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-ticket-alt"></i> Chọn Promotion Code <span class="text-danger">*</span></label>
+                            <select class="form-select" name="promotionCodeId" id="promotionCodeId" required disabled>
+                                <option value="">-- Vui lòng chọn loại voucher trước --</option>
+                            </select>
+                            <small class="text-muted">Chọn mã khuyến mãi cụ thể</small>
+                            
+                            @if (promotionCodes != null && promotionCodes.Any())
+                            {
+                                <!-- Hidden data for JavaScript -->
+                                <div id="promotionCodesData" style="display: none;">
+                                    @foreach (var code in promotionCodes)
+                                    {
+                                        var typeValue = (int)(code.Promotion?.Type ?? 0);
+                                        var displayText = $"{code.Code} - ";
+                                        if (code.IsPercent)
+                                        {
+                                            displayText += $"Giảm {code.Value}%";
+                                        }
+                                        else
+                                        {
+                                            displayText += $"Giảm {code.Value:N0}₫";
+                                        }
+                                        if (code.Promotion != null)
+                                        {
+                                            displayText += $" ({code.Promotion.Name})";
+                                        }
+                                        <div class="promo-code-item" 
+                                             data-id="@code.Id" 
+                                             data-type="@typeValue" 
+                                             data-text="@displayText">
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Cột phải -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-box"></i> Tồn kho</label>
+                            <input type="number" class="form-control" name="stock" min="0" 
+                                   placeholder="Để trống = không giới hạn">
+                            <small class="text-muted">Số lượng phần quà có thể đổi (để trống nếu không giới hạn)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-calendar-alt"></i> Hạn sử dụng (ngày) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="validDays" required min="1" value="30"
+                                   placeholder="30">
+                            <small class="text-muted">Voucher có hiệu lực bao nhiêu ngày sau khi đổi</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-image"></i> Ảnh phần quà</label>
+                            <input type="file" class="form-control" name="imageFile" accept="image/*" id="imageInput"
+                                   onchange="previewImage(event)">
+                            <small class="text-muted">Ảnh minh họa cho phần quà (jpg, png, gif)</small>
+                            
+                            <div class="mt-3" id="imagePreview" style="display: none;">
+                                <img id="preview" src="" alt="Preview" class="img-thumbnail" 
+                                     style="max-width: 100%; max-height: 300px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-danger">*</span> <small class="text-muted">Trường bắt buộc</small>
+                    </div>
+                    <div>
+                        <a asp-action="ManagePointRewards" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Hủy
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Tạo phần quà
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <div class="alert alert-info">
+            <i class="fas fa-lightbulb"></i> <strong>Gợi ý:</strong>
+            <ul class="mb-0 mt-2">
+                <li><strong>Voucher:</strong> Cần chọn Promotion Code để user có thể sử dụng khi checkout</li>
+                <li><strong>Điểm cần thiết:</strong> Nên cân đối với giá trị phần quà (VD: Voucher 50k = 500 điểm)</li>
+                <li><strong>Tồn kho:</strong> Để trống nếu muốn không giới hạn số lượng đổi</li>
+                <li><strong>Hạn sử dụng:</strong> Thời gian voucher có hiệu lực sau khi user đổi</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Filter promotion codes based on selected type
+    document.getElementById('promotionTypeFilter').addEventListener('change', function() {
+        const selectedType = this.value;
+        const promotionCodeSelect = document.getElementById('promotionCodeId');
+        const promoCodesData = document.querySelectorAll('#promotionCodesData .promo-code-item');
+        
+        // Clear current options
+        promotionCodeSelect.innerHTML = '<option value="">-- Chọn mã khuyến mãi --</option>';
+        
+        if (selectedType === '') {
+            promotionCodeSelect.disabled = true;
+            promotionCodeSelect.innerHTML = '<option value="">-- Vui lòng chọn loại voucher trước --</option>';
+            return;
+        }
+        
+        // Enable and populate options
+        promotionCodeSelect.disabled = false;
+        let hasOptions = false;
+        
+        promoCodesData.forEach(function(item) {
+            if (item.dataset.type === selectedType) {
+                const option = document.createElement('option');
+                option.value = item.dataset.id;
+                option.textContent = item.dataset.text;
+                promotionCodeSelect.appendChild(option);
+                hasOptions = true;
+            }
+        });
+        
+        if (!hasOptions) {
+            promotionCodeSelect.innerHTML = '<option value="">-- Không có mã khuyến mãi nào cho loại này --</option>';
+            promotionCodeSelect.disabled = true;
+        }
+    });
+</script>
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --secondary-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 1rem !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #0891b2; 
+        border-color: #0891b2; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .alert-info {
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-color);
+        background-color: var(--background-light);
+        color: #164e63;
+    }
+
+    .img-thumbnail {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+    }
+</style>

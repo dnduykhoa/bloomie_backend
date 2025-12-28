@@ -1,0 +1,230 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Chi tiết phiếu nhập kho";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-file-alt text-primary me-2"></i> Chi tiết phiếu nhập kho
+                </h2>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Thông tin phiếu nhập -->
+                <div class="col-lg-12">
+                    <!-- Thông tin chung -->
+                    <div class="card mb-4 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin phiếu nhập</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Nhà cung cấp</label>
+                                    <div class="fw-bold">@Model.Supplier</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Ngày nhập</label>
+                                    <div class="fw-bold">@Model.OrderDate</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="text-muted small">Ghi chú</label>
+                                    <div>@(Model.Note ?? "Không có ghi chú")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách sản phẩm -->
+                    <div class="card mb-4 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-box-open text-primary me-2"></i> Danh sách mặt hàng nhập kho</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 80px;">STT</th>
+                                            <th style="width: 200px;">Loại hoa</th>
+                                            <th>Biến thể hoa</th>
+                                            <th class="text-center" style="width: 120px;">Số lượng</th>
+                                            <th class="text-end" style="width: 150px;">Đơn giá</th>
+                                            <th class="text-end" style="width: 150px;">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ 
+                                            int index = 1;
+                                            decimal total = 0;
+                                        }
+                                        @foreach (var d in Model.Details)
+                                        {
+                                            var lineTotal = d.Quantity * d.UnitPrice;
+                                            total += lineTotal;
+                                            <tr>
+                                                <td class="text-center">@index</td>
+                                                <td>@(d.FlowerType ?? "N/A")</td>
+                                                <td>
+                                                    <div class="fw-bold">@d.Name</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark">@d.Quantity</span>
+                                                </td>
+                                                <td class="text-end">@d.UnitPrice.ToString("N0")₫</td>
+                                                <td class="text-end fw-bold text-success">@lineTotal.ToString("N0")₫</td>
+                                            </tr>
+                                            index++;
+                                        }
+                                    </tbody>
+                                    <tfoot class="bg-light">
+                                        <tr>
+                                            <td colspan="5" class="text-end fw-bold">Tổng cộng:</td>
+                                            <td class="text-end fw-bold text-danger" style="font-size: 1.1rem;">
+                                                @total.ToString("N0")₫
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+
+    h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        margin-top: 20px !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f9fafb !important;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .table { 
+        background-color: #ffffff; 
+        border-radius: 8px; 
+        font-size: 0.9rem; 
+    }
+    
+    .table th, .table td { 
+        border-color: #e5e7eb; 
+        vertical-align: middle; 
+        padding: 12px; 
+    }
+    
+    .table thead th { 
+        background-color: #f9fafb; 
+        color: var(--text-dark); 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        font-size: 0.8rem; 
+    }
+    
+    .table-hover tbody tr:hover { 
+        background-color: #f1f5f9; 
+    }
+
+    .table tfoot {
+        background-color: #f9fafb;
+        font-size: 1rem;
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .text-success {
+        color: var(--success-color) !important;
+    }
+
+    .text-danger {
+        color: var(--danger-color) !important;
+    }
+</style>

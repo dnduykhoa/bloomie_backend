@@ -1,0 +1,337 @@
+@using Bloomie.Areas.Staff.Models;
+
+@{
+    ViewData["Title"] = "Bảng Điều Khiển Nhân Viên";
+    Layout = "~/Areas/Staff/Views/Shared/_StaffLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Tiêu đề chính -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-tachometer-alt text-primary me-2"></i> Bảng Điều Khiển Nhân Viên
+                </h2>
+                <span class="badge bg-primary text-white p-2">
+                    <i class="fas fa-calendar me-2"></i> @DateTime.Now.ToString("dd/MM/yyyy HH:mm")
+                </span>
+            </div>
+
+            <!-- Thẻ tóm tắt -->
+            <div class="row mb-4 g-3">
+                <!-- Đơn Hàng Đang Chờ -->
+                <div class="col-md-6 col-sm-12 mb-3">
+                    <div class="stat-card p-3 text-center">
+                        <i class="bi bi-cart-check text-primary" style="font-size: 1.5rem;"></i>
+                        <h5 class="card-title mt-2">Đơn Hàng Đang Chờ</h5>
+                        <h3 class="fw-bold text-primary">@ViewData["SoLuongDonHangCho"]</h3>
+                        <a href="@Url.Action("Index", "StaffOrder")" class="btn btn-sm btn-outline-primary">Xem Đơn Hàng</a>
+                    </div>
+                </div>
+                <!-- Báo Cáo Chưa Giải Quyết -->
+                <div class="col-md-6 col-sm-12 mb-3">
+                    <div class="stat-card p-3 text-center">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                        <h5 class="card-title mt-2">Báo Cáo Chưa Giải Quyết</h5>
+                        <h3 class="fw-bold text-warning">@ViewData["SoLuongBaoCaoChuaGiaiQuyet"]</h3>
+                        <a href="@Url.Action("Index", "StaffRating")" class="btn btn-sm btn-outline-warning">Xem Đánh Giá</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Đơn hàng gần đây -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Đơn Hàng Gần Đây</h5>
+                    @{
+                        var donHangGanDay = ViewData["DonHangGanDay"] as List<OrderSummary>;
+                        if (donHangGanDay != null && donHangGanDay.Count > 0)
+                        {
+                            <p class="text-muted">Tìm thấy @donHangGanDay.Count đơn hàng gần đây.</p>
+                            <table class="table table-bordered table-hover mt-3">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th>Mã Đơn Hàng</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Ngày Đặt</th>
+                                        <th>Tổng Giá</th>
+                                        <th>Trạng Thái</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var donHang in donHangGanDay)
+                                    {
+                                        var statusBadge = donHang.OrderStatus switch
+                                        {
+                                            "Chờ xác nhận" => "bg-warning text-dark",
+                                            "Đã xác nhận" => "bg-info",
+                                            "Đang giao" => "bg-primary",
+                                            "Hoàn thành" => "bg-success",
+                                            "Đã hủy" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                        <tr>
+                                            <td>@donHang.Id</td>
+                                            <td>@donHang.TenNguoiDung</td>
+                                            <td>@donHang.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@donHang.TotalPrice.ToString("#,##0") VNĐ</td>
+                                            <td>
+                                                <span class="badge @statusBadge">@donHang.OrderStatus</span>
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("Details", "StaffOrder", new { id = donHang.Id })" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> Chi Tiết
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-3">Không có đơn hàng gần đây.</p>
+                        }
+                    }
+                </div>
+            </div>
+
+            <!-- Đánh giá gần đây -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Đánh Giá Gần Đây</h5>
+                    @{
+                        var danhGiaGanDay = ViewData["DanhGiaGanDay"] as List<RatingSummary>;
+                        if (danhGiaGanDay != null && danhGiaGanDay.Count > 0)
+                        {
+                            <p class="text-muted">Tìm thấy @danhGiaGanDay.Count đánh giá gần đây.</p>
+                            <table class="table table-bordered table-hover mt-3">
+                                <thead class="bg-primary text-white">
+                                    <tr>
+                                        <th>Mã Đánh Giá</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Sản Phẩm</th>
+                                        <th>Đánh Giá</th>
+                                        <th>Ngày Đánh Giá</th>
+                                        <th>Hiển Thị</th>
+                                        <th>Hành Động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var danhGia in danhGiaGanDay)
+                                    {
+                                        <tr>
+                                            <td>@danhGia.Id</td>
+                                            <td>@danhGia.TenNguoiDung</td>
+                                            <td>@danhGia.TenSanPham</td>
+                                            <td>
+                                                <span class="text-warning">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        if (i <= danhGia.GiaTriDanhGia)
+                                                        {
+                                                            <i class="fas fa-star me-1"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="far fa-star me-1"></i>
+                                                        }
+                                                    }
+                                                </span>
+                                            </td>
+                                            <td>@danhGia.ReviewDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>
+                                                <span class="badge @(danhGia.IsVisible ? "bg-success" : "bg-danger")">
+                                                    @(danhGia.IsVisible ? "Hiển Thị" : "Ẩn")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="@Url.Action("Index", "StaffRating")" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-gear"></i> Quản Lý
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <p class="text-muted mt-3">Không có đánh giá gần đây.</p>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #4b5563;
+        --secondary-color: #9ca3af;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+
+    h2, h4, h5 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+    }
+
+    h4 {
+        font-size: 1.25rem;
+    }
+
+    h5 {
+        font-size: 1.1rem;
+    }
+
+    .container-fluid {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+    }
+
+    .card {
+        width: 100% !important;
+        max-width: none !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #374151;
+            border-color: #374151;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+    .btn-outline-primary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+    .btn-outline-warning {
+        border-color: #ffc107;
+        color: #ffc107;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .stat-card {
+        border-radius: 8px;
+        background-color: #ffffff;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+    }
+
+        .stat-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 6px rgba(75, 85, 99, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .stat-card h3 {
+            font-size: 1.25rem;
+            margin: 0;
+        }
+
+        .stat-card h5 {
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .stat-card .btn {
+            font-size: 0.8rem;
+            padding: 4px 8px;
+        }
+
+    .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .table {
+        background-color: #ffffff;
+        border-radius: 8px;
+        table-layout: fixed;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+        .table th, .table td {
+            border-color: #e5e7eb;
+            text-align: center;
+            vertical-align: middle;
+            padding: 10px;
+        }
+
+        .table th {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+</style>

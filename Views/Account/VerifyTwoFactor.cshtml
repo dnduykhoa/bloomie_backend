@@ -1,0 +1,290 @@
+@model dynamic
+@{
+    ViewData["Title"] = "Xác minh Mã 2FA";
+    Layout = "~/Views/Shared/_IdentityLayout.cshtml";
+}
+
+<div class="profile-wrapper">
+    <div class="profile-card">
+        <div class="profile-header text-center">
+            <h2 class="profile-title">Xác minh Mã Xác thực</h2>
+            <p class="profile-subtitle">Nhập mã xác thực hai bước để tiếp tục</p>
+        </div>
+        <div class="profile-content">
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger text-center mb-4">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    @TempData["error"]
+                </div>
+            }
+            @if (TempData["error"] == null)
+            {
+                <form asp-action="VerifyTwoFactor" method="post" class="verification-form">
+                    <div class="form-group mb-4">
+                        <label class="form-label">Nhập mã xác thực đã gửi đến email của bạn:</label>
+                        <div class="input-wrapper">
+                            <input type="text" name="code" class="form-control verification-input" placeholder="Nhập mã xác thực..." maxlength="6" autofocus />
+                            <i class="fas fa-key input-icon"></i>
+                        </div>
+                        @if (ViewBag.Error != null)
+                        {
+                            <span class="text-danger d-block mt-2">@ViewBag.Error</span>
+                        }
+                        @if (ViewBag.Message != null)
+                        {
+                            <p class="text-muted mt-2">@ViewBag.Message</p>
+                        }
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary btn-lg verification-btn">
+                            <i class="fas fa-check mr-2"></i>Xác minh
+                        </button>
+                    </div>
+                </form>
+            }
+            <div class="text-center mt-3">
+                <a asp-action="Index" asp-controller="Account" class="btn btn-secondary btn-sm">Quay lại</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* General Styling (giống trang trước) */
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(rgba(255, 250, 250, 0.8), rgba(255, 182, 193, 0.3)), url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .profile-wrapper {
+        max-width: 600px;
+        margin: 15px;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 95%;
+    }
+
+    .profile-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        transition: transform 0.3s ease;
+    }
+
+    .profile-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-title {
+        font-size: 30px;
+        color: #D0021B;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 8px;
+    }
+
+    .profile-title::after {
+        content: '';
+        width: 40px;
+        height: 3px;
+        background: #D0021B;
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .profile-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-top: 6px;
+    }
+
+    /* Verification Form Styling */
+    .profile-content {
+        padding: 0;
+    }
+
+    .verification-form {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #34495e;
+        font-size: 16px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .verification-input {
+        width: 100%;
+        padding: 12px 12px 12px 45px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background-color: #f9f9f9;
+    }
+
+    .verification-input:focus {
+        border-color: #D0021B;
+        box-shadow: 0 0 0 0.2rem rgba(208, 2, 27, 0.25);
+        background-color: #fff;
+        outline: none;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 16px;
+    }
+
+    .text-danger {
+        font-size: 14px;
+        color: #dc3545 !important;
+    }
+
+    .text-muted {
+        font-size: 14px;
+        color: #6c757d !important;
+    }
+
+    .alert {
+        border: none;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border-left: 4px solid #dc3545;
+    }
+
+    .verification-btn {
+        background-color: #D0021B;
+        border: none;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 8px rgba(208, 2, 27, 0.2);
+        width: 100%;
+    }
+
+    .verification-btn:hover {
+        background-color: #F5A623;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4);
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+        padding: 8px 20px;
+        font-size: 14px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-1px);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .profile-card {
+        animation: fadeIn 0.5s ease;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .profile-wrapper {
+            margin: 10px;
+            padding: 15px;
+        }
+
+        .verification-btn {
+            padding: 14px 20px;
+            font-size: 16px;
+        }
+
+        .profile-title {
+            font-size: 24px;
+        }
+
+        .profile-subtitle {
+            font-size: 14px;
+        }
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+        // Tự động focus vào input khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.querySelector('input[name="code"]');
+            if (input) {
+                input.focus();
+            }
+            
+            // Giới hạn chỉ nhập số
+            input.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Chỉ cho phép số
+                // Bỏ phần tự động submit khi đủ 6 ký tự
+                // if (e.target.value.length === 6) {
+                //     e.target.form.submit();
+                // }
+            });
+        });
+    </script>
+}

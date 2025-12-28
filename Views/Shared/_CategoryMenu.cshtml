@@ -1,0 +1,84 @@
+@using Bloomie.Data
+@using Bloomie.Models.Entities
+@inject ApplicationDbContext db
+@{
+    var topicType = (int)Bloomie.Models.Entities.CategoryType.Topic;
+    var recipientType = (int)Bloomie.Models.Entities.CategoryType.Recipient;
+    var shapeType = (int)Bloomie.Models.Entities.CategoryType.Shape;
+    var topics = db.Categories.Where(c => c.Type == topicType).ToList();
+    var recipients = db.Categories.Where(c => c.Type == recipientType).ToList();
+    var shapes = db.Categories.Where(c => c.Type == shapeType).ToList();
+    var flowerTypes = db.FlowerTypes.ToList();
+    var colors = db.FlowerVariants.Select(f => f.Color).Distinct().Where(c => !string.IsNullOrEmpty(c)).ToList();
+}
+<ul class="nav nav-left">
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#">Chủ đề</a>
+        <div class="dropdown-menu">
+            @foreach (var cat in topics)
+            {
+                <a class="dropdown-item" href="@Url.Action("Index", "Product", new { categoryId = cat.Id })">@cat.Name</a>
+            }
+        </div>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#">Đối tượng</a>
+        <div class="dropdown-menu">
+            @foreach (var cat in recipients)
+            {
+                <a class="dropdown-item" href="@Url.Action("Index", "Product", new { categoryId = cat.Id })">@cat.Name</a>
+            }
+        </div>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#">Kiểu dáng</a>
+        <div class="dropdown-menu">
+            @foreach (var cat in shapes)
+            {
+                <a class="dropdown-item" href="@Url.Action("Index", "Product", new { categoryId = cat.Id })">@cat.Name</a>
+            }
+        </div>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#">Hoa tươi</a>
+        <div class="dropdown-menu">
+            @foreach (var flower in flowerTypes)
+            {
+                <a class="dropdown-item" href="@Url.Action("Index", "Product", new { flowerTypeId = flower.Id })">@flower.Name</a>
+            }
+        </div>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#">Màu sắc</a>
+        <div class="dropdown-menu">
+            @foreach (var color in colors)
+            {
+                <a class="dropdown-item" href="@Url.Action("Index", "Product", new { color = color })">@color</a>
+            }
+        </div>
+    </li>
+</ul>
+<ul class="nav nav-right">
+    @if (User.Identity?.IsAuthenticated ?? false)
+    {
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("VoucherCampaigns", "Promotion")">
+                <i class="bi bi-gift-fill me-1"></i>Vouchers
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="@Url.Action("Index", "CheckIn")">
+                <i class="bi bi-calendar-check me-1"></i>Điểm danh
+            </a>
+        </li>
+    }
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Index", "Blog")">Blog</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("Contact", "Home")">Liên hệ</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="@Url.Action("About", "Home")">Giới thiệu</a>
+    </li>
+</ul>

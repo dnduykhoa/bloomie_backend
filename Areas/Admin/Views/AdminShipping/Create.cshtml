@@ -1,0 +1,363 @@
+@model Bloomie.Models.Entities.ShippingFee
+@{
+    ViewData["Title"] = "Thêm phí giao hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary me-2"></i> Thêm phí giao hàng mới
+                </h2>
+            </div>
+
+            <!-- Form -->
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-md-8">
+                        <div class="card mb-3 shadow-sm border">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-map-marker-alt text-primary me-2"></i> Thông tin phí ship</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-map"></i> Chọn Phường/Xã
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="wardSelect" class="form-select" required>
+                                        <option value="">-- Chọn phường/xã --</option>
+                                    </select>
+                                    <input type="hidden" asp-for="WardCode" id="wardCode" />
+                                    <input type="hidden" asp-for="WardName" id="wardName" />
+                                    <span asp-validation-for="WardCode" class="text-danger"></span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label asp-for="Fee" class="form-label fw-bold">
+                                        <i class="fas fa-money-bill-wave"></i> Phí giao hàng
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <input asp-for="Fee" class="form-control" type="number" min="0" 
+                                               placeholder="Ví dụ: 20000" required />
+                                        <span class="input-group-text">đ</span>
+                                    </div>
+                                    <span asp-validation-for="Fee" class="text-danger"></span>
+                                    <small class="text-muted">Khuyến nghị: 15,000đ - 50,000đ (nhập bội số 1,000đ)</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input type="checkbox" name="IsActive" value="true" class="form-check-input" id="IsActive" checked />
+                                        <input type="hidden" name="IsActive" value="false" />
+                                        <label for="IsActive" class="form-check-label fw-bold">
+                                            Kích hoạt ngay
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Nếu bật, phí ship sẽ áp dụng ngay khi khách đặt hàng</small>
+                                </div>
+
+                                <div class="mb-0">
+                                    <label asp-for="Notes" class="form-label fw-bold">Ghi chú (tùy chọn)</label>
+                                    <textarea asp-for="Notes" class="form-control" rows="3" 
+                                              placeholder="Ví dụ: Khu vực xa trung tâm, cần thêm 5k phí cầu"></textarea>
+                                    <span asp-validation-for="Notes" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-4">
+                        <div class="card border-info shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Gợi ý phí ship</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="small mb-3 fee-suggestion-list">
+                                    <li>
+                                        <strong>Khu vực trung tâm</strong><br>
+                                        <span class="text-muted">(Bến Nghé, Bến Thành, Nguyễn Thái Bình)</span><br>
+                                        <span class="badge bg-success mt-1">15,000 - 20,000đ</span>
+                                    </li>
+                                    <li>
+                                        <strong>Khu vực gần</strong><br>
+                                        <span class="text-muted">(Tân Thuận Đông, Tân Quy, Tân Phú)</span><br>
+                                        <span class="badge bg-success mt-1">20,000 - 30,000đ</span>
+                                    </li>
+                                    <li>
+                                        <strong>Khu vực xa</strong><br>
+                                        <span class="text-muted">(Long Thạnh Mỹ, Phước Kiển, Trung Chánh)</span><br>
+                                        <span class="badge bg-success mt-1">30,000 - 50,000đ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card border-warning shadow-sm mt-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Lưu ý</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="small mb-0 note-list">
+                                    <li>Mỗi phường/xã chỉ có 1 mức phí duy nhất</li>
+                                    <li>Có thể tạm dừng không giao cho phường/xã nào đó bằng cách tắt "Kích hoạt"</li>
+                                    <li>Miễn phí ship sẽ được quản lý ở <strong>Khuyến mãi</strong>, không nhập ở đây</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between gap-2 mt-4 pt-3 border-top">
+                    <a class="btn btn-secondary" asp-action="Index">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Lưu phí giao hàng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lấy danh sách phường/xã TP.HCM từ API (depth=2 để lấy cả wards)
+    fetch('https://provinces.open-api.vn/api/v2/p/79?depth=2')
+        .then(response => response.json())
+        .then(data => {
+            const wardSelect = document.getElementById('wardSelect');
+            const wards = data.wards;
+
+            wards.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify({
+                    code: ward.code,
+                    name: ward.name
+                });
+                option.textContent = ward.name;
+                wardSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Lỗi khi tải danh sách phường/xã:', error);
+            alert('Không thể tải danh sách phường/xã. Vui lòng thử lại sau.');
+        });
+
+    // Khi chọn phường/xã, cập nhật hidden inputs
+    document.getElementById('wardSelect').addEventListener('change', function() {
+        if (this.value) {
+            const data = JSON.parse(this.value);
+            document.getElementById('wardCode').value = data.code;
+            document.getElementById('wardName').value = data.name;
+        } else {
+            document.getElementById('wardCode').value = '';
+            document.getElementById('wardName').value = '';
+        }
+    });
+});
+</script>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --info-color: #3b82f6;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+    }
+
+    .btn-primary, .btn-secondary {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+    }
+
+    .alert-danger {
+        border-radius: 6px;
+        border-left: 4px solid #ef4444;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .input-group-text {
+        background-color: #f9fafb;
+        border-color: #d1d5db;
+        color: var(--text-dark);
+        font-weight: 600;
+    }
+
+    .form-check-input {
+        width: 2.5rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        margin-left: 0.5rem;
+    }
+
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+        border-radius: 12px;
+    }
+
+    .fee-suggestion-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .fee-suggestion-list li {
+        padding: 12px;
+        margin-bottom: 12px;
+        background-color: #f9fafb;
+        border-radius: 6px;
+        border-left: 3px solid var(--success-color);
+    }
+
+    .fee-suggestion-list li:last-child {
+        margin-bottom: 0;
+    }
+
+    .note-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .note-list li {
+        padding: 8px 0;
+        padding-left: 20px;
+        position: relative;
+    }
+
+    .note-list li:before {
+        content: "•";
+        position: absolute;
+        left: 5px;
+        color: var(--warning-color);
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .border-info {
+        border-left: 3px solid var(--info-color) !important;
+    }
+
+    .border-warning {
+        border-left: 3px solid var(--warning-color) !important;
+    }
+
+    .bg-info {
+        background-color: var(--info-color) !important;
+    }
+
+    .bg-warning {
+        background-color: var(--warning-color) !important;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .border-top {
+        border-top: 1px solid #e5e7eb !important;
+    }
+</style>
+}

@@ -1,0 +1,227 @@
+@{
+    ViewData["Title"] = "Nhận diện hoa AI";
+}
+
+<style>
+    .detection-hero {
+        background: linear-gradient(135deg, #C41E3A 0%, #E63946 100%);
+        color: white;
+        padding: 60px 20px;
+        text-align: center;
+        border-radius: 20px;
+        margin-bottom: 40px;
+    }
+    .detection-hero h1 {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .detection-hero p {
+        font-size: 1.3rem;
+        margin-bottom: 30px;
+        opacity: 0.95;
+    }
+    .feature-card {
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+    }
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 8px 25px rgba(196,30,58,0.2);
+    }
+    .feature-icon {
+        font-size: 3rem;
+        color: #C41E3A;
+        margin-bottom: 20px;
+    }
+    .feature-card h3 {
+        font-size: 1.5rem;
+        color: #2B2D42;
+        margin-bottom: 15px;
+    }
+    .feature-card p {
+        color: #8D99AE;
+        font-size: 1rem;
+    }
+    .cta-button {
+        background: white;
+        color: #C41E3A;
+        border: none;
+        padding: 18px 50px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .cta-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        background: #f5f5f5;
+    }
+    .how-it-works {
+        background: #f8f9fa;
+        padding: 60px 20px;
+        border-radius: 20px;
+        margin-top: 60px;
+    }
+    .how-it-works h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        color: #C41E3A;
+        margin-bottom: 50px;
+    }
+    .step {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    .step-number {
+        background: #C41E3A;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    .step-content h3 {
+        font-size: 1.5rem;
+        color: #2B2D42;
+        margin-bottom: 10px;
+    }
+    .step-content p {
+        color: #8D99AE;
+        font-size: 1.1rem;
+    }
+</style>
+
+<div class="detection-hero">
+    <h1><i class="bi bi-stars"></i> Nhận diện hoa bằng AI</h1>
+    <p>Công nghệ trí tuệ nhân tạo giúp bạn nhận diện loại hoa, số lượng và ước tính giá trị chỉ qua một bức ảnh</p>
+    <button class="cta-button" onclick="openFlowerDetectionModal()">
+        <i class="fas fa-camera"></i>
+        Bắt đầu nhận diện ngay
+    </button>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-camera-retro"></i>
+                </div>
+                <h3>Chụp ảnh hoặc Tải ảnh</h3>
+                <p>Sử dụng camera của bạn hoặc tải ảnh có sẵn để nhận diện các loài hoa trong bức ảnh</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI phân tích thông minh</h3>
+                <p>Trí tuệ nhân tạo của chúng tôi sẽ phân tích và nhận diện từng loài hoa, đếm số lượng chính xác</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h3>Ước tính giá trị</h3>
+                <p>Hệ thống tự động tính toán giá trị bó hoa dựa trên loại hoa và số lượng phát hiện được</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="how-it-works">
+    <div class="container">
+        <h2>Cách sử dụng</h2>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>Mở camera hoặc chọn ảnh</h3>
+                <p>Nhấn nút "Bắt đầu nhận diện" và chọn chế độ Live (quét liên tục), Chụp ảnh hoặc Tải ảnh từ thiết bị</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>Hướng camera vào bó hoa</h3>
+                <p>Đảm bảo bó hoa nằm trong khung hình, ánh sáng đủ sáng để AI có thể nhận diện chính xác</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>Xem kết quả chi tiết</h3>
+                <p>AI sẽ hiển thị danh sách các loài hoa, số lượng từng loại và giá trị ước tính của bó hoa</p>
+            </div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h3>Điều chỉnh và đặt hàng</h3>
+                <p>Bạn có thể điều chỉnh số lượng, chọn gói hoa (cơ bản/cao cấp) rồi thêm vào giỏ hàng</p>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 50px;">
+            <button class="cta-button" onclick="openFlowerDetectionModal()">
+                <i class="fas fa-magic"></i>
+                Thử ngay miễn phí
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="margin-top: 60px; margin-bottom: 60px;">
+    <div style="background: linear-gradient(135deg, rgba(196,30,58,0.1), rgba(244,162,97,0.1)); border-radius: 20px; padding: 50px; text-align: center;">
+        <h2 style="color: #C41E3A; margin-bottom: 20px;">
+            <i class="fas fa-lightbulb"></i> Mẹo sử dụng hiệu quả
+        </h2>
+        <div class="row" style="margin-top: 40px;">
+            <div class="col-md-3">
+                <i class="fas fa-sun" style="font-size: 2.5rem; color: #F4A261; margin-bottom: 15px;"></i>
+                <h4>Ánh sáng tốt</h4>
+                <p style="color: #666;">Chụp ở nơi có ánh sáng đủ</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fas fa-expand" style="font-size: 2.5rem; color: #F4A261; margin-bottom: 15px;"></i>
+                <h4>Toàn bộ bó hoa</h4>
+                <p style="color: #666;">Đảm bảo hoa nằm gọn trong khung</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fas fa-focus" style="font-size: 2.5rem; color: #F4A261; margin-bottom: 15px;"></i>
+                <h4>Lấy nét rõ ràng</h4>
+                <p style="color: #666;">Ảnh không bị mờ hoặc nhòe</p>
+            </div>
+            <div class="col-md-3">
+                <i class="fas fa-angle-up" style="font-size: 2.5rem; color: #F4A261; margin-bottom: 15px;"></i>
+                <h4>Góc chụp phù hợp</h4>
+                <p style="color: #666;">Chụp từ phía trên hoặc ngang</p>
+            </div>
+        </div>
+    </div>
+</div>

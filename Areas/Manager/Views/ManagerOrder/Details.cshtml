@@ -1,0 +1,1677 @@
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Bloomie.Data.ApplicationUser> UserManager
+@model Bloomie.Models.Entities.Order
+@{
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.OrderId}";
+    var isModal = Context.Request.Query["modal"].ToString() == "true";
+    Layout = isModal ? null : "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+}
+
+@if (isModal)
+{
+    @:<!DOCTYPE html>
+    @:<html lang="vi">
+    @:<head>
+        @:<meta charset="utf-8" />
+        @:<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>@ViewData["Title"]</title>
+        @:<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+        @:<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        @:<style>
+            @:body {
+                @:background: #f8f9fa;
+                @:padding: 20px;
+            @:}
+        @:</style>
+    @:</head>
+    @:<body>
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-receipt text-primary me-2"></i> Chi tiết đơn hàng #@Model.OrderId
+                </h2>
+                @if (!isModal)
+                {
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                }
+            </div>
+
+            <!-- Alerts -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle"></i> @TempData["success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <i class="fas fa-exclamation-circle"></i> @TempData["error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Cột trái: Thông tin đơn hàng -->
+                <div class="col-lg-8">
+                    <!-- Thông tin chung -->
+                    <div class="card mb-3 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i> Thông tin đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Mã đơn hàng</label>
+                                    <div class="fw-bold">#@Model.OrderId</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Ngày đặt hàng</label>
+                                    <div class="fw-bold">@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Trạng thái đơn hàng</label>
+                                    <div id="orderStatusBadge">
+                                        @if (Model.Status == "Chờ xác nhận")
+                                        {
+                                            <span class="badge bg-info"><i class="fas fa-clock"></i> @Model.Status</span>
+                                        }
+                                        else if (Model.Status == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> @Model.Status</span>
+                                        }
+                                        else if (Model.Status == "Đã hủy")
+                                        {
+                                            <span class="badge bg-secondary"><i class="fas fa-ban"></i> @Model.Status</span>
+                                        }
+                                        else if (Model.Status == "Đang giao")
+                                        {
+                                            <span class="badge bg-primary"><i class="fas fa-shipping-fast"></i> @Model.Status</span>
+                                        }
+                                        else if (Model.Status == "Đã giao")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-truck"></i> @Model.Status</span>
+                                        }
+                                        else if (Model.Status == "Hoàn thành")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check-double"></i> @Model.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@Model.Status</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Trạng thái thanh toán</label>
+                                    <div id="paymentStatusBadge">
+                                        @if (Model.PaymentStatus == "Chờ thanh toán")
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> @Model.PaymentStatus</span>
+                                        }
+                                        else if (Model.PaymentStatus == "Đã thanh toán")
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> @Model.PaymentStatus</span>
+                                        }
+                                        else if (Model.PaymentStatus == "Thanh toán thất bại")
+                                        {
+                                            <span class="badge bg-danger"><i class="fas fa-times-circle"></i> @Model.PaymentStatus</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@Model.PaymentStatus</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Khách hàng</label>
+                                    <div class="fw-bold">
+                                        @{
+                                            var displayName = Model.UserId ?? "N/A";
+                                            if (!string.IsNullOrEmpty(Model.UserId))
+                                            {
+                                                var user = await UserManager.FindByIdAsync(Model.UserId);
+                                                displayName = user?.UserName ?? Model.UserId;
+                                            }
+                                        }
+                                        <i class="fas fa-user me-1 text-primary"></i>@displayName
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Tổng tiền</label>
+                                    <div class="fw-bold text-danger" style="font-size: 1.2rem;">
+                                        @Model.TotalAmount.ToString("N0")đ
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Danh sách sản phẩm -->
+                    <div class="card mb-3 shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-box-open text-primary me-2"></i> Sản phẩm trong đơn hàng</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 80px;">STT</th>
+                                            <th>Tên sản phẩm</th>
+                                            <th class="text-center" style="width: 120px;">Số lượng</th>
+                                            <th class="text-end" style="width: 150px;">Đơn giá</th>
+                                            <th class="text-end" style="width: 150px;">Thành tiền</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{ int index = 1; }
+                                        @foreach (var detail in Model.OrderDetails)
+                                        {
+                                            <tr>
+                                                <td class="text-center">@index</td>
+                                                <td>
+                                                    <div class="fw-bold">@detail.Product?.Name</div>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-light text-dark">@detail.Quantity</span>
+                                                </td>
+                                                <td class="text-end">@detail.UnitPrice.ToString("N0")đ</td>
+                                                <td class="text-end fw-bold">@((detail.UnitPrice * detail.Quantity).ToString("N0"))đ</td>
+                                            </tr>
+                                            index++;
+                                        }
+                                    </tbody>
+                                    <tfoot class="bg-light">
+                                        <tr>
+                                            <td colspan="4" class="text-end fw-bold">Tổng cộng:</td>
+                                            <td class="text-end fw-bold text-danger" style="font-size: 1.1rem;">
+                                                @{
+                                                    var productTotal = Model.OrderDetails?.Sum(d => d.UnitPrice * d.Quantity) ?? 0;
+                                                }
+                                                @productTotal.ToString("N0")đ
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="card shadow-sm border">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-cogs text-primary me-2"></i> Thao tác</h5>
+                        </div>
+                        <div class="card-body">
+                            @if (Model.Status == "Chờ xác nhận")
+                            {
+                                @* Chỉ cho phép xác nhận nếu đã thanh toán hoặc là COD *@
+                                @if (Model.PaymentStatus == "Đã thanh toán" || Model.PaymentMethod == "COD")
+                                {
+                                    <form asp-action="ConfirmOrder" asp-route-id="@Model.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận đơn hàng này?')">
+                                            <i class="fas fa-check-circle me-1"></i> Xác nhận đơn hàng
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    @* Đơn hàng chưa thanh toán (Momo/VNPAY) *@
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                        <strong>Chưa thể xác nhận đơn hàng!</strong><br/>
+                                        Đơn hàng đang ở trạng thái: <span class="badge bg-warning">@Model.PaymentStatus</span><br/>
+                                        Vui lòng đợi khách hàng thanh toán hoặc chuyển sang COD.
+                                    </div>
+                                    <a href="@Url.Action("PendingPayments", "ManagerOrder")" class="btn btn-warning">
+                                        <i class="fas fa-clock me-1"></i> Quản lý thanh toán
+                                    </a>
+                                }
+                                <button type="button" class="btn btn-danger" onclick="cancelOrder(@Model.Id)">
+                                    <i class="fas fa-times-circle me-1"></i> Hủy đơn hàng
+                                </button>
+                            }
+                            
+                            @if (Model.Status == "Đã xác nhận")
+                            {
+                                @if (Model.ShipperStatus == "Đã xác nhận")
+                                {
+                                    <div class="alert alert-success mb-0">
+                                        <i class="fas fa-check-circle me-1"></i> 
+                                        Shipper đã xác nhận nhận hoa. Đơn hàng sẽ được giao sớm.
+                                    </div>
+                                }
+                                else if (Model.ShipperStatus == "Đã phân công")
+                                {
+                                    <div class="alert alert-warning mb-3">
+                                        <i class="fas fa-clock me-1"></i> 
+                                        Đơn hàng đã được xác nhận và đang chờ shipper nhận đơn hàng để giao (còn lại <span id="timeoutCountdown"></span>).
+                                    </div>
+                                    <button type="button" class="btn btn-danger" onclick="cancelOrder(@Model.Id)">
+                                        <i class="fas fa-times-circle me-1"></i> Hủy đơn hàng
+                                    </button>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-info mb-3">
+                                        <i class="fas fa-info-circle me-1"></i> 
+                                        Đơn hàng đã được xác nhận và đang chờ phân công shipper.
+                                    </div>
+                                    <button type="button" class="btn btn-danger" onclick="cancelOrder(@Model.Id)">
+                                        <i class="fas fa-times-circle me-1"></i> Hủy đơn hàng
+                                    </button>
+                                }
+                            }
+
+                            @if (Model.Status == "Đang giao")
+                            {
+                                <div class="alert alert-primary mb-3">
+                                    <i class="fas fa-shipping-fast me-1"></i> 
+                                    <strong>Đơn hàng đang được giao!</strong><br/>
+                                    Shipper đang trên đường giao hàng đến khách. Vui lòng đợi shipper xác nhận giao thành công.
+                                </div>
+                            }
+                            
+                            @if (Model.Status == "Đã giao")
+                            {
+                                <div class="alert alert-success mb-3">
+                                    <i class="fas fa-check-circle me-1"></i> 
+                                    <strong>Đơn hàng đã được giao thành công!</strong><br/>
+                                    Đang chờ khách hàng xác nhận đã nhận hàng. Sau 2 ngày sẽ tự động chuyển sang "Hoàn thành".
+                                </div>
+                            }
+                            
+                            @if (Model.Status != "Hoàn thành" && Model.Status != "Đã hủy" && Model.Status != "Đã giao")
+                            {
+                                <hr class="my-3">
+                                <p class="text-muted mb-2 small">
+                                    <i class="fas fa-info-circle me-1"></i>Cập nhật trạng thái thủ công:
+                                </p>
+                                <form asp-action="UpdateStatus" asp-route-id="@Model.Id" method="post" class="d-flex align-items-center gap-2">
+                                    @Html.AntiForgeryToken()
+                                    <select name="newStatus" class="form-select" style="max-width: 250px;" required>
+                                        <option value="">-- Chọn trạng thái --</option>
+                                        <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                        <option value="Đã xác nhận">Đã xác nhận</option>
+                                        <option value="Đang giao">Đang giao</option>
+                                        <option value="Đã giao">Đã giao</option>
+                                        <option value="Đã hủy">Đã hủy</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-sync-alt me-1"></i> Cập nhật
+                                    </button>
+                                </form>
+                            }
+
+                            @if (Model.Status == "Hoàn thành")
+                            {
+                                <div class="alert alert-success mb-0">
+                                    <i class="fas fa-check-double me-1"></i> Đơn hàng đã hoàn thành thành công!
+                                </div>
+                            }
+
+                            @if (Model.Status == "Đã hủy")
+                            {
+                                <div class="alert alert-secondary mb-0">
+                                    <i class="fas fa-ban me-1"></i> Đơn hàng đã bị hủy.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Thông tin bổ sung -->
+                <div class="col-lg-4">
+                    <!-- Thông tin Shipper -->
+                    @if (!string.IsNullOrEmpty(Model.ShipperId))
+                    {
+                        var shipper = await UserManager.FindByIdAsync(Model.ShipperId);
+                        <div class="card mb-3 shadow-sm border-info" id="shipperCard">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="fas fa-motorcycle me-2"></i> Shipper giao hàng</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <label class="text-muted small">Họ tên</label>
+                                    <div class="fw-bold">
+                                        <i class="fas fa-user-circle me-1 text-info"></i>
+                                        @(shipper?.FullName ?? "N/A")
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-muted small">Email</label>
+                                    <div>@(shipper?.Email ?? "N/A")</div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-muted small">Số điện thoại</label>
+                                    <div class="fw-bold">
+                                        @if (!string.IsNullOrEmpty(shipper?.PhoneNumber))
+                                        {
+                                            <a href="tel:@shipper.PhoneNumber" class="text-decoration-none">
+                                                <i class="fas fa-phone text-success me-1"></i>@shipper.PhoneNumber
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Chưa cập nhật</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="text-muted small">Trạng thái</label>
+                                    <div>
+                                        @if (Model.ShipperStatus == "Đã phân công")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-clock me-1"></i>Chờ xác nhận
+                                            </span>
+                                        }
+                                        else if (Model.ShipperStatus == "Đã xác nhận")
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Đã nhận hoa
+                                            </span>
+                                        }
+                                        else if (Model.ShipperStatus == "Đã từ chối")
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Từ chối
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                @if (Model.AssignedAt != null)
+                                {
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Thời gian phân công</label>
+                                        <div class="small">
+                                            <i class="fas fa-calendar-alt me-1"></i>
+                                            @Model.AssignedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                                        </div>
+                                    </div>
+                                }
+                                @if (Model.ShipperConfirmedAt != null)
+                                {
+                                    <div class="mb-2">
+                                        <label class="text-muted small">Thời gian xác nhận</label>
+                                        <div class="small text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            @Model.ShipperConfirmedAt.Value.ToString("HH:mm:ss dd/MM/yyyy")
+                                        </div>
+                                    </div>
+                                }
+                                
+                                @if (Model.Status == "Đang giao")
+                                {
+                                    <div class="mt-3 pt-3 border-top">
+                                        <label class="text-muted small mb-2 d-block">
+                                            <i class="fas fa-map-marked-alt me-1"></i>Vị trí shipper realtime
+                                        </label>
+                                        <div id="map" style="height: 300px; border-radius: 8px; border: 2px solid #dee2e6;"></div>
+                                        <div class="mt-2 text-muted small">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Vị trí cập nhật tự động mỗi 5 giây
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (Model.Status == "Đã xác nhận" || Model.Status == "Đang giao")
+                    {
+                        <div class="card mb-3 shadow-sm border-warning" id="shipperCard">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Shipper</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Chưa có shipper nào được phân công cho đơn hàng này.
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Thông tin giao hàng -->
+                    <div class="card mb-3 shadow-sm border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i> Thông tin giao hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="text-muted small">Người nhận</label>
+                                <div class="fw-bold">@(Model.ReceiverName ?? "Chưa có thông tin")</div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="text-muted small">Số điện thoại</label>
+                                <div class="fw-bold">@(Model.Phone ?? "Chưa có thông tin")</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Địa chỉ giao hàng</label>
+                                <div>@(Model.ShippingAddress ?? "Chưa có thông tin")</div>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.DeliveryImageUrl))
+                            {
+                                <div class="mt-3 pt-3 border-top">
+                                    <label class="text-muted small mb-2 d-block">Ảnh chứng minh giao hàng</label>
+                                    <div>
+                                        <a href="#" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#imageModal">
+                                            <i class="fas fa-image me-2"></i>Xem ảnh giao hàng
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Tổng quan đơn hàng -->
+                    <div class="card mb-3 shadow-sm border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-dollar-sign me-2"></i> Tổng quan đơn hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Tiền hàng:</span>
+                                <span class="fw-bold">
+                                    @{
+                                        var subtotal = Model.TotalAmount 
+                                            + (Model.PromotionDiscount + Model.VoucherDiscount + Model.ShippingDiscount + Model.PointsDiscount)
+                                            - Model.ShippingFee;
+                                    }
+                                    @subtotal.ToString("N0")₫
+                                </span>
+                            </div>
+                            
+                            @if (Model.ShippingFee > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2" style="background-color: #f0f9ff; padding: 8px; border-radius: 4px;">
+                                    <span style="color: #0369a1; font-weight: 500;">
+                                        <i class="fas fa-shipping-fast me-1" style="color: #0ea5e9;"></i>
+                                        Phí vận chuyển:
+                                    </span>
+                                    <span class="fw-bold" style="color: #0284c7;">
+                                        +@Model.ShippingFee.ToString("N0")₫
+                                    </span>
+                                </div>
+                            }
+                            
+                            @if (Model.PromotionDiscount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">🚚 Phí vận chuyển:</span>
+                                    <span class="fw-bold">+@Model.ShippingFee.ToString("N0")₫</span>
+                                </div>
+                            }
+                            
+                            @if (Model.PromotionDiscount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span style="color: #ff6b6b;">🎁 Giảm khuyến mãi:</span>
+                                    <span class="fw-bold" style="color: #28a745;">-@Model.PromotionDiscount.ToString("N0")₫</span>
+                                </div>
+                            }
+                            @if (Model.VoucherDiscount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span style="color: #f59e0b;">🎟️ Voucher (@Model.DiscountVoucherCode):</span>
+                                    <span class="fw-bold" style="color: #28a745;">-@Model.VoucherDiscount.ToString("N0")₫</span>
+                                </div>
+                            }
+                            @if (Model.PointsDiscount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span style="color: #fbbf24;">💰 Điểm tích lũy:</span>
+                                    <span class="fw-bold" style="color: #28a745;">-@Model.PointsDiscount.ToString("N0")₫</span>
+                                </div>
+                            }
+                            @if (Model.ShippingDiscount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span style="color: #3b82f6;">🚚 Giảm ship (@Model.ShippingVoucherCode):</span>
+                                    <span class="fw-bold" style="color: #28a745;">-@Model.ShippingDiscount.ToString("N0")₫</span>
+                                </div>
+                            }
+                            
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">Tổng thanh toán:</span>
+                                <span class="fw-bold text-danger" style="font-size: 1.3rem;">
+                                    @Model.TotalAmount.ToString("N0")₫
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ghi chú -->
+                    <div class="card shadow-sm border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-sticky-note me-2"></i> Ghi chú</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0 small">@(Model.Note ?? "Không có ghi chú")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal xem ảnh giao hàng -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-image me-2"></i>Ảnh chứng minh giao hàng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                @if (!string.IsNullOrEmpty(Model.DeliveryImageUrl))
+                {
+                    <img src="@Model.DeliveryImageUrl" alt="Ảnh giao hàng" class="img-fluid" style="max-height: 80vh;">
+                    <div class="mt-3 text-muted">
+                        <i class="fas fa-clock me-1"></i> 
+                        Chụp lúc: @Model.DeliveryImageUploadedAt.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isModal)
+{
+    @:<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @:</body>
+    @:</html>
+}
+
+<!-- Modal nhập lý do hủy đơn hàng -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="cancelOrderModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>Hủy đơn hàng #@Model.OrderId
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CancelOrder" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-dark">
+                            Chọn lý do hủy đơn hàng
+                        </label>
+                        <div class="list-group mb-2">
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Khách hàng yêu cầu hủy đơn" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Khách hàng yêu cầu hủy đơn</span>
+                            </label>
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Sản phẩm hết hàng" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Sản phẩm hết hàng</span>
+                            </label>
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Không liên lạc được với khách hàng" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Không liên lạc được với khách hàng</span>
+                            </label>
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Địa chỉ giao hàng không hợp lệ" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Địa chỉ giao hàng không hợp lệ</span>
+                            </label>
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Đơn hàng bị trùng lặp" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Đơn hàng bị trùng lặp</span>
+                            </label>
+                            <label class="list-group-item list-group-item-action cursor-pointer cancel-reason-item">
+                                <input class="form-check-input me-2" type="checkbox" value="Nghi ngờ đơn hàng giả mạo" onchange="updateCancelReason()">
+                                <span class="cancel-reason-text">Nghi ngờ đơn hàng giả mạo</span>
+                            </label>
+                        </div>
+                        <small class="text-muted">Bạn có thể chọn nhiều lý do hoặc nhập lý do khác bên dưới</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cancelReasonInput" class="form-label fw-bold">
+                            Lý do chi tiết <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="cancelReasonInput" name="cancelReason" rows="4" required 
+                                  placeholder="Các lý do đã chọn sẽ tự động điền vào đây hoặc bạn có thể nhập lý do khác..."></textarea>
+                        <small class="text-muted">Thông tin này sẽ được gửi đến khách hàng</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Đóng
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check me-1"></i>Xác nhận hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (!isModal)
+{
+    @section Scripts {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+        <script>
+            function cancelOrder(orderId) {
+                var modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+                modal.show();
+            }
+
+            function updateCancelReason() {
+                const checkboxes = document.querySelectorAll('#cancelOrderModal input[type="checkbox"]:checked');
+                const reasons = Array.from(checkboxes).map(cb => cb.value);
+                const textarea = document.getElementById('cancelReasonInput');
+                
+                if (reasons.length > 0) {
+                    textarea.value = reasons.join('; ') + '.';
+                }
+            }
+
+            // Reset form khi đóng modal
+            document.getElementById('cancelOrderModal').addEventListener('hidden.bs.modal', function () {
+                const checkboxes = document.querySelectorAll('#cancelOrderModal input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+                document.getElementById('cancelReasonInput').value = '';
+            });
+
+            // ⏱️ Countdown timer cho shipper timeout (3 phút)
+            @if (Model.Status == "Đã xác nhận" && Model.ShipperStatus == "Đã phân công" && Model.AssignedAt != null)
+            {
+                @:const assignedAt = new Date('@Model.AssignedAt.Value.ToString("yyyy-MM-ddTHH:mm:ss")');
+                @:const timeoutMinutes = 3;
+                @:const timeoutAt = new Date(assignedAt.getTime() + timeoutMinutes * 60000);
+                @:
+                @:function updateCountdown() {
+                @:    const now = new Date();
+                @:    const remaining = timeoutAt - now;
+                @:
+                @:    if (remaining @Html.Raw("<=") 0) {
+                @:        const countdownEl = document.getElementById('timeoutCountdown');
+                @:        if (countdownEl) {
+                @:            countdownEl.textContent = 'Hết hạn';
+                @:            countdownEl.style.color = 'red';
+                @:        }
+                @:        return;
+                @:    }
+                @:
+                @:    const minutes = Math.floor(remaining / 60000);
+                @:    const seconds = Math.floor((remaining % 60000) / 1000);
+                @:    
+                @:    const countdownEl = document.getElementById('timeoutCountdown');
+                @:    if (countdownEl) {
+                @:        countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                @:    }
+                @:
+                @:    setTimeout(updateCountdown, 1000);
+                @:}
+                @:
+                @:updateCountdown();
+            }
+
+            // 🔔 SignalR - Realtime Updates
+            const currentOrderId = @Model.Id;
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveShipperUpdate", function (orderId, shipperInfo) {
+                if (orderId !== currentOrderId) return;
+
+                updateShipperCard(shipperInfo);
+            });
+
+            // 🔔 Realtime Order Status Update
+            connection.on("ReceiveOrderStatusUpdate", function (orderId, statusInfo) {
+                if (orderId !== currentOrderId) return;
+
+                updateOrderStatus(statusInfo.orderStatus, statusInfo.paymentStatus);
+            });
+
+            // 📍 Realtime Shipper Location Update
+            connection.on("ReceiveShipperLocation", function (orderId, locationData) {
+                if (orderId !== currentOrderId) return;
+
+                updateShipperMarker(locationData.latitude, locationData.longitude);
+            });
+
+            connection.start()
+                .then(() => {
+                    // Khởi tạo bản đồ ngay khi load nếu đơn hàng đang giao
+                    const currentStatus = '@Html.Raw(Model.Status)';
+                    
+                    if (currentStatus === 'Đang giao') {
+                        setTimeout(initMap, 500);
+                    }
+                })
+                .catch(err => console.error('❌ SignalR Error:', err));
+
+            // Hàm cập nhật UI card shipper
+            function updateShipperCard(info) {
+                const shipperContainer = document.querySelector('.col-lg-4');
+                
+                // Nếu không có shipper (timeout/unassign)
+                if (!info.shipperId) {
+                    const warningCard = `
+                        <div class="card mb-3 shadow-sm border-warning" id="shipperCard">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Shipper</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Chưa có shipper nào được phân công cho đơn hàng này.
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const existingCard = document.getElementById('shipperCard');
+                    if (existingCard) {
+                        existingCard.outerHTML = warningCard;
+                    } else {
+                        shipperContainer.insertAdjacentHTML('afterbegin', warningCard);
+                    }
+                    return;
+                }
+
+                // Xác định badge status
+                let statusBadge = '';
+                if (info.shipperStatus === 'Đã phân công') {
+                    statusBadge = '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
+                } else if (info.shipperStatus === 'Đã xác nhận') {
+                    statusBadge = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã nhận hoa</span>';
+                } else if (info.shipperStatus === 'Đã từ chối') {
+                    statusBadge = '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Từ chối</span>';
+                }
+
+                // Tạo card HTML mới
+                const shipperCard = `
+                    <div class="card mb-3 shadow-sm border-primary" id="shipperCard">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-motorcycle me-2"></i> Shipper giao hàng</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="text-muted small">Họ tên</label>
+                                <div class="fw-bold">
+                                    <i class="fas fa-user-circle me-1 text-primary"></i>
+                                    ${info.shipperName}
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="text-muted small">Email</label>
+                                <div>${info.shipperEmail}</div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="text-muted small">Số điện thoại</label>
+                                <div class="fw-bold">
+                                    ${info.shipperPhone !== 'Chưa cập nhật' 
+                                        ? `<a href="tel:${info.shipperPhone}" class="text-decoration-none"><i class="fas fa-phone text-success me-1"></i>${info.shipperPhone}</a>`
+                                        : '<span class="text-muted">Chưa cập nhật</span>'}
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="text-muted small">Trạng thái</label>
+                                <div>${statusBadge}</div>
+                            </div>
+                            ${info.assignedAt ? `
+                                <div class="mb-2">
+                                    <label class="text-muted small">Thời gian phân công</label>
+                                    <div class="small">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        ${info.assignedAt}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${info.shipperConfirmedAt ? `
+                                <div class="mb-0">
+                                    <label class="text-muted small">Thời gian xác nhận</label>
+                                    <div class="small text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        ${info.shipperConfirmedAt}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                // Thay thế hoặc insert card mới
+                const existingCard = document.getElementById('shipperCard');
+                if (existingCard) {
+                    existingCard.outerHTML = shipperCard;
+                } else {
+                    shipperContainer.insertAdjacentHTML('afterbegin', shipperCard);
+                }
+
+                // Hiệu ứng highlight
+                const newCard = document.getElementById('shipperCard');
+                newCard.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    newCard.style.animation = '';
+                }, 500);
+            }
+
+            // Hàm cập nhật trạng thái đơn hàng và thanh toán realtime
+            function updateOrderStatus(orderStatus, paymentStatus) {
+                const orderStatusElement = document.getElementById('orderStatusBadge');
+                if (orderStatusElement && orderStatus) {
+                    let statusBadgeHtml = '';
+                    
+                    if (orderStatus === "Chờ xác nhận") {
+                        statusBadgeHtml = '<span class="badge bg-info"><i class="fas fa-clock"></i> ' + orderStatus + '</span>';
+                    } else if (orderStatus === "Đã xác nhận") {
+                        statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check"></i> ' + orderStatus + '</span>';
+                    } else if (orderStatus === "Đã hủy") {
+                        statusBadgeHtml = '<span class="badge bg-secondary"><i class="fas fa-ban"></i> ' + orderStatus + '</span>';
+                    } else if (orderStatus === "Đang giao") {
+                        statusBadgeHtml = '<span class="badge bg-primary"><i class="fas fa-shipping-fast"></i> ' + orderStatus + '</span>';
+                    } else if (orderStatus === "Đã giao") {
+                        statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-truck"></i> ' + orderStatus + '</span>';
+                    } else if (orderStatus === "Hoàn thành") {
+                        statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check-double"></i> ' + orderStatus + '</span>';
+                    } else {
+                        statusBadgeHtml = '<span class="badge bg-secondary">' + orderStatus + '</span>';
+                    }
+                    
+                    orderStatusElement.innerHTML = statusBadgeHtml;
+                    
+                    // Hiệu ứng highlight
+                    orderStatusElement.style.animation = 'pulse 0.5s ease-in-out';
+                    setTimeout(() => {
+                        orderStatusElement.style.animation = '';
+                    }, 500);
+                }
+
+                // Cập nhật trạng thái thanh toán
+                const paymentStatusElement = document.getElementById('paymentStatusBadge');
+                if (paymentStatusElement && paymentStatus) {
+                    let paymentBadgeHtml = '';
+                    
+                    if (paymentStatus === "Chờ thanh toán") {
+                        paymentBadgeHtml = '<span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> ' + paymentStatus + '</span>';
+                    } else if (paymentStatus === "Đã thanh toán") {
+                        paymentBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> ' + paymentStatus + '</span>';
+                    } else if (paymentStatus === "Thanh toán thất bại") {
+                        paymentBadgeHtml = '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> ' + paymentStatus + '</span>';
+                    } else {
+                        paymentBadgeHtml = '<span class="badge bg-secondary">' + paymentStatus + '</span>';
+                    }
+                    
+                    paymentStatusElement.innerHTML = paymentBadgeHtml;
+                    
+                    // Hiệu ứng highlight
+                    paymentStatusElement.style.animation = 'pulse 0.5s ease-in-out';
+                    setTimeout(() => {
+                        paymentStatusElement.style.animation = '';
+                    }, 500);
+                }
+
+                console.log('✅ Updated order status:', orderStatus, '| payment status:', paymentStatus);
+            }
+
+            // 📍 Leaflet Maps - Khởi tạo bản đồ (MIỄN PHÍ, không cần billing)
+            let map = null;
+            let shipperMarker = null;
+            let destinationMarker = null;
+            let shipperCircle = null;
+
+            function initMap() {
+                const mapElement = document.getElementById('map');
+                if (!mapElement || map) return;
+
+                const defaultCenter = [10.8231, 106.6297];
+
+                map = L.map('map').setView(defaultCenter, 14);
+
+                // Thêm tile layer từ OpenStreetMap
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19
+                }).addTo(map);
+
+                // Marker địa chỉ giao hàng (màu đỏ)
+                const deliveryAddress = '@Model.ShippingAddress';
+                if (deliveryAddress) {
+                    // Geocode địa chỉ bằng Nominatim (free)
+                    const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(deliveryAddress)}`;
+                    
+                    fetch(geocodeUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.length > 0) {
+                                const lat = parseFloat(data[0].lat);
+                                const lon = parseFloat(data[0].lon);
+                                
+                                // Custom icon cho địa chỉ giao hàng
+                                const redIcon = L.icon({
+                                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41]
+                                });
+                                
+                                destinationMarker = L.marker([lat, lon], { icon: redIcon })
+                                    .addTo(map)
+                                    .bindPopup(`<strong>📍 Địa chỉ giao hàng:</strong><br>${deliveryAddress}`)
+                                    .openPopup();
+                                
+                                map.setView([lat, lon], 15);
+                            }
+                        })
+                        .catch(err => console.warn('⚠️ Geocoding error:', err));
+                }
+
+                // Marker shipper (màu xanh dương) - ẨN cho đến khi nhận GPS thật
+                const blueIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+
+                // Tạo marker nhưng không add vào map (chỉ add khi có GPS thật)
+                shipperMarker = L.marker(defaultCenter, { 
+                    icon: blueIcon,
+                    opacity: 0  // Ẩn hoàn toàn
+                });
+
+                // Vòng tròn xung quanh shipper (độ chính xác) - cũng ẩn
+                shipperCircle = L.circle(defaultCenter, {
+                    color: '#3b82f6',
+                    fillColor: '#3b82f6',
+                    fillOpacity: 0,
+                    radius: 100,
+                    opacity: 0
+                });
+
+                // 📍 Load GPS cuối cùng từ database (nếu có)
+                const lastLat = @(Model.LastKnownLatitude?.ToString() ?? "null");
+                const lastLng = @(Model.LastKnownLongitude?.ToString() ?? "null");
+                
+                if (lastLat !== null && lastLng !== null) {
+                    updateShipperMarker(lastLat, lastLng);
+                }
+            }
+
+            function updateShipperMarker(lat, lng) {
+                if (!map) {
+                    initMap();
+                    setTimeout(() => updateShipperMarker(lat, lng), 1000);
+                    return;
+                }
+
+                if (!shipperMarker || !shipperCircle) return;
+
+                const newPos = [lat, lng];
+                
+                if (!map.hasLayer(shipperMarker)) {
+                    shipperMarker.addTo(map);
+                    shipperCircle.addTo(map);
+                }
+                
+                shipperMarker.setLatLng(newPos);
+                shipperMarker.setOpacity(1);
+                shipperMarker.setPopupContent('🚴 Vị trí shipper hiện tại');
+                
+                shipperCircle.setLatLng(newPos);
+                shipperCircle.setStyle({ fillOpacity: 0.1, opacity: 1 });
+                
+                map.setView(newPos, 16);
+            }
+
+            // Auto-init map when page loads
+            window.addEventListener('load', function() {
+                const mapElement = document.getElementById('map');
+                if (mapElement) {
+                    setTimeout(initMap, 500);
+                }
+            });
+        </script>
+        
+        <!-- Leaflet CSS & JS (Open-source, miễn phí) -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    }
+}
+else
+{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        function cancelOrder(orderId) {
+            var modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+            modal.show();
+        }
+
+        function updateCancelReason() {
+            const checkboxes = document.querySelectorAll('#cancelOrderModal input[type="checkbox"]:checked');
+            const reasons = Array.from(checkboxes).map(cb => cb.value);
+            const textarea = document.getElementById('cancelReasonInput');
+            
+            if (reasons.length > 0) {
+                textarea.value = reasons.join('; ') + '.';
+            }
+        }
+
+        // Reset form khi đóng modal
+        document.getElementById('cancelOrderModal').addEventListener('hidden.bs.modal', function () {
+            const checkboxes = document.querySelectorAll('#cancelOrderModal input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            document.getElementById('cancelReasonInput').value = '';
+        });
+
+        // 🔔 SignalR - Realtime Updates (Modal mode)
+        const currentOrderId = @Model.Id;
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.on("ReceiveShipperUpdate", function (orderId, shipperInfo) {
+            if (orderId !== currentOrderId) return;
+            console.log('📦 Received shipper update:', shipperInfo);
+            updateShipperCard(shipperInfo);
+        });
+
+        // 🔔 Realtime Order Status Update
+        connection.on("ReceiveOrderStatusUpdate", function (orderId, statusInfo) {
+            if (orderId !== currentOrderId) return;
+
+            console.log('📋 Received order status update:', statusInfo);
+            updateOrderStatus(statusInfo.orderStatus, statusInfo.paymentStatus);
+        });
+
+        // 📍 Realtime Shipper Location Update
+        connection.on("ReceiveShipperLocation", function (orderId, locationData) {
+            if (orderId !== currentOrderId) return;
+
+            console.log('📍 Received shipper location:', locationData);
+            updateShipperMarker(locationData.latitude, locationData.longitude);
+        });
+
+        connection.start()
+            .then(() => {
+                console.log('✅ SignalR Connected for Order #' + currentOrderId);
+                
+                // Khởi tạo bản đồ nếu đơn hàng đang giao
+                const currentStatus = '@Model.Status';
+                if (currentStatus === 'Đang giao') {
+                    initMap();
+                }
+            })
+            .catch(err => console.error('❌ SignalR Error:', err));
+
+        function updateShipperCard(info) {
+            const shipperContainer = document.querySelector('.col-lg-4');
+            
+            if (!info.shipperId) {
+                const warningCard = `
+                    <div class="card mb-3 shadow-sm border-warning" id="shipperCard">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i> Shipper</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Chưa có shipper nào được phân công cho đơn hàng này.
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                const existingCard = document.getElementById('shipperCard');
+                if (existingCard) {
+                    existingCard.outerHTML = warningCard;
+                } else {
+                    shipperContainer.insertAdjacentHTML('afterbegin', warningCard);
+                }
+                return;
+            }
+
+            let statusBadge = '';
+            if (info.shipperStatus === 'Đã phân công') {
+                statusBadge = '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Chờ xác nhận</span>';
+            } else if (info.shipperStatus === 'Đã xác nhận') {
+                statusBadge = '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã nhận hoa</span>';
+            } else if (info.shipperStatus === 'Đã từ chối') {
+                statusBadge = '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Từ chối</span>';
+            }
+
+            const shipperCard = `
+                <div class="card mb-3 shadow-sm border-primary" id="shipperCard">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-motorcycle me-2"></i> Shipper giao hàng</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="text-muted small">Họ tên</label>
+                            <div class="fw-bold">
+                                <i class="fas fa-user-circle me-1 text-primary"></i>
+                                ${info.shipperName}
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="text-muted small">Email</label>
+                            <div>${info.shipperEmail}</div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="text-muted small">Số điện thoại</label>
+                            <div class="fw-bold">
+                                ${info.shipperPhone !== 'Chưa cập nhật' 
+                                    ? \`<a href="tel:\${info.shipperPhone}" class="text-decoration-none"><i class="fas fa-phone text-success me-1"></i>\${info.shipperPhone}</a>\`
+                                    : '<span class="text-muted">Chưa cập nhật</span>'}
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="text-muted small">Trạng thái</label>
+                            <div>${statusBadge}</div>
+                        </div>
+                        ${info.assignedAt ? \`
+                            <div class="mb-2">
+                                <label class="text-muted small">Thời gian phân công</label>
+                                <div class="small">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    \${info.assignedAt}
+                                </div>
+                            </div>
+                        \` : ''}
+                        ${info.shipperConfirmedAt ? \`
+                            <div class="mb-0">
+                                <label class="text-muted small">Thời gian xác nhận</label>
+                                <div class="small text-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    \${info.shipperConfirmedAt}
+                                </div>
+                            </div>
+                        \` : ''}
+                    </div>
+                </div>
+            `;
+
+            const existingCard = document.getElementById('shipperCard');
+            if (existingCard) {
+                existingCard.outerHTML = shipperCard;
+            } else {
+                shipperContainer.insertAdjacentHTML('afterbegin', shipperCard);
+            }
+
+            const newCard = document.getElementById('shipperCard');
+            newCard.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                newCard.style.animation = '';
+            }, 500);
+        }
+
+        // Hàm cập nhật trạng thái đơn hàng và thanh toán realtime
+        function updateOrderStatus(orderStatus, paymentStatus) {
+            // Cập nhật trạng thái đơn hàng
+            const orderStatusElement = document.getElementById('orderStatusBadge');
+            if (orderStatusElement && orderStatus) {
+                let statusBadgeHtml = '';
+                
+                if (orderStatus === "Chờ xác nhận") {
+                    statusBadgeHtml = '<span class="badge bg-info"><i class="fas fa-clock"></i> ' + orderStatus + '</span>';
+                } else if (orderStatus === "Đã xác nhận") {
+                    statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check"></i> ' + orderStatus + '</span>';
+                } else if (orderStatus === "Đã hủy") {
+                    statusBadgeHtml = '<span class="badge bg-secondary"><i class="fas fa-ban"></i> ' + orderStatus + '</span>';
+                } else if (orderStatus === "Đang giao") {
+                    statusBadgeHtml = '<span class="badge bg-primary"><i class="fas fa-shipping-fast"></i> ' + orderStatus + '</span>';
+                } else if (orderStatus === "Đã giao") {
+                    statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-truck"></i> ' + orderStatus + '</span>';
+                } else if (orderStatus === "Hoàn thành") {
+                    statusBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check-double"></i> ' + orderStatus + '</span>';
+                } else {
+                    statusBadgeHtml = '<span class="badge bg-secondary">' + orderStatus + '</span>';
+                }
+                
+                orderStatusElement.innerHTML = statusBadgeHtml;
+                
+                // Hiệu ứng highlight
+                orderStatusElement.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    orderStatusElement.style.animation = '';
+                }, 500);
+            }
+
+            const paymentStatusElement = document.getElementById('paymentStatusBadge');
+            if (paymentStatusElement && paymentStatus) {
+                let paymentBadgeHtml = '';
+                
+                if (paymentStatus === "Chờ thanh toán") {
+                    paymentBadgeHtml = '<span class="badge bg-warning text-dark"><i class="fas fa-clock"></i> ' + paymentStatus + '</span>';
+                } else if (paymentStatus === "Đã thanh toán") {
+                    paymentBadgeHtml = '<span class="badge bg-success"><i class="fas fa-check-circle"></i> ' + paymentStatus + '</span>';
+                } else if (paymentStatus === "Thanh toán thất bại") {
+                    paymentBadgeHtml = '<span class="badge bg-danger"><i class="fas fa-times-circle"></i> ' + paymentStatus + '</span>';
+                } else {
+                    paymentBadgeHtml = '<span class="badge bg-secondary">' + paymentStatus + '</span>';
+                }
+                
+                paymentStatusElement.innerHTML = paymentBadgeHtml;
+                
+                // Hiệu ứng highlight
+                paymentStatusElement.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    paymentStatusElement.style.animation = '';
+                }, 500);
+            }
+        }
+
+        // 📍 Leaflet Maps - Khởi tạo bản đồ (Modal mode - MIỄN PHÍ)
+        let map = null;
+        let shipperMarker = null;
+        let destinationMarker = null;
+        let shipperCircle = null;
+
+        function initMap() {
+            const mapElement = document.getElementById('map');
+            if (!mapElement || map) return;
+
+            const defaultCenter = [10.8231, 106.6297];
+
+            map = L.map('map').setView(defaultCenter, 14);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+
+            const deliveryAddress = '@Model.ShippingAddress';
+            if (deliveryAddress) {
+                const geocodeUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(deliveryAddress)}`;
+                
+                fetch(geocodeUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            
+                            const redIcon = L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            });
+                            
+                            destinationMarker = L.marker([lat, lon], { icon: redIcon })
+                                .addTo(map)
+                                .bindPopup(`<strong>📍 Địa chỉ giao hàng:</strong><br>${deliveryAddress}`)
+                                .openPopup();
+                            
+                            map.setView([lat, lon], 15);
+                        }
+                    })
+                    .catch(err => console.warn('⚠️ Geocoding error:', err));
+            }
+
+            const blueIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            // Tạo marker nhưng ẨN cho đến khi nhận GPS thật
+            shipperMarker = L.marker(defaultCenter, { 
+                icon: blueIcon,
+                opacity: 0
+            });
+
+            shipperCircle = L.circle(defaultCenter, {
+                color: '#3b82f6',
+                fillColor: '#3b82f6',
+                fillOpacity: 0,
+                radius: 100,
+                opacity: 0
+            });
+
+            console.log('✅ Leaflet map initialized (modal mode)');
+        }
+
+        function updateShipperMarker(lat, lng) {
+            if (!map) {
+                initMap();
+                setTimeout(() => updateShipperMarker(lat, lng), 1000);
+                return;
+            }
+
+            if (!shipperMarker || !shipperCircle) return;
+
+            const newPos = [lat, lng];
+            
+            // HIỂN THỊ marker lần đầu khi nhận GPS thật
+            if (!map.hasLayer(shipperMarker)) {
+                shipperMarker.addTo(map);
+                shipperCircle.addTo(map);
+                console.log('🎯 Shipper marker hiển thị lần đầu tại:', lat, lng);
+            }
+            
+            shipperMarker.setLatLng(newPos);
+            shipperMarker.setOpacity(1);
+            shipperMarker.setPopupContent('🚴 Vị trí shipper hiện tại');
+            shipperCircle.setLatLng(newPos);
+            shipperCircle.setStyle({ fillOpacity: 0.1, opacity: 1 });
+            map.setView(newPos, 16);
+
+            console.log('📍 Shipper marker updated:', lat, lng);
+        }
+
+        window.addEventListener('load', function() {
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                setTimeout(initMap, 500);
+            }
+        });
+    </script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+}
+
+<style>
+    :root {
+        --primary-color: #0e7490;
+        --secondary-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #3b82f6;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+    }
+
+    .btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-warning {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #0891b2; 
+        border-color: #0891b2; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-success {
+        background-color: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .btn-success:hover {
+        background-color: #059669;
+        transform: translateY(-1px);
+    }
+
+    .btn-danger {
+        background-color: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    .btn-danger:hover {
+        background-color: #dc2626;
+        transform: translateY(-1px);
+    }
+
+    .btn-warning {
+        background-color: var(--warning-color);
+        border-color: var(--warning-color);
+        color: white;
+    }
+
+    .btn-warning:hover {
+        background-color: #d97706;
+        transform: translateY(-1px);
+    }
+
+    .table { 
+        background-color: #ffffff; 
+        border-radius: 8px; 
+        font-size: 0.9rem; 
+    }
+    
+    .table th, .table td { 
+        border-color: #e5e7eb; 
+        vertical-align: middle; 
+        padding: 12px; 
+    }
+    
+    .table thead th { 
+        background-color: #f9fafb; 
+        color: var(--text-dark); 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        font-size: 0.8rem; 
+    }
+    
+    .table-hover tbody tr:hover { 
+        background-color: #f1f5f9; 
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    .alert {
+        border-radius: 8px;
+        border-left: 4px solid;
+    }
+
+    .alert-success {
+        border-left-color: var(--success-color);
+        background-color: #f0fdf4;
+        color: #166534;
+    }
+
+    .alert-danger {
+        border-left-color: var(--danger-color);
+        background-color: #fef2f2;
+        color: #991b1b;
+    }
+
+    .alert-warning {
+        border-left-color: var(--warning-color);
+        background-color: #fffbeb;
+        color: #92400e;
+    }
+
+    .alert-info {
+        border-left-color: var(--info-color);
+        background-color: #eff6ff;
+        color: #1e40af;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .border-info {
+        border-left: 3px solid var(--info-color) !important;
+    }
+
+    .border-success {
+        border-left: 3px solid var(--success-color) !important;
+    }
+
+    .border-warning {
+        border-left: 3px solid var(--warning-color) !important;
+    }
+
+    .bg-info {
+        background-color: var(--info-color) !important;
+    }
+
+    .bg-success {
+        background-color: var(--success-color) !important;
+    }
+
+    .bg-warning {
+        background-color: var(--warning-color) !important;
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+        outline: none;
+    }
+
+    .text-success {
+        color: var(--success-color) !important;
+    }
+
+    .text-danger {
+        color: var(--danger-color) !important;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .cancel-reason-item {
+        border: 1px solid #d1d5db;
+        margin-bottom: 4px;
+    }
+
+    .cancel-reason-text {
+        color: #1e293b;
+        font-size: 0.95rem;
+        font-weight: 400;
+    }
+
+    .list-group-item {
+        transition: all 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #f3f4f6;
+    }
+
+    .list-group-item:has(input[type="checkbox"]:checked) {
+        background-color: #dbeafe;
+        border-color: #3b82f6;
+    }
+
+    .list-group-item:has(input[type="checkbox"]:checked) .cancel-reason-text {
+        font-weight: 600;
+        color: #1e40af;
+    }
+
+    /* Animation cho realtime update */
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(14, 116, 144, 0.2);
+        }
+        50% {
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(14, 116, 144, 0.4);
+        }
+    }
+
+    #shipperCard {
+        transition: all 0.3s ease;
+    }
+</style>

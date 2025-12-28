@@ -1,0 +1,625 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/obj/Debug/net8.0/scopedcss/projectbundle/Bloomie.bundle.scp.css",
+      "PackagePath": "staticwebassets/Bloomie.bundle.scp.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/css/site.css",
+      "PackagePath": "staticwebassets/css/site.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/favicon.ico",
+      "PackagePath": "staticwebassets/favicon.ico"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/banners/banner1.gif",
+      "PackagePath": "staticwebassets/images/banners/banner1.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/banners/banner2.gif",
+      "PackagePath": "staticwebassets/images/banners/banner2.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/banners/banner3.gif",
+      "PackagePath": "staticwebassets/images/banners/banner3.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/banners/banner4.gif",
+      "PackagePath": "staticwebassets/images/banners/banner4.gif"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511251084QKM_20251126132320.webp",
+      "PackagePath": "staticwebassets/images/delivery/2511251084QKM_20251126132320.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261090PBP_20251126180752.png",
+      "PackagePath": "staticwebassets/images/delivery/2511261090PBP_20251126180752.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261091QVH_20251126170004.webp",
+      "PackagePath": "staticwebassets/images/delivery/2511261091QVH_20251126170004.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261092GIT_20251126175949.webp",
+      "PackagePath": "staticwebassets/images/delivery/2511261092GIT_20251126175949.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261093AMX_20251126175226.png",
+      "PackagePath": "staticwebassets/images/delivery/2511261093AMX_20251126175226.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261097GSR_20251126221231.webp",
+      "PackagePath": "staticwebassets/images/delivery/2511261097GSR_20251126221231.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261098XTH_20251126201505.webp",
+      "PackagePath": "staticwebassets/images/delivery/2511261098XTH_20251126201505.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261099VHL_20251126221536.png",
+      "PackagePath": "staticwebassets/images/delivery/2511261099VHL_20251126221536.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261100VLQ_20251126225937.png",
+      "PackagePath": "staticwebassets/images/delivery/2511261100VLQ_20251126225937.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2511261102SCD_20251127195843.png",
+      "PackagePath": "staticwebassets/images/delivery/2511261102SCD_20251127195843.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2512011115DAB_20251209115101.webp",
+      "PackagePath": "staticwebassets/images/delivery/2512011115DAB_20251209115101.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/delivery/2512021118ZJN_20251206150317.webp",
+      "PackagePath": "staticwebassets/images/delivery/2512021118ZJN_20251206150317.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/logos/bloomie_logo.png",
+      "PackagePath": "staticwebassets/images/logos/bloomie_logo.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/logos/hoa_chuc_mung.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_chuc_mung.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/logos/hoa_cuoi.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_cuoi.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/logos/hoa_sinh_nhat.jpg",
+      "PackagePath": "staticwebassets/images/logos/hoa_sinh_nhat.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/logos/hoa_tinh_yeu.webp",
+      "PackagePath": "staticwebassets/images/logos/hoa_tinh_yeu.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/250_w9KRDBMecxXL3rbeubCXGeMEd_0b2e762e.webp",
+      "PackagePath": "staticwebassets/images/products/250_w9KRDBMecxXL3rbeubCXGeMEd_0b2e762e.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/250_w9KRDBMecxXL3rbeubCXGeMEd_e4677d23.webp",
+      "PackagePath": "staticwebassets/images/products/250_w9KRDBMecxXL3rbeubCXGeMEd_e4677d23.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_59GjMBrkQH2hB7v4jtnvshgF2_7dc8e15f.webp",
+      "PackagePath": "staticwebassets/images/products/350_59GjMBrkQH2hB7v4jtnvshgF2_7dc8e15f.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_9YzYcdt0ePfsTMipPwfnQ7dP4_255c8893.webp",
+      "PackagePath": "staticwebassets/images/products/350_9YzYcdt0ePfsTMipPwfnQ7dP4_255c8893.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_9YzYcdt0ePfsTMipPwfnQ7dP4_742cb58d.webp",
+      "PackagePath": "staticwebassets/images/products/350_9YzYcdt0ePfsTMipPwfnQ7dP4_742cb58d.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_ENwLOvzHARLMm2aVkvlqJaERo_8510e7f4.webp",
+      "PackagePath": "staticwebassets/images/products/350_ENwLOvzHARLMm2aVkvlqJaERo_8510e7f4.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_ENwLOvzHARLMm2aVkvlqJaERo_cf075cfe.webp",
+      "PackagePath": "staticwebassets/images/products/350_ENwLOvzHARLMm2aVkvlqJaERo_cf075cfe.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_HRKn1KAAAX6MgG4ijOztkIhc2_b1da9b03.webp",
+      "PackagePath": "staticwebassets/images/products/350_HRKn1KAAAX6MgG4ijOztkIhc2_b1da9b03.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_HRKn1KAAAX6MgG4ijOztkIhc2_f5804c4b.webp",
+      "PackagePath": "staticwebassets/images/products/350_HRKn1KAAAX6MgG4ijOztkIhc2_f5804c4b.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_IZmoQVcSUH3PADqvtGdEIpKVc_4e805470.webp",
+      "PackagePath": "staticwebassets/images/products/350_IZmoQVcSUH3PADqvtGdEIpKVc_4e805470.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_M4shdATIoChMyhvQupHhxfbKD_1931d67a.webp",
+      "PackagePath": "staticwebassets/images/products/350_M4shdATIoChMyhvQupHhxfbKD_1931d67a.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_Z9fAROBcYT0gzCvij09F8DvRp_50743504.jpg",
+      "PackagePath": "staticwebassets/images/products/350_Z9fAROBcYT0gzCvij09F8DvRp_50743504.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_Z9fAROBcYT0gzCvij09F8DvRp_b6263a7c.jpg",
+      "PackagePath": "staticwebassets/images/products/350_Z9fAROBcYT0gzCvij09F8DvRp_b6263a7c.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_e1Z6VmK05WPqTtZFPoN0GIuGu_0a5b2791.webp",
+      "PackagePath": "staticwebassets/images/products/350_e1Z6VmK05WPqTtZFPoN0GIuGu_0a5b2791.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_e1Z6VmK05WPqTtZFPoN0GIuGu_97270874.webp",
+      "PackagePath": "staticwebassets/images/products/350_e1Z6VmK05WPqTtZFPoN0GIuGu_97270874.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_nDfkpqafTXQsDjQ7b1XhIQSDO_7dfca3fa.webp",
+      "PackagePath": "staticwebassets/images/products/350_nDfkpqafTXQsDjQ7b1XhIQSDO_7dfca3fa.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_oNQyJPO0VkANFuPR757CRXXdC_83053adb.webp",
+      "PackagePath": "staticwebassets/images/products/350_oNQyJPO0VkANFuPR757CRXXdC_83053adb.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/350_simGZj4sC8RRwpeUksNxS2KHJ_8c7de602.webp",
+      "PackagePath": "staticwebassets/images/products/350_simGZj4sC8RRwpeUksNxS2KHJ_8c7de602.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_2psShjhLTbcjkHdpXKWm66sqb_99909b9d.webp",
+      "PackagePath": "staticwebassets/images/products/600_2psShjhLTbcjkHdpXKWm66sqb_99909b9d.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_CO3DLmBTD2HuOuqdwCo5IU4tF_12987453.webp",
+      "PackagePath": "staticwebassets/images/products/600_CO3DLmBTD2HuOuqdwCo5IU4tF_12987453.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_EgF6oHafcl2mTMqiadaGGSQbY_1c4406e7.webp",
+      "PackagePath": "staticwebassets/images/products/600_EgF6oHafcl2mTMqiadaGGSQbY_1c4406e7.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_Khjqfel96RTLXuqVNnu1lQhkh_8415f3c7.webp",
+      "PackagePath": "staticwebassets/images/products/600_Khjqfel96RTLXuqVNnu1lQhkh_8415f3c7.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_LiieQ7CsjQSnNAa2wT8WK05Xx_220d2437.webp",
+      "PackagePath": "staticwebassets/images/products/600_LiieQ7CsjQSnNAa2wT8WK05Xx_220d2437.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_OeURyNkYPIqIsvT3fhzFuZ6lL_f3c41cac.webp",
+      "PackagePath": "staticwebassets/images/products/600_OeURyNkYPIqIsvT3fhzFuZ6lL_f3c41cac.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_SePVgXAkqLGNPTjNYeaGNq0Tb_bd4ca754.webp",
+      "PackagePath": "staticwebassets/images/products/600_SePVgXAkqLGNPTjNYeaGNq0Tb_bd4ca754.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_cXKSXddCrYBOh6CoZYhBV0vss_88a93bf4.webp",
+      "PackagePath": "staticwebassets/images/products/600_cXKSXddCrYBOh6CoZYhBV0vss_88a93bf4.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_nuZa2mRvwhMp1VVtbqGQK3sVN_dc997f27.webp",
+      "PackagePath": "staticwebassets/images/products/600_nuZa2mRvwhMp1VVtbqGQK3sVN_dc997f27.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_vzhZIvYoWBicwMkWeVakpbTH8_5a747a8c.webp",
+      "PackagePath": "staticwebassets/images/products/600_vzhZIvYoWBicwMkWeVakpbTH8_5a747a8c.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/600_vzhZIvYoWBicwMkWeVakpbTH8_6f0cf4c5.webp",
+      "PackagePath": "staticwebassets/images/products/600_vzhZIvYoWBicwMkWeVakpbTH8_6f0cf4c5.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 14.03.08_7e9adfaf.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 14.03.08_7e9adfaf.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 14.04.21_3bc4c599.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 14.04.21_3bc4c599.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-17 lúc 16.05.50_475089c8.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-17 lúc 16.05.50_475089c8.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/products/Ảnh màn hình 2025-10-19 lúc 22.56.31_d3de67a9.png",
+      "PackagePath": "staticwebassets/images/products/Ảnh màn hình 2025-10-19 lúc 22.56.31_d3de67a9.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/profiles/06b71a56-10c9-4200-b850-76da018862ac.jpg",
+      "PackagePath": "staticwebassets/images/profiles/06b71a56-10c9-4200-b850-76da018862ac.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/profiles/a46c789f-2e21-4637-89ac-4da713ff2dbd.jpg",
+      "PackagePath": "staticwebassets/images/profiles/a46c789f-2e21-4637-89ac-4da713ff2dbd.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/profiles/default-avatar.png",
+      "PackagePath": "staticwebassets/images/profiles/default-avatar.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/profiles/e1296bbb-7adb-4a43-bee3-0d0c251c2d07.jpg",
+      "PackagePath": "staticwebassets/images/profiles/e1296bbb-7adb-4a43-bee3-0d0c251c2d07.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/profiles/e2742c18-215c-4266-a694-df1c8ec90185.webp",
+      "PackagePath": "staticwebassets/images/profiles/e2742c18-215c-4266-a694-df1c8ec90185.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/02443df6-313a-4173-a5e9-37c6bbea6bed.webp",
+      "PackagePath": "staticwebassets/images/ratings/02443df6-313a-4173-a5e9-37c6bbea6bed.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/46b6b416-a388-452b-a0b7-8638cf302477.png",
+      "PackagePath": "staticwebassets/images/ratings/46b6b416-a388-452b-a0b7-8638cf302477.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/514c4f06-cbb8-417f-ac6c-9390a57b3721.jpg",
+      "PackagePath": "staticwebassets/images/ratings/514c4f06-cbb8-417f-ac6c-9390a57b3721.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/56e36aae-bf98-4a40-a522-e85cd17e288b.png",
+      "PackagePath": "staticwebassets/images/ratings/56e36aae-bf98-4a40-a522-e85cd17e288b.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/684db4c2-3340-4e7a-970f-9951e986d09f.png",
+      "PackagePath": "staticwebassets/images/ratings/684db4c2-3340-4e7a-970f-9951e986d09f.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/8740ba59-3c51-4af7-95e5-b5820cdfdc56.webp",
+      "PackagePath": "staticwebassets/images/ratings/8740ba59-3c51-4af7-95e5-b5820cdfdc56.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/92a4f995-505c-40d1-8e6f-099a4fbcbdb0.jpg",
+      "PackagePath": "staticwebassets/images/ratings/92a4f995-505c-40d1-8e6f-099a4fbcbdb0.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/9509d917-96d1-4c79-85bb-ba220a95b558.webp",
+      "PackagePath": "staticwebassets/images/ratings/9509d917-96d1-4c79-85bb-ba220a95b558.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/c18be8e8-ce6f-4340-b7dc-254a6b56005d.webp",
+      "PackagePath": "staticwebassets/images/ratings/c18be8e8-ce6f-4340-b7dc-254a6b56005d.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/e0939265-0900-4dde-9155-ea260ee39ae3.png",
+      "PackagePath": "staticwebassets/images/ratings/e0939265-0900-4dde-9155-ea260ee39ae3.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/ratings/fc89f7f2-c22f-4df9-8601-f89e53ac97eb.png",
+      "PackagePath": "staticwebassets/images/ratings/fc89f7f2-c22f-4df9-8601-f89e53ac97eb.png"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/replies/011a66bd-6807-448b-90a6-50526bacd4b6.jpg",
+      "PackagePath": "staticwebassets/images/replies/011a66bd-6807-448b-90a6-50526bacd4b6.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/replies/893cb8d0-752a-403d-8f74-8457d4b92ef2.jpeg",
+      "PackagePath": "staticwebassets/images/replies/893cb8d0-752a-403d-8f74-8457d4b92ef2.jpeg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/replies/92351b86-a5be-4d02-8377-c3f72c383630.jpg",
+      "PackagePath": "staticwebassets/images/replies/92351b86-a5be-4d02-8377-c3f72c383630.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/replies/bd7b7e15-717f-4602-aca9-11cba5c9e9aa.jpg",
+      "PackagePath": "staticwebassets/images/replies/bd7b7e15-717f-4602-aca9-11cba5c9e9aa.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/images/replies/cbf08401-7e29-4ad6-8217-2d5706f2d48c.jpg",
+      "PackagePath": "staticwebassets/images/replies/cbf08401-7e29-4ad6-8217-2d5706f2d48c.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/js/flower-detection.js",
+      "PackagePath": "staticwebassets/js/flower-detection.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/js/login-history.js",
+      "PackagePath": "staticwebassets/js/login-history.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/js/site.js",
+      "PackagePath": "staticwebassets/js/site.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/LICENSE",
+      "PackagePath": "staticwebassets/lib/bootstrap"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-grid.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-reboot.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap-utilities.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.min.css"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/css/bootstrap.rtl.min.css.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/css/bootstrap.rtl.min.css.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.bundle.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.bundle.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.esm.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.esm.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/bootstrap/dist/js/bootstrap.min.js.map",
+      "PackagePath": "staticwebassets/lib/bootstrap/dist/js/bootstrap.min.js.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/LICENSE.txt"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation/LICENSE.md",
+      "PackagePath": "staticwebassets/lib/jquery-validation/LICENSE.md"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation/dist/additional-methods.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/additional-methods.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation/dist/additional-methods.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/additional-methods.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation/dist/jquery.validate.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/jquery.validate.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery-validation/dist/jquery.validate.min.js",
+      "PackagePath": "staticwebassets/lib/jquery-validation/dist/jquery.validate.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery/LICENSE.txt",
+      "PackagePath": "staticwebassets/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery/dist/jquery.js",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery/dist/jquery.min.js",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.js"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/lib/jquery/dist/jquery.min.map",
+      "PackagePath": "staticwebassets/lib/jquery/dist/jquery.min.map"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/014e9506-c9db-45e2-ba8f-fefb39c56104.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/014e9506-c9db-45e2-ba8f-fefb39c56104.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/10a7169b-023f-4627-9161-c5b3ae3e5db4.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/10a7169b-023f-4627-9161-c5b3ae3e5db4.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/15aca99f-1d29-45ee-9417-0249047c22b4.webp",
+      "PackagePath": "staticwebassets/uploads/chat/15aca99f-1d29-45ee-9417-0249047c22b4.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/18ada754-b8db-41e8-9457-45b669db138e.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/18ada754-b8db-41e8-9457-45b669db138e.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/3bfa5b4f-4a0e-418b-94c3-e8aecff0a6a6.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/3bfa5b4f-4a0e-418b-94c3-e8aecff0a6a6.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/52168978-1d9c-45fd-86f6-2691b89731b6.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/52168978-1d9c-45fd-86f6-2691b89731b6.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/5e1eee2b-3a8b-421b-8a3f-16fddffdc8c0.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/5e1eee2b-3a8b-421b-8a3f-16fddffdc8c0.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/80b08ccb-5d46-47ce-9590-3a2f3bedc522.webp",
+      "PackagePath": "staticwebassets/uploads/chat/80b08ccb-5d46-47ce-9590-3a2f3bedc522.webp"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/chat/a66e75e1-8837-4e73-9aea-559f673eaa3f.jpg",
+      "PackagePath": "staticwebassets/uploads/chat/a66e75e1-8837-4e73-9aea-559f673eaa3f.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/delivery-proofs/delivery_proof_1141_20251209102713.jpg",
+      "PackagePath": "staticwebassets/uploads/delivery-proofs/delivery_proof_1141_20251209102713.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/delivery-proofs/delivery_proof_1141_20251210055832.jpg",
+      "PackagePath": "staticwebassets/uploads/delivery-proofs/delivery_proof_1141_20251210055832.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/delivery-proofs/delivery_proof_1143_20251210064042.jpg",
+      "PackagePath": "staticwebassets/uploads/delivery-proofs/delivery_proof_1143_20251210064042.jpg"
+    },
+    {
+      "Id": "/Users/daokhoa/Documents/LẬP TRÌNH DI ĐỘNG/Do_An/bloomie/wwwroot/uploads/delivery-proofs/delivery_proof_1144_20251210075632.jpg",
+      "PackagePath": "staticwebassets/uploads/delivery-proofs/delivery_proof_1144_20251210075632.jpg"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.Bloomie.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.Bloomie.props",
+      "PackagePath": "build\\Bloomie.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.Bloomie.props",
+      "PackagePath": "buildMultiTargeting\\Bloomie.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.Bloomie.props",
+      "PackagePath": "buildTransitive\\Bloomie.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

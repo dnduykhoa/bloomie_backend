@@ -1,0 +1,409 @@
+@{
+    ViewData["Title"] = "Tạo Vòng Quay May Mắn";
+  Layout = "~/Areas/Manager/Views/Shared/_ManagerLayout.cshtml";
+    var promoCodes = ViewBag.PromotionCodes as List<Bloomie.Models.Entities.PromotionCode> ?? new List<Bloomie.Models.Entities.PromotionCode>();
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <h2 class="fw-bold text-dark mb-3">
+                <i class="fas fa-dharmachakra text-warning me-2"></i> Tạo Vòng Quay May Mắn
+            </h2>
+
+            <div class="alert alert-info" style="border-left: 4px solid #0dcaf0;">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Lucky Wheel:</strong> Users quay vòng để nhận voucher ngẫu nhiên. Cấu hình tỉ lệ trúng cho từng loại voucher!
+            </div>
+
+            <form method="post" asp-action="CreateLuckyWheel" id="luckyWheelForm">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Tên Chương Trình <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" required placeholder="VD: Vòng Quay May Mắn Tháng 11">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Số Lượt Quay/User <span class="text-danger">*</span></label>
+                        <input type="number" name="spinsPerUser" class="form-control" required min="1" max="10" value="3">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">Mô Tả</label>
+                        <textarea name="description" class="form-control" rows="2" placeholder="Quay vòng nhận voucher miễn phí! Mỗi người có 3 lượt quay."></textarea>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Thời Gian Bắt Đầu <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="startDate" class="form-control" required id="startDateInput">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Thời Gian Kết Thúc <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="endDate" class="form-control" required id="endDateInput">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Cấu Hình Voucher & Tỉ Lệ Trúng <span class="text-danger">*</span></label>
+                    <div class="alert alert-secondary">
+                        <small><i class="bi bi-lightbulb me-1"></i> <strong>Tỉ lệ:</strong> 0.0 (0%) đến 1.0 (100%). Tổng tỉ lệ nên = 1.0. VD: 3 voucher có tỉ lệ 0.3, 0.5, 0.2</small>
+                    </div>
+
+                    <div id="voucherRatesContainer">
+                        <!-- Voucher rate entries will be added here -->
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addVoucherRate()">
+                        <i class="bi bi-plus-circle me-1"></i> Thêm Voucher
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning ms-2" onclick="addLuckySlot()">
+                        <i class="bi bi-clover me-1"></i> Thêm Ô "Chúc May Mắn"
+                    </button>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-bold">URL Banner (Optional)</label>
+                        <input type="text" name="bannerImage" class="form-control" placeholder="/images/banners/lucky-wheel.jpg">
+                    </div>
+                </div>
+
+                <input type="hidden" name="voucherIdsJson" id="voucherIdsJsonInput">
+
+                <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                    <a asp-action="CreateTypeSelect" asp-route-tab="program" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-warning text-dark">
+                        <i class="fas fa-dharmachakra me-1"></i> Tạo Vòng Quay
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div><style>
+    :root {
+        --primary-color: #0e7490;
+        --secondary-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f0fdfa;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .btn-primary, .btn-secondary, .btn-warning, .btn-danger {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #0891b2; 
+        border-color: #0891b2; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        border-color: #ffc107;
+    }
+
+    .btn-warning:hover {
+        background-color: #ffb300;
+        border-color: #ffb300;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+
+    .btn-danger:hover {
+        background-color: #b91c1c;
+        border-color: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .form-control, .form-select {
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+
+    .alert {
+        border-radius: 6px;
+    }
+
+    .voucher-rate-entry .card {
+        border: 1px solid #e5e7eb;
+    }
+
+    .voucher-rate-entry .card-body {
+        padding: 12px;
+    }
+
+    .lucky-slot-entry {
+        background-color: #fffbeb;
+        border-color: #ffc107 !important;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+
+    .btn-danger.btn-sm {
+        transition: all 0.2s ease;
+    }
+
+    .btn-danger.btn-sm:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+    }
+
+    .btn-outline-primary,
+    .btn-outline-warning {
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(14, 116, 144, 0.2);
+    }
+
+    .btn-outline-warning:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(255, 193, 7, 0.2);
+    }
+</style>
+
+<script>
+    let voucherRateIndex = 0;
+    const promoCodes = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        promoCodes.Select(pc => new { 
+            id = pc.Id, 
+            code = pc.Code, 
+            discount = pc.IsPercent 
+                ? $"Giảm {pc.Value}%" + (pc.MaxDiscount.HasValue ? $" (tối đa {pc.MaxDiscount.Value:N0}đ)" : "")
+                : $"Giảm {(pc.Value ?? 0):N0}đ"
+        }).ToList()
+    ));
+
+    function addVoucherRate() {
+        const container = document.getElementById('voucherRatesContainer');
+        const div = document.createElement('div');
+        div.className = 'card mb-2 voucher-rate-entry';
+        div.innerHTML = `
+            <div class="card-body p-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label">Voucher</label>
+                        <select class="form-select voucher-select" required>
+                            <option value="">-- Chọn voucher --</option>
+                            ${promoCodes.map(pc => `<option value="${pc.id}">[${pc.code}] - ${pc.discount}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tỉ Lệ Trúng (0.0 - 1.0)</label>
+                        <input type="number" class="form-control rate-input" step="0.01" min="0" max="1" value="0.3" required>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.voucher-rate-entry').remove(); updateTotalRate();">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        
+        // Add event listener to update total rate
+        div.querySelector('.rate-input').addEventListener('input', updateTotalRate);
+        
+        voucherRateIndex++;
+        updateTotalRate();
+    }
+
+    function addLuckySlot() {
+        const container = document.getElementById('voucherRatesContainer');
+        const div = document.createElement('div');
+        div.className = 'card mb-2 voucher-rate-entry lucky-slot-entry';
+        div.innerHTML = `
+            <div class="card-body p-3 bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-clover text-warning me-1"></i>
+                            <strong>Ô "Chúc May Mắn Lần Sau"</strong>
+                        </label>
+                        <input type="text" class="form-control" value="Không trúng thưởng" disabled>
+                        <input type="hidden" class="lucky-slot-marker" value="lucky">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tỉ Lệ Trúng (0.0 - 1.0)</label>
+                        <input type="number" class="form-control rate-input" step="0.01" min="0" max="1" value="0.2" required>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('.voucher-rate-entry').remove(); updateTotalRate();">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    User trúng ô này sẽ KHÔNG nhận được voucher
+                </small>
+            </div>
+        `;
+        container.appendChild(div);
+        
+        // Add event listener to update total rate
+        div.querySelector('.rate-input').addEventListener('input', updateTotalRate);
+        
+        voucherRateIndex++;
+        updateTotalRate();
+    }
+
+    function updateTotalRate() {
+        const rates = document.querySelectorAll('.rate-input');
+        let total = 0;
+        rates.forEach(r => total += parseFloat(r.value || 0));
+        
+        // Display total rate (optional, for admin feedback)
+        console.log('Total rate:', total.toFixed(2));
+    }
+
+    // Add initial voucher rate entries
+    addVoucherRate();
+    addVoucherRate();
+    addVoucherRate();
+
+    // On form submit, build JSON
+    document.getElementById('luckyWheelForm').addEventListener('submit', function(e) {
+        const voucherRates = [];
+        const entries = document.querySelectorAll('.voucher-rate-entry');
+        entries.forEach(entry => {
+            const rate = parseFloat(entry.querySelector('.rate-input').value);
+            
+            // Check if this is a lucky slot
+            const isLuckySlot = entry.querySelector('.lucky-slot-marker');
+            
+            if (isLuckySlot) {
+                // Lucky slot (no prize)
+                if (rate >= 0) {
+                    voucherRates.push({ Id: 0, Rate: rate, IsLucky: true });
+                }
+            } else {
+                // Regular voucher slot
+                const voucherId = entry.querySelector('.voucher-select').value;
+                if (voucherId && rate >= 0) {
+                    voucherRates.push({ Id: parseInt(voucherId), Rate: rate, IsLucky: false });
+                }
+            }
+        });
+
+        if (voucherRates.length === 0) {
+            e.preventDefault();
+            alert('Vui lòng thêm ít nhất 1 voucher hoặc ô may mắn với tỉ lệ > 0!');
+            return false;
+        }
+
+        // Kiểm tra tổng tỷ lệ
+        let totalRate = voucherRates.reduce((sum, vr) => sum + vr.Rate, 0);
+        totalRate = Math.round(totalRate * 100) / 100;
+
+        if (totalRate > 1) {
+            e.preventDefault();
+            alert('Tổng tỉ lệ vượt quá 100%. Vui lòng giảm lại!');
+            return false;
+        }
+        if (totalRate < 1 && voucherRates.length > 0) {
+            // Tự động cộng phần thiếu vào entry cuối cùng
+            const missing = Math.round((1 - totalRate) * 100) / 100;
+            voucherRates[voucherRates.length - 1].Rate += missing;
+            totalRate = 1;
+            alert('Hệ thống đã tự động cộng phần thiếu vào entry cuối cùng để đủ 100%.');
+        }
+
+        document.getElementById('voucherIdsJsonInput').value = JSON.stringify(voucherRates);
+    });
+
+    // Set default start/end dates
+    const now = new Date();
+    const startInput = document.getElementById('startDateInput');
+    const endInput = document.getElementById('endDateInput');
+    
+    // Function to format datetime-local input (YYYY-MM-DDTHH:mm)
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Start: Ngay bây giờ (immediate start) - LOCAL TIME
+    startInput.value = formatDateTimeLocal(now);
+    
+    const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    endInput.value = nextWeek.toISOString().slice(0, 16);
+</script>

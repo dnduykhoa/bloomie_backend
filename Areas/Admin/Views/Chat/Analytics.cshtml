@@ -1,0 +1,923 @@
+@{
+    ViewData["Title"] = "Quản lý hỗ trợ khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Quản lý hỗ trợ khách hàng
+                </h2>
+                <div>
+                    <a href="@Url.Action("Index", "Chat", new { area = "Admin" })" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <button id="refresh-analytics-btn" class="btn btn-primary me-2">
+                        <i class="fas fa-sync-alt me-1"></i> Làm mới
+                    </button>
+                    <button id="export-report-btn" class="btn btn-success">
+                        <i class="fas fa-file-excel me-1"></i> Xuất Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="filter-section mb-4">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt me-1"></i> Từ ngày
+                        </label>
+                        <input type="date" class="form-control" id="analytics-from-date">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt me-1"></i> Đến ngày
+                        </label>
+                        <input type="date" class="form-control" id="analytics-to-date">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            <i class="fas fa-clock me-1"></i> Khoảng Thời Gian
+                        </label>
+                        <select class="form-select" id="date-preset">
+                            <option value="7">7 ngày qua</option>
+                            <option value="30">30 ngày qua</option>
+                            <option value="90">90 ngày qua</option>
+                            <option value="custom">Tùy chỉnh</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100" id="apply-filter-btn">
+                            <i class="fas fa-search me-1"></i> Áp dụng
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4" id="analytics-summary">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Tổng Cuộc Hội Thoại</div>
+                            <div class="stat-value" id="total-conversations-stat">
+                                <span class="spinner-border spinner-border-sm"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đã Giải Quyết</div>
+                            <div class="stat-value">
+                                <span id="resolved-conversations-stat"><span class="spinner-border spinner-border-sm"></span></span>
+                                <small id="resolved-rate" class="ms-2" style="font-size: 0.9rem; color: #94a3b8;">-</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Thời Gian Phản Hồi TB</div>
+                            <div class="stat-value" id="avg-response-time-stat">
+                                <span class="spinner-border spinner-border-sm"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card stat-card-danger">
+                        <div class="stat-icon">
+                            <i class="fas fa-hourglass-half"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Đang Chờ</div>
+                            <div class="stat-value">
+                                <span id="pending-conversations-stat"><span class="spinner-border spinner-border-sm"></span></span>
+                                <small id="pending-rate" class="ms-2" style="font-size: 0.9rem; color: #94a3b8;">-</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="row mb-4">
+        <div class="col-lg-8 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-line text-primary"></i> Cuộc Hội Thoại Theo Ngày
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="daily-conversations-chart" height="60"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-pie text-success"></i> Phân Bổ Theo Tag
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="tag-distribution-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-bar text-info"></i> Giờ Cao Điểm Chat
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="hourly-distribution-chart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-exclamation-circle text-warning"></i> Độ Ưu Tiên
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="priority-distribution-chart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Staff Performance -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-trophy text-warning"></i> Bảng Xếp Hạng Staff
+                        </h6>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary active" data-sort="total">
+                                <i class="fas fa-sort-amount-down"></i> Tổng
+                            </button>
+                            <button class="btn btn-outline-success" data-sort="resolved">
+                                <i class="fas fa-check"></i> Giải quyết
+                            </button>
+                            <button class="btn btn-outline-info" data-sort="speed">
+                                <i class="fas fa-bolt"></i> Tốc độ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="staff-performance-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 80px;">Hạng</th>
+                                    <th>Tên Staff</th>
+                                    <th class="text-center">Tổng Hội Thoại</th>
+                                    <th class="text-center">Đã Giải Quyết</th>
+                                    <th style="width: 200px;">Tỷ Lệ Thành Công</th>
+                                    <th class="text-center">Thời Gian TB</th>
+                                    <th class="text-center">Đánh Giá</th>
+                                </tr>
+                            </thead>
+                            <tbody id="staff-performance-body">
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Đang tải...</span>
+                                        </div>
+                                        <p class="mt-2 mb-0">Đang tải dữ liệu...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics -->
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-bullseye text-danger"></i> Top 10 Khách Hàng Tương Tác Nhiều
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush" id="top-customers-list">
+                        <div class="text-center py-3 text-muted">
+                            <span class="spinner-border spinner-border-sm"></span> Đang tải...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-fire text-danger"></i> Từ Khóa Thường Gặp
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="keywords-cloud">
+                        <div class="text-center py-3 text-muted">
+                            <span class="spinner-border spinner-border-sm"></span> Đang tải...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+    }
+
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        width: 100% !important; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    /* Filter Section */
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .filter-section .form-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Statistics Cards */
+    .stat-card {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border-left: 4px solid;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card-primary { border-left-color: var(--primary-color); }
+    .stat-card-success { border-left-color: var(--success-color); }
+    .stat-card-warning { border-left-color: var(--warning-color); }
+    .stat-card-danger { border-left-color: var(--danger-color); }
+
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.75rem;
+        margin-right: 1rem;
+    }
+
+    .stat-card-primary .stat-icon {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: var(--primary-color);
+    }
+
+    .stat-card-success .stat-icon {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: var(--success-color);
+    }
+
+    .stat-card-warning .stat-icon {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: var(--warning-color);
+    }
+
+    .stat-card-danger .stat-icon {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: var(--danger-color);
+    }
+
+    .stat-content {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    /* Buttons */
+    .btn-primary, .btn-success, .btn-secondary {
+        border-radius: 6px; 
+        padding: 6px 12px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary { 
+        background-color: var(--primary-color); 
+        border-color: var(--primary-color); 
+    }
+    
+    .btn-primary:hover { 
+        background-color: #1d4ed8; 
+        border-color: #1d4ed8; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+    
+    .btn-success { 
+        background-color: #28a745; 
+        border-color: #28a745; 
+    }
+    
+    .btn-success:hover { 
+        background-color: #218838; 
+        border-color: #218838; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-secondary { 
+        background-color: #6b7280; 
+        border-color: #6b7280; 
+    }
+    
+    .btn-secondary:hover { 
+        background-color: #4b5563; 
+        border-color: #4b5563; 
+        transform: translateY(-1px); 
+    }
+
+    /* Form Controls */
+    .form-control, .form-select {
+        border-radius: 6px; 
+        border: 1px solid #d1d5db; 
+        padding: 8px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .form-control:focus, .form-select:focus { 
+        border-color: var(--primary-color); 
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+        outline: none; 
+    }
+
+    /* Charts */
+    .card.border-0 {
+        transition: transform 0.2s ease;
+    }
+    
+    .card.border-0:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Staff Performance Table */
+    #staff-performance-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    #staff-performance-table tbody tr:hover {
+        background: linear-gradient(to right, #f8f9fa, #ffffff);
+        transform: scale(1.01);
+    }
+
+    .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .rank-1 {
+        background: linear-gradient(135deg, #ffd700, #ffed4e);
+        color: #8b6914;
+        box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .rank-2 {
+        background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+        color: #666;
+        box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
+    }
+
+    .rank-3 {
+        background: linear-gradient(135deg, #cd7f32, #e8a87c);
+        color: #654321;
+        box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
+    }
+
+    /* Keywords */
+    .keyword-tag {
+        display: inline-block;
+        padding: 8px 16px;
+        margin: 5px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: 500;
+        transition: transform 0.2s ease;
+    }
+
+    .keyword-tag:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let dailyConversationsChart = null;
+    let tagDistributionChart = null;
+    let hourlyDistributionChart = null;
+    let priorityDistributionChart = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeDates();
+        loadAnalytics();
+        
+        // Event listeners
+        document.getElementById('apply-filter-btn').addEventListener('click', loadAnalytics);
+        document.getElementById('refresh-analytics-btn').addEventListener('click', loadAnalytics);
+        document.getElementById('date-preset').addEventListener('change', handlePresetChange);
+        document.getElementById('export-report-btn').addEventListener('click', exportToExcel);
+    });
+
+    function initializeDates() {
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        
+        document.getElementById('analytics-to-date').value = today.toISOString().split('T')[0];
+        document.getElementById('analytics-from-date').value = lastWeek.toISOString().split('T')[0];
+    }
+
+    function handlePresetChange(e) {
+        const days = parseInt(e.target.value);
+        if (isNaN(days)) return;
+
+        const today = new Date();
+        const fromDate = new Date(today);
+        fromDate.setDate(fromDate.getDate() - days);
+        
+        document.getElementById('analytics-to-date').value = today.toISOString().split('T')[0];
+        document.getElementById('analytics-from-date').value = fromDate.toISOString().split('T')[0];
+    }
+
+    async function loadAnalytics() {
+        const fromDate = document.getElementById('analytics-from-date').value;
+        const toDate = document.getElementById('analytics-to-date').value;
+
+        if (!fromDate || !toDate) {
+            alert('Vui lòng chọn khoảng thời gian');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/supportchat/analytics?from=${fromDate}&to=${toDate}`);
+            if (!response.ok) throw new Error('Failed to load analytics');
+            
+            const data = await response.json();
+            
+            // Update summary cards
+            updateSummaryCards(data);
+
+            // Update charts
+            updateDailyConversationsChart(data.dailyConversations || []);
+            updateTagDistributionChart(data.tagDistribution || []);
+            updateHourlyDistributionChart(data.hourlyDistribution || []);
+            updatePriorityDistributionChart(data.priorityDistribution || []);
+
+            // Update staff performance table
+            updateStaffPerformanceTable(data.staffPerformance || []);
+
+            // Update top customers
+            updateTopCustomers(data.topCustomers || []);
+
+            // Update keywords
+            updateKeywords(data.keywords || []);
+
+        } catch (error) {
+            console.error('Error loading analytics:', error);
+            alert('Không thể tải dữ liệu thống kê. Vui lòng thử lại.');
+        }
+    }
+
+    function updateSummaryCards(data) {
+        document.getElementById('total-conversations-stat').textContent = data.totalConversations || 0;
+        document.getElementById('resolved-conversations-stat').textContent = data.resolvedConversations || 0;
+        document.getElementById('avg-response-time-stat').textContent = data.avgResponseTime || '-';
+        document.getElementById('pending-conversations-stat').textContent = data.pendingConversations || 0;
+
+        // Calculate rates
+        const total = data.totalConversations || 1;
+        const resolvedRate = ((data.resolvedConversations / total) * 100).toFixed(1);
+        const pendingRate = ((data.pendingConversations / total) * 100).toFixed(1);
+
+        document.getElementById('resolved-rate').textContent = `${resolvedRate}% tỷ lệ`;
+        document.getElementById('pending-rate').textContent = `${pendingRate}% tỷ lệ`;
+    }
+
+    function updateDailyConversationsChart(data) {
+        const ctx = document.getElementById('daily-conversations-chart');
+        if (!ctx) return;
+
+        const labels = data.map(d => d.date);
+        const values = data.map(d => d.count);
+
+        if (dailyConversationsChart) {
+            dailyConversationsChart.destroy();
+        }
+
+        dailyConversationsChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số conversation',
+                    data: values,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 13 }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { 
+                            precision: 0,
+                            padding: 5
+                        },
+                        grid: {
+                            display: true,
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            padding: 5
+                        }
+                    }
+                },
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 0
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTagDistributionChart(data) {
+        const ctx = document.getElementById('tag-distribution-chart');
+        if (!ctx) return;
+
+        const labels = data.map(d => d.tag || 'Không tag');
+        const values = data.map(d => d.count);
+        const colors = ['#667eea', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+        if (tagDistributionChart) {
+            tagDistributionChart.destroy();
+        }
+
+        tagDistributionChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, labels.length),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 15, font: { size: 12 } }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateHourlyDistributionChart(data) {
+        const ctx = document.getElementById('hourly-distribution-chart');
+        if (!ctx) return;
+
+        // Generate data for 24 hours if not provided
+        const hours = Array.from({length: 24}, (_, i) => `${i}:00`);
+        const values = Array(24).fill(0);
+        
+        data.forEach(d => {
+            if (d.hour >= 0 && d.hour < 24) {
+                values[d.hour] = d.count;
+            }
+        });
+
+        if (hourlyDistributionChart) {
+            hourlyDistributionChart.destroy();
+        }
+
+        hourlyDistributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: hours,
+                datasets: [{
+                    label: 'Số conversation',
+                    data: values,
+                    backgroundColor: 'rgba(6, 182, 212, 0.7)',
+                    borderColor: '#06b6d4',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    function updatePriorityDistributionChart(data) {
+        const ctx = document.getElementById('priority-distribution-chart');
+        if (!ctx) return;
+
+        const labels = ['Bình thường', 'Cao', 'Khẩn cấp'];
+        const values = [0, 0, 0];
+        
+        data.forEach(d => {
+            if (d.priority >= 0 && d.priority <= 2) {
+                values[d.priority] = d.count;
+            }
+        });
+
+        if (priorityDistributionChart) {
+            priorityDistributionChart.destroy();
+        }
+
+        priorityDistributionChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Số conversation',
+                    data: values,
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateStaffPerformanceTable(data) {
+        const tbody = document.getElementById('staff-performance-body');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map((staff, index) => {
+            const rank = index + 1;
+            let rankBadge = '';
+            
+            if (rank === 1) {
+                rankBadge = '<div class="rank-badge rank-1">🥇</div>';
+            } else if (rank === 2) {
+                rankBadge = '<div class="rank-badge rank-2">🥈</div>';
+            } else if (rank === 3) {
+                rankBadge = '<div class="rank-badge rank-3">🥉</div>';
+            } else {
+                rankBadge = `<div class="rank-badge bg-light text-secondary">${rank}</div>`;
+            }
+
+            const resolveRate = staff.totalConversations > 0 
+                ? ((staff.resolvedConversations / staff.totalConversations) * 100).toFixed(1)
+                : 0;
+
+            const progressClass = resolveRate >= 80 ? 'bg-success' : resolveRate >= 50 ? 'bg-warning' : 'bg-danger';
+
+            return `
+                <tr>
+                    <td class="text-center">${rankBadge}</td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-circle me-2" style="width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                ${staff.staffName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <div class="fw-bold">${staff.staffName}</div>
+                                <small class="text-muted">${staff.role || 'Staff'}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-primary" style="font-size: 0.9rem; padding: 6px 12px;">
+                            ${staff.totalConversations}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-success" style="font-size: 0.9rem; padding: 6px 12px;">
+                            ${staff.resolvedConversations}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height: 24px;">
+                                <div class="progress-bar ${progressClass}" 
+                                     style="width: ${resolveRate}%; font-weight: 600; font-size: 0.85rem;">
+                                    ${resolveRate}%
+                                </div>
+                            </div>
+                            <span class="badge ${progressClass}" style="min-width: 50px;">${resolveRate}%</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-info" style="font-size: 0.85rem; padding: 6px 12px;">
+                            ${staff.avgResponseTime || 'N/A'}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        ${generateStarRating(resolveRate)}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function generateStarRating(rate) {
+        const stars = rate >= 90 ? 5 : rate >= 75 ? 4 : rate >= 60 ? 3 : rate >= 40 ? 2 : 1;
+        return '⭐'.repeat(stars);
+    }
+
+    function updateTopCustomers(data) {
+        const list = document.getElementById('top-customers-list');
+        if (!list) return;
+
+        if (data.length === 0) {
+            list.innerHTML = '<div class="text-center text-muted py-3">Không có dữ liệu</div>';
+            return;
+        }
+
+        list.innerHTML = data.map((customer, index) => `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-secondary me-2">${index + 1}</span>
+                    <strong class="text-dark">${customer.customerName}</strong>
+                </div>
+                <span class="badge bg-primary rounded-pill">${customer.conversationCount} chats</span>
+            </div>
+        `).join('');
+    }
+
+    function updateKeywords(data) {
+        const container = document.getElementById('keywords-cloud');
+        if (!container) return;
+
+        if (data.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted py-3">Không có dữ liệu</div>';
+            return;
+        }
+
+        container.innerHTML = data.map(keyword => {
+            const size = Math.min(keyword.count / 2 + 10, 20);
+            return `<span class="keyword-tag" style="font-size: ${size}px;">${keyword.keyword} (${keyword.count})</span>`;
+        }).join('');
+    }
+
+    function exportToExcel() {
+        const fromDate = document.getElementById('analytics-from-date').value;
+        const toDate = document.getElementById('analytics-to-date').value;
+        
+        window.location.href = `/api/supportchat/analytics/export?from=${fromDate}&to=${toDate}`;
+    }
+</script>

@@ -1,0 +1,606 @@
+@model List<Bloomie.Models.Entities.PromotionCode>
+@{
+    ViewData["Title"] = "Vouchers Khuyến Mãi";
+    var userVoucherIds = ViewBag.UserVoucherIds as List<int> ?? new List<int>();
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var flashSaleCampaigns = ViewBag.FlashSaleCampaigns as List<Bloomie.Models.Entities.VoucherCampaign> ?? new List<Bloomie.Models.Entities.VoucherCampaign>();
+    var luckyWheelCampaigns = ViewBag.LuckyWheelCampaigns as List<Bloomie.Models.Entities.VoucherCampaign> ?? new List<Bloomie.Models.Entities.VoucherCampaign>();
+    var hasSpecialPrograms = (bool)(ViewBag.HasSpecialPrograms ?? false);
+    var userFlashSaleVouchers = ViewBag.UserFlashSaleVouchers as Dictionary<int, int> ?? new Dictionary<int, int>();
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Khuyến mãi</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-gift me-2"></i>
+                Chương Trình Khuyến Mãi
+            </h1>
+            <p class="header-subtitle">Thu thập voucher miễn phí và tiết kiệm khi mua sắm!</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+
+    @if (!isAuthenticated)
+    {
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            Vui lòng <a asp-controller="Account" asp-action="Login" class="alert-link fw-bold">đăng nhập</a> để thu thập voucher vào ví của bạn!
+        </div>
+    }
+
+    @* Special Programs Section - Only show if there are active campaigns *@
+    @if (hasSpecialPrograms)
+    {
+        <div class="special-programs mb-5">
+            <h3 class="section-title text-center mb-4">
+                <i class="bi bi-stars me-2"></i>Chương Trình Khuyến Mãi
+            </h3>
+            @{
+                var programCount = (flashSaleCampaigns.Any() ? 1 : 0) + (luckyWheelCampaigns.Any() ? 1 : 0);
+                var colClass = programCount == 1 ? "col-md-8 mx-auto" : "col-md-6";
+            }
+            <div class="row g-4 mb-4">
+                @* Flash Sale Card - Only show if there are active flash sales *@
+                @if (flashSaleCampaigns.Any())
+                {
+                    <div class="@colClass">
+                        <a href="@Url.Action("FlashSale", "Promotion")" class="text-decoration-none">
+                            <div class="special-card flash-sale-card">
+                                <div class="special-card-icon">
+                                    <i class="bi bi-lightning-fill"></i>
+                                </div>
+                                <div class="special-card-content">
+                                    <h4 class="special-card-title">Flash Sale ⚡</h4>
+                                    <p class="special-card-desc">Săn voucher giảm giá siêu tốc - Số lượng có hạn!</p>
+                                    <div class="special-card-badge">
+                                        <span class="badge bg-danger">@flashSaleCampaigns.Count chương trình</span>
+                                    </div>
+                                </div>
+                                <div class="special-card-arrow">
+                                    <i class="bi bi-arrow-right-circle-fill"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+
+                @* Lucky Wheel Card - Only show if there are active lucky wheel campaigns *@
+                @if (luckyWheelCampaigns.Any())
+                {
+                    <div class="@colClass">
+                        <a href="@Url.Action("LuckyWheel", "Promotion")" class="text-decoration-none">
+                            <div class="special-card lucky-wheel-card">
+                                <div class="special-card-icon">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div class="special-card-content">
+                                    <h4 class="special-card-title">Vòng Quay May Mắn 🎯</h4>
+                                    <p class="special-card-desc">Quay ngay để nhận voucher và quà tặng hấp dẫn!</p>
+                                    <div class="special-card-badge">
+                                        <span class="badge bg-warning text-dark">Miễn phí</span>
+                                    </div>
+                                </div>
+                                <div class="special-card-arrow">
+                                    <i class="bi bi-arrow-right-circle-fill"></i>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center">
+            <i class="bi bi-inbox me-2"></i>
+            Hiện chưa có chương trình voucher nào. Quay lại sau nhé!
+        </div>
+    }
+    else
+    {
+        <h3 class="section-title mb-4">
+            <i class="bi bi-ticket-perforated me-2"></i>Voucher Hấp Dẫn
+        </h3>
+        <div class="row g-4">
+            @foreach (var promoCode in Model)
+            {
+                var hasVoucher = userVoucherIds.Contains(promoCode.Id);
+                var quantityRemaining = promoCode.UsageLimit.HasValue 
+                    ? promoCode.UsageLimit.Value - promoCode.UsedCount 
+                    : (int?)null;
+                var isLowStock = quantityRemaining.HasValue && quantityRemaining.Value <= 50;
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 @(hasVoucher ? "border-success" : "")">
+                        @if (hasVoucher)
+                        {
+                            <div class="position-absolute top-0 end-0 m-2">
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Đã có trong ví
+                                </span>
+                            </div>
+                        }
+                        
+                        <div class="card-body d-flex flex-column">
+                            @* <!-- Campaign Name -->
+                            <h5 class="card-title fw-bold text-primary mb-2">
+                                @promoCode.Promotion?.Name
+                            </h5> *@
+
+                            <!-- Voucher Code -->
+                            <div class="mb-3 p-3 bg-light rounded text-center">
+                                <small class="text-muted d-block mb-1">Mã voucher</small>
+                                <h4 class="mb-0 fw-bold text-dark">@promoCode.Code</h4>
+                            </div>
+
+                            <!-- Discount Info -->
+                            <div class="mb-3">
+                                @{
+                                    var isGiftPromo = promoCode.Promotion?.Type == Bloomie.Models.Entities.PromotionType.Gift;
+                                    var isShippingPromo = promoCode.Promotion?.Type == Bloomie.Models.Entities.PromotionType.Shipping;
+                                    var giftInfo = isGiftPromo ? promoCode.Promotion?.PromotionGifts?.FirstOrDefault() : null;
+                                    var shippingInfo = isShippingPromo ? promoCode.Promotion?.PromotionShippings?.FirstOrDefault() : null;
+                                }
+                                
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-tag-fill text-danger me-2"></i>
+                                    <span class="fw-bold text-danger fs-5">
+                                        @if (isShippingPromo)
+                                        {
+                                            var shipType = promoCode.Promotion?.ShippingDiscountType;
+                                            if (shipType == "free")
+                                            {
+                                                <text>Miễn phí vận chuyển</text>
+                                            }
+                                            else if (shipType == "percent" && promoCode.Value.HasValue)
+                                            {
+                                                <text>Giảm @promoCode.Value%</text>
+                                            }
+                                            else if (shipType == "money" && promoCode.Value.HasValue)
+                                            {
+                                                <text>Giảm @((promoCode.Value.Value).ToString("N0"))đ</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Miễn phí vận chuyển</text>
+                                            }
+                                        }
+                                        else if (isGiftPromo && giftInfo != null)
+                                        {
+                                            // Hiển thị giảm giá cho Mua X tặng Y
+                                            if (giftInfo.GiftDiscountType == "free")
+                                            {
+                                                <text>Tặng @giftInfo.GiftQuantity sản phẩm</text>
+                                            }
+                                            else if (giftInfo.GiftDiscountType == "percent")
+                                            {
+                                                <text>Giảm @giftInfo.GiftDiscountValue% mỗi sản phẩm tặng</text>
+                                            }
+                                            else if (giftInfo.GiftDiscountType == "money")
+                                            {
+                                                <text>Giảm @((giftInfo.GiftDiscountMoneyValue ?? 0).ToString("N0"))đ mỗi sản phẩm tặng</text>
+                                            }
+                                        }
+                                        else if (promoCode.IsPercent)
+                                        {
+                                            <text>Giảm @promoCode.Value%</text>
+                                            if (promoCode.MaxDiscount.HasValue)
+                                            {
+                                                <text> (tối đa @(promoCode.MaxDiscount.Value.ToString("N0"))đ)</text>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <text>Giảm @((promoCode.Value ?? 0).ToString("N0"))đ</text>
+                                        }
+                                    </span>
+                                </div>
+
+                                @if (isShippingPromo && shippingInfo != null)
+                                {
+                                    // Hiển thị điều kiện Miễn phí vận chuyển (lấy từ Promotion)
+                                    @if (promoCode.MinOrderValue.HasValue && promoCode.MinOrderValue.Value > 0)
+                                    {
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-cart-check me-2"></i>
+                                            Đơn tối thiểu: <strong class="ms-1">@((promoCode.MinOrderValue.Value).ToString("N0"))đ</strong>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <strong>Không có điều kiện - Áp dụng cho tất cả đơn hàng</strong>
+                                        </div>
+                                    }
+                                }
+                                else if (isGiftPromo && giftInfo != null)
+                                {
+                                    // Hiển thị điều kiện Mua X tặng Y
+                                    @if (giftInfo.BuyConditionType == "MinQuantity")
+                                    {
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-box-seam me-2"></i>
+                                            Mua tối thiểu: <strong class="ms-1">@giftInfo.BuyConditionValue sản phẩm</strong>
+                                        </div>
+                                    }
+                                    else if (giftInfo.BuyConditionType == "MinValue")
+                                    {
+                                        <div class="d-flex align-items-center text-muted small">
+                                            <i class="bi bi-currency-dollar me-2"></i>
+                                            Tổng giá trị tối thiểu: <strong class="ms-1">@((giftInfo.BuyConditionValueMoney ?? 0).ToString("N0"))đ</strong>
+                                        </div>
+                                    }
+                                }
+
+                                @if (!isShippingPromo && promoCode.MinOrderValue.HasValue)
+                                {
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="bi bi-cart-check me-2"></i>
+                                        Đơn tối thiểu: <strong class="ms-1">@promoCode.MinOrderValue.Value.ToString("N0") đ</strong>
+                                    </div>
+                                }
+                                
+                                @if (promoCode.Promotion?.MinProductQuantity.HasValue == true)
+                                {
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="bi bi-box-seam me-2"></i>
+                                        Tối thiểu: <strong class="ms-1">@promoCode.Promotion.MinProductQuantity.Value sản phẩm</strong>
+                                    </div>
+                                }
+                                
+                                @if (promoCode.Promotion?.MinProductValue.HasValue == true)
+                                {
+                                    <div class="d-flex align-items-center text-muted small">
+                                        <i class="bi bi-currency-dollar me-2"></i>
+                                        Giá trị sản phẩm tối thiểu: <strong class="ms-1">@promoCode.Promotion.MinProductValue.Value.ToString("N0") đ</strong>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Description -->
+                            @if (!string.IsNullOrEmpty(promoCode.Promotion?.Description))
+                            {
+                                <p class="text-muted small mb-3">
+                                    @promoCode.Promotion.Description
+                                </p>
+                            }
+
+                            <!-- Expiry & Quantity Info -->
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+                                    <span>
+                                        <i class="bi bi-calendar-x me-1"></i>
+                                        HSD: @(promoCode.ExpiryDate.HasValue ? promoCode.ExpiryDate.Value.ToString("dd/MM/yyyy") : "Không có ngày kết thúc")
+                                    </span>
+                                    @if (quantityRemaining.HasValue)
+                                    {
+                                        <span class="@(isLowStock ? "text-danger fw-bold" : "")">
+                                            <i class="bi bi-box me-1"></i>
+                                            Còn @quantityRemaining.Value
+                                        </span>
+                                    }
+                                </div>
+
+                                <!-- Action Button -->
+                                @if (hasVoucher)
+                                {
+                                    <a asp-controller="Promotion" asp-action="MyVouchers" class="btn btn-outline-success w-100">
+                                        <i class="bi bi-wallet2 me-1"></i> Xem trong ví
+                                    </a>
+                                }
+                                else if (isAuthenticated)
+                                {
+                                    <button class="btn btn-primary w-100 collect-voucher-btn" 
+                                            data-voucher-id="@promoCode.Id"
+                                            @(quantityRemaining.HasValue && quantityRemaining.Value <= 0 ? "disabled" : "")>
+                                        <i class="bi bi-gift me-1"></i> Lưu vào ví
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập để thu thập
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.collect-voucher-btn').click(function() {
+                var btn = $(this);
+                var voucherId = btn.data('voucher-id');
+                
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Đang xử lý...');
+
+                $.ajax({
+                    url: '@Url.Action("CollectCampaignVoucher", "Promotion")',
+                    type: 'POST',
+                    data: { 
+                        promotionCodeId: voucherId,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            btn.removeClass('btn-primary')
+                               .addClass('btn-success')
+                               .html('<i class="bi bi-check-circle-fill me-1"></i>Đã lưu vào ví');
+                            
+                            // Add success badge
+                            btn.closest('.card').addClass('border-success');
+                            btn.closest('.card').find('.card-body').prepend(
+                                '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                                '<i class="bi bi-check-circle me-2"></i>' + response.message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                '</div>'
+                            );
+                        } else {
+                            alert(response.message);
+                            btn.prop('disabled', false).html('<i class="bi bi-gift me-1"></i>Lưu vào ví');
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại!');
+                        btn.prop('disabled', false).html('<i class="bi bi-gift me-1"></i>Lưu vào ví');
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@* Add antiforgery token for AJAX POST *@
+@Html.AntiForgeryToken()
+
+<style>
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        position: relative;
+        display: inline-block;
+    }
+
+    /* Special Programs Section */
+    .special-programs {
+        margin-top: 2rem;
+    }
+
+    .special-card {
+        position: relative;
+        padding: 2rem;
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        min-height: 180px;
+    }
+
+    .special-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.05;
+        transition: opacity 0.4s;
+    }
+
+    .special-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+    }
+
+    .special-card:hover::before {
+        opacity: 0.1;
+    }
+
+    /* Flash Sale Card */
+    .flash-sale-card {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe6e6 100%);
+        border: 2px solid #ff6b6b;
+    }
+
+    .flash-sale-card::before {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    }
+
+    .flash-sale-card .special-card-icon {
+        color: #ff6b6b;
+    }
+
+    .flash-sale-card:hover {
+        border-color: #ee5a6f;
+    }
+
+    /* Lucky Wheel Card */
+    .lucky-wheel-card {
+        background: linear-gradient(135deg, #fffbf0 0%, #fff4d9 100%);
+        border: 2px solid #ffc107;
+    }
+
+    .lucky-wheel-card::before {
+        background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    }
+
+    .lucky-wheel-card .special-card-icon {
+        color: #ffc107;
+    }
+
+    .lucky-wheel-card:hover {
+        border-color: #ffb300;
+    }
+
+    /* Special Card Components */
+    .special-card-icon {
+        font-size: 4rem;
+        line-height: 1;
+        flex-shrink: 0;
+        animation: pulse 2s infinite;
+    }
+
+    .special-card-content {
+        flex: 1;
+    }
+
+    .special-card-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .special-card-desc {
+        color: #666;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .special-card-badge {
+        margin-top: 0.5rem;
+    }
+
+    .special-card-arrow {
+        font-size: 2rem;
+        color: rgba(0, 0, 0, 0.3);
+        flex-shrink: 0;
+        transition: all 0.3s;
+    }
+
+    .special-card:hover .special-card-arrow {
+        color: rgba(0, 0, 0, 0.6);
+        transform: translateX(8px);
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .special-card {
+            flex-direction: column;
+            text-align: center;
+            padding: 1.5rem;
+        }
+
+        .special-card-icon {
+            font-size: 3rem;
+        }
+
+        .special-card-title {
+            font-size: 1.25rem;
+        }
+
+        .special-card-arrow {
+            display: none;
+        }
+    }
+</style>

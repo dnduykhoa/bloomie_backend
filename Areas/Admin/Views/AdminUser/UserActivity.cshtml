@@ -1,0 +1,227 @@
+@model List<Bloomie.Models.ViewModels.UserActivityViewModel>
+@{
+    ViewData["Title"] = "Tổng hợp hoạt động";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid mt-2 p-0">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-chart-line text-primary me-2"></i>Tổng hợp hoạt động - @ViewBag.User.FullName
+                </h2>
+                <div class="d-flex gap-2">
+                    <a asp-action="Details" asp-route-id="@ViewBag.User.Id" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                    <a asp-action="LoginHistory" asp-route-id="@ViewBag.User.Id" class="btn btn-info">
+                        <i class="fas fa-sign-in-alt me-1"></i> Chỉ đăng nhập
+                    </a>
+                    <a asp-action="AccessHistory" asp-route-id="@ViewBag.User.Id" class="btn btn-outline-info">
+                        <i class="fas fa-eye me-1"></i> Chỉ truy cập
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card: Timeline hoạt động -->
+            <div class="card mb-3">
+                <div class="card-header fw-bold">
+                    <i class="fas fa-clock text-primary me-2"></i>Timeline hoạt động
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="timeline-container">
+                            @foreach (var activity in Model)
+                            {
+                                <div class="timeline-item">
+                                    <div class="timeline-marker">
+                                        <div class="timeline-icon bg-@GetBadgeColor(activity.Status)">
+                                            <i class="fas fa-@GetIcon(activity.Type)"></i>
+                                        </div>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-2">
+                                                <div class="timeline-time">
+                                                    <div class="fw-bold" style="font-size: 0.9rem;">@activity.Timestamp.ToString("dd/MM/yyyy")</div>
+                                                    <small class="text-muted" style="font-size: 0.8rem;">
+                                                        <i class="far fa-clock me-1"></i>@activity.Timestamp.ToString("HH:mm:ss")
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <span class="badge bg-@GetBadgeColor(activity.Status)" style="font-size: 0.85rem;">
+                                                    <i class="fas fa-@GetIcon(activity.Type) me-1"></i>@activity.Type
+                                                </span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <strong class="text-dark" style="font-size: 0.95rem;">@activity.Description</strong>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <small class="text-muted" style="font-size: 0.8rem;">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>@activity.IpAddress
+                                                </small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <small class="text-muted" title="@activity.DeviceInfo" style="font-size: 0.8rem;">
+                                                    <i class="fas fa-desktop me-1"></i>
+                                                    @(activity.DeviceInfo.Length > 20 ? activity.DeviceInfo.Substring(0, 20) + "..." : activity.DeviceInfo)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Chưa có hoạt động nào được ghi nhận.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetBadgeColor(string status)
+    {
+        return status switch
+        {
+            "success" => "success",
+            "warning" => "warning", 
+            "danger" => "danger",
+            "info" => "info",
+            _ => "secondary"
+        };
+    }
+
+    string GetIcon(string type)
+    {
+        return type switch
+        {
+            "Đăng nhập" => "sign-in-alt",
+            "Truy cập trang" => "eye",
+            "Tạo tài khoản" => "user-plus",
+            "Xóa tài khoản" => "trash",
+            _ => "circle"
+        };
+    }
+}
+
+<style>
+    :root {
+        --primary-color: #2563eb;
+        --secondary-color: #60a5fa;
+        --text-dark: #1e293b;
+        --text-light: #ffffff;
+        --background-light: #f8fafc;
+    }
+    
+    h2 { 
+        font-family: 'Inter', sans-serif; 
+        font-size: 1.75rem; 
+        font-weight: 600; 
+        color: var(--text-dark); 
+    }
+    
+    .container-fluid { 
+        padding: 0 !important; 
+        margin: 0 !important; 
+        width: 100% !important; 
+    }
+    
+    .card { 
+        border-radius: 8px; 
+        background-color: #ffffff; 
+    }
+    
+    .card-body { 
+        padding: 20px; 
+    }
+
+    .card-header {
+        border-radius: 8px 8px 0 0 !important;
+        padding: 12px 20px;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .btn-primary, .btn-secondary, .btn-info, .btn-outline-info {
+        border-radius: 6px; 
+        padding: 8px 16px; 
+        font-size: 0.9rem; 
+        transition: all 0.2s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); 
+    }
+
+    /* Timeline Styles */
+    .timeline-container {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 30px;
+    }
+
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 48px;
+        width: 2px;
+        height: calc(100% - 20px);
+        background: linear-gradient(to bottom, var(--primary-color), #e5e7eb);
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -40px;
+        top: 8px;
+    }
+
+    .timeline-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .timeline-content {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-content:hover {
+        background-color: #f8fafc;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateX(4px);
+    }
+
+    .timeline-time {
+        color: var(--text-dark);
+    }
+</style>

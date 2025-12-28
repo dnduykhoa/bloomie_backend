@@ -1,0 +1,579 @@
+@using Bloomie.Data
+@model ApplicationUser
+
+@{
+    ViewData["Title"] = "Cập nhật thông tin tài khoản";
+    Layout = "~/Views/Shared/_IdentityLayout.cshtml";
+}
+
+<div class="profile-wrapper">
+    <div class="profile-card">
+        <div class="profile-header text-center">
+            <h2 class="profile-title">Cập nhật thông tin tài khoản</h2>
+            <p class="profile-subtitle">Chỉnh sửa thông tin cá nhân của bạn</p>
+
+            <!-- Thêm phần hiển thị thông báo -->
+            @if (TempData["success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["success"]
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            @if (TempData["error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["error"]
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+            @if (TempData["info"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @TempData["info"]
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+        </div>
+        <div class="profile-content">
+            <form asp-action="UpdateAccount" asp-controller="Account" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="RoleId" value="@Model.RoleId" />
+                <input type="hidden" asp-for="Token" value="@Model.Token" />
+
+                <div asp-validation-summary="All" class="text-danger mb-3" role="alert"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="UserName" class="label">Tên người dùng</label>
+                    <input asp-for="UserName" class="form-control" placeholder="Tên người dùng" required />
+                    <span asp-validation-for="UserName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="label">Email</label>
+                    <input asp-for="Email" class="form-control" placeholder="Email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i>
+                        Nếu bạn thay đổi email, một email xác thực sẽ được gửi đến địa chỉ email mới.
+                    </small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="PhoneNumber" class="label">Số điện thoại</label>
+                    <input asp-for="PhoneNumber" class="form-control" placeholder="VD: 0987654321 hoặc +84987654321" pattern="^(\+84|84|0)(3|5|7|8|9)([0-9]{8})$" />
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Định dạng: 0987654321 hoặc +84987654321
+                    </small>
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="PasswordHash" class="label">Mật khẩu hiện tại</label>
+                    <input type="text" readonly class="form-control" value="••••••••" />
+                    <span asp-validation-for="PasswordHash" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3 position-relative">
+                    <label for="newPassword" class="label">Mật khẩu mới (để trống nếu không đổi)</label>
+                    <input type="password" name="NewPassword" id="newPassword" class="form-control password-input" placeholder="Mật khẩu mới" data-val="false" data-val-required="false" data-optional="true" />
+                    <span class="toggle-password" onclick="togglePassword('newPassword', 'toggleNewPassword')">
+                        <i id="toggleNewPassword" class="fas fa-eye-slash"></i>
+                    </span>
+                </div>
+
+                <div class="form-group mb-3 position-relative">
+                    <label for="confirmNewPassword" class="label">Xác nhận mật khẩu mới</label>
+                    <input type="password" name="ConfirmNewPassword" id="confirmNewPassword" class="form-control password-input" placeholder="Xác nhận mật khẩu mới" data-val="false" data-val-required="false" data-optional="true" />
+                    <span class="toggle-password" onclick="togglePassword('confirmNewPassword', 'toggleConfirmNewPassword')">
+                        <i id="toggleConfirmNewPassword" class="fas fa-eye-slash"></i>
+                    </span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="FullName" class="label">Họ và Tên</label>
+                    <input asp-for="FullName" class="form-control" placeholder="Họ và Tên" required />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+
+                <div class="profile-actions text-center mt-4">
+                    <a asp-action="Profile" asp-controller="Account" class="btn btn-secondary btn-lg mr-2">Quay lại</a>
+                    <button type="submit" class="btn btn-primary btn-lg">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* General Styling */
+    body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(rgba(255, 250, 250, 0.8), rgba(255, 182, 193, 0.3)), url('https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .profile-wrapper {
+        max-width: 1100px;
+        margin: 15px;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        width: 95%;
+    }
+
+    .profile-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 20px;
+        transition: transform 0.3s ease;
+    }
+
+        .profile-card:hover {
+            transform: translateY(-3px);
+        }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .profile-title {
+        font-size: 30px;
+        color: #D0021B;
+        font-weight: 700;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 8px;
+    }
+
+        .profile-title::after {
+            content: '';
+            width: 40px;
+            height: 3px;
+            background: #D0021B;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+    .profile-subtitle {
+        font-size: 16px;
+        color: #666;
+        margin-top: 6px;
+    }
+
+    /* Form Styling */
+    .form-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .label {
+        font-weight: 600;
+        color: #34495e;
+        font-size: 16px;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .password-input {
+        padding-right: 40px; /* Chừa chỗ cho con mắt */
+    }
+
+    .form-control:focus {
+        border-color: #D0021B;
+        box-shadow: 0 0 5px rgba(208, 2, 27, 0.3);
+        outline: none;
+    }
+
+    .form-control[readonly] {
+        background-color: #f1f1f1;
+        cursor: not-allowed;
+    }
+
+    .text-danger {
+        font-size: 14px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .form-text {
+        font-size: 13px;
+        color: #6c757d;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .form-text i {
+        margin-right: 5px;
+        color: #17a2b8;
+    }
+
+    /* Password Toggle */
+    .toggle-password {
+        position: absolute;
+        right: 15px;
+        top: 70%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #666;
+        font-size: 16px;
+        height: 100%;
+        padding: 0 5px;
+    }
+
+        .toggle-password:hover {
+            color: #D0021B;
+        }
+
+    /* Actions */
+    .profile-actions {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+        .profile-actions .btn-primary {
+            background-color: #D0021B;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(208, 2, 27, 0.2);
+        }
+
+            .profile-actions .btn-primary:hover {
+                background-color: #F5A623;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4);
+            }
+
+        .profile-actions .btn-secondary {
+            background-color: #6c757d;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 8px rgba(108, 117, 125, 0.2);
+        }
+
+            .profile-actions .btn-secondary:hover {
+                background-color: #5a6268;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 10px rgba(90, 98, 104, 0.4);
+            }
+
+    /* Alert Styling */
+    .alert {
+        padding: 10px 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        font-size: 16px;
+        position: relative;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+
+    .alert-dismissible .close {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 10px 15px;
+        color: inherit;
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    /* Animations */
+    keyframes fadeIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+
+    /* Responsive */
+    media (max-width: 768px) {
+        .profile-wrapper
+
+    {
+        margin: 10px;
+        padding: 15px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .profile-actions .btn-primary,
+    .profile-actions .btn-secondary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .profile-actions .btn-secondary {
+        margin-right: 0;
+    }
+
+    }
+</style>
+
+<script>
+    // Biến để theo dõi trạng thái validation
+    let isPhoneValid = true;
+    let isPasswordValid = true;
+
+    // Hàm chuyển đổi hiển thị/ẩn mật khẩu
+    function togglePassword(inputId, iconId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleIcon.classList.remove("fa-eye-slash");
+            toggleIcon.classList.add("fa-eye");
+        } else {
+            passwordInput.type = "password";
+            toggleIcon.classList.remove("fa-eye");
+            toggleIcon.classList.add("fa-eye-slash");
+        }
+    }
+
+    // Hàm kiểm tra định dạng số điện thoại Việt Nam
+    function validatePhoneNumber(phoneNumber) {
+        const phoneRegex = /^(\+84|84|0)(3|5|7|8|9)([0-9]{8})$/;
+        return phoneRegex.test(phoneNumber);
+    }
+
+    // Hàm kiểm tra mật khẩu xác nhận có khớp không
+    function validatePasswords() {
+        const newPassword = document.getElementById('newPassword');
+        const confirmPassword = document.getElementById('confirmNewPassword');
+        
+        if (newPassword && confirmPassword) {
+            const newPass = newPassword.value;
+            const confirmPass = confirmPassword.value;
+            
+            if (newPass && confirmPass && newPass !== confirmPass) {
+                isPasswordValid = false;
+                confirmPassword.classList.add('is-invalid');
+                showError(confirmPassword, 'Mật khẩu xác nhận không khớp', 'password-error');
+                return false;
+            } else {
+                isPasswordValid = true;
+                confirmPassword.classList.remove('is-invalid');
+                hideError(confirmPassword, 'password-error');
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // Hàm hiển thị thông báo lỗi
+    function showError(input, message, className) {
+        let errorDiv = input.parentNode.querySelector('.' + className);
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'text-danger ' + className;
+            input.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+
+    // Hàm ẩn thông báo lỗi
+    function hideError(input, className) {
+        const errorDiv = input.parentNode.querySelector('.' + className);
+        if (errorDiv) errorDiv.remove();
+    }
+
+    // Hàm hiển thị lỗi số điện thoại
+    function showPhoneError(input, message) {
+        showError(input, message, 'phone-error');
+    }
+
+    // Hàm ẩn lỗi số điện thoại
+    function hidePhoneError(input) {
+        hideError(input, 'phone-error');
+    }
+
+    // Hàm hiển thị thông báo lỗi chung
+    function showGeneralError(message) {
+        let alertDiv = document.querySelector('.validation-summary');
+        if (!alertDiv) {
+            alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger validation-summary';
+            document.querySelector('.profile-header').appendChild(alertDiv);
+        }
+        alertDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+        
+        // Tự động ẩn sau 5 giây
+        setTimeout(() => {
+            if (alertDiv) alertDiv.remove();
+        }, 5000);
+    }
+
+    // Sự kiện chính khi trang đã tải xong
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form');
+        const phoneInput = document.querySelector('input[name="PhoneNumber"]');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmNewPassword');
+
+        // Kiểm tra số điện thoại
+        if (phoneInput) {
+            phoneInput.addEventListener('blur', function() {
+                const phone = this.value.trim();
+                if (phone && !validatePhoneNumber(phone)) {
+                    isPhoneValid = false;
+                    this.classList.add('is-invalid');
+                    showPhoneError(this, 'Số điện thoại không hợp lệ (VD: 0987654321)');
+                } else {
+                    isPhoneValid = true;
+                    this.classList.remove('is-invalid');
+                    hidePhoneError(this);
+                }
+            });
+
+            phoneInput.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    const phone = this.value.trim();
+                    if (!phone || validatePhoneNumber(phone)) {
+                        isPhoneValid = true;
+                        this.classList.remove('is-invalid');
+                        hidePhoneError(this);
+                    }
+                }
+            });
+        }
+
+        // Kiểm tra xác nhận mật khẩu
+        if (confirmPasswordInput) {
+            confirmPasswordInput.addEventListener('blur', validatePasswords);
+            confirmPasswordInput.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    validatePasswords();
+                }
+            });
+        }
+
+        if (newPasswordInput) {
+            newPasswordInput.addEventListener('input', function() {
+                if (confirmPasswordInput && confirmPasswordInput.value) {
+                    validatePasswords();
+                }
+            });
+        }
+
+        // Kiểm tra validation khi submit form
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                let hasErrors = false;
+                
+                // Kiểm tra số điện thoại
+                if (phoneInput && phoneInput.value.trim()) {
+                    if (!validatePhoneNumber(phoneInput.value.trim())) {
+                        hasErrors = true;
+                        isPhoneValid = false;
+                        phoneInput.classList.add('is-invalid');
+                        showPhoneError(phoneInput, 'Vui lòng nhập số điện thoại hợp lệ trước khi cập nhật');
+                    }
+                }
+                
+                // Kiểm tra xác nhận mật khẩu
+                if (!validatePasswords()) {
+                    hasErrors = true;
+                }
+                
+                if (hasErrors) {
+                    e.preventDefault();
+                    
+                    // Focus vào field lỗi đầu tiên
+                    const firstError = document.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                    
+                    // Hiển thị thông báo lỗi chung
+                    showGeneralError('Vui lòng sửa các lỗi được đánh dấu trước khi cập nhật');
+                    return false;
+                }
+            });
+        }
+
+        // Tự động ẩn thông báo sau 3 giây
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }, 3000);
+        });
+    });
+</script>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+}

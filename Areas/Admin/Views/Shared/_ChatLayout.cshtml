@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Bloomie</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        *,
+        *::before,
+        *::after {
+            outline: none !important;
+        }
+
+        *:focus,
+        *:focus-visible,
+        *:focus-within,
+        *:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Remove Bootstrap's default focus styles completely */
+        .btn,
+        .btn:focus,
+        .btn:active,
+        .btn:focus-visible,
+        .btn.focus,
+        .btn.active,
+        .btn:not(:disabled):not(.disabled):active,
+        .btn:not(:disabled):not(.disabled):active:focus,
+        .btn:not(:disabled):not(.disabled).active:focus,
+        button,
+        button:focus,
+        button:active,
+        a,
+        a:focus,
+        a:active,
+        div:focus,
+        div:active {
+            outline: 0 !important;
+            box-shadow: none !important;
+        }
+
+        /* Specifically for icons */
+        i,
+        i::before,
+        i::after,
+        i:focus,
+        i:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow-x: hidden;
+            overflow-y: auto;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 75px;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            z-index: 9999 !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-button {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateX(-4px);
+        }
+
+        .chat-title {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-title i {
+            font-size: 1.5rem;
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-badge {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-badge i {
+            font-size: 1.1rem;
+        }
+
+        .online-badge {
+            background: rgba(255, 255, 255, 0.95);
+            color: #10b981;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: none;
+            outline: none;
+        }
+
+        .online-badge i {
+            color: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .chat-content {
+            margin-top: 75px;
+            min-height: calc(100vh - 75px);
+            padding: 24px;
+        }
+
+        /* Notification & Message Icons */
+        .header-icons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .notification-icon,
+        .message-icon {
+            position: relative;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .notification-icon:hover,
+        .message-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+        }
+
+        .badge-count {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 12px;
+            padding: 3px 7px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            min-width: 20px;
+            text-align: center;
+            border: 2px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dropdown for notifications */
+        .dropdown-menu {
+            min-width: 320px;
+            max-height: 450px;
+            overflow-y: auto;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            border: none;
+            margin-top: 12px;
+        }
+
+        /* Remove focus outline from dropdown toggles */
+        .dropdown-toggle:focus,
+        .dropdown-toggle:active,
+        .notification-icon:focus,
+        .message-icon:focus,
+        a:focus,
+        button:focus {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn:focus,
+        .btn:active,
+        .btn.show {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .dropdown-menu::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .dropdown-menu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8fafc;
+        }
+
+        /* Notification Dropdown */
+        .dropdown-menu-notifications {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 8px;
+            min-width: 400px;
+            max-width: 450px;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            margin-bottom: 6px;
+        }
+
+        .notification-item:hover {
+            background-color: #f3f4f6;
+            transform: translateX(3px);
+        }
+
+        .notification-item.unread {
+            background-color: #eff6ff;
+            border-left-color: #3b82f6;
+        }
+
+        .notification-item[data-type="success"] {
+            border-left-color: #10b981;
+        }
+
+        .notification-item[data-type="danger"] {
+            border-left-color: #ef4444;
+        }
+
+        .notification-item[data-type="warning"] {
+            border-left-color: #f59e0b;
+        }
+
+        .notification-item[data-type="info"] {
+            border-left-color: #3b82f6;
+        }
+
+        .notification-icon {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.success {
+            color: #10b981;
+        }
+
+        .notification-icon.danger {
+            color: #ef4444;
+        }
+
+        .notification-icon.warning {
+            color: #f59e0b;
+        }
+
+        .notification-icon.info {
+            color: #3b82f6;
+        }
+
+        .notification-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notification-content span {
+            display: block;
+            white-space: normal;
+            max-width: 100%;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .notification-content a {
+            color: #1f2937;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .notification-content a:hover {
+            color: #4f46e5;
+        }
+
+        .notification-item:not(.unread) {
+            opacity: 0.92;
+        }
+
+        .notification-item:not(.unread):hover {
+            opacity: 1;
+        }
+
+        .notification-item:not(.unread) .notification-content a {
+            color: #4b5563;
+        }
+
+        .notification-item:not(.unread):hover .notification-content a {
+            color: #1f2937;
+        }
+
+        .notification-time {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Message Dropdown */
+        .dropdown-menu-messages {
+            max-height: 400px;
+            overflow: hidden;
+            padding: 15px;
+            max-width: 450px;
+            width: auto;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .message-item.unread {
+            background-color: #eff6ff;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .message-item:not(.unread) {
+            opacity: 0.75;
+        }
+
+        .message-item:hover {
+            background-color: #f8fafc;
+            opacity: 1;
+        }
+
+        /* Notification Modal */
+        #notificationModal .modal-content {
+            border-radius: 12px;
+        }
+
+        #notificationModal .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+
+        #notificationModal .modal-title {
+            font-weight: 600;
+        }
+
+        #notificationModal .notification-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-actions-bar {
+            display: flex;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <!-- Chat Header -->
+    <div class="chat-header" style="position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; z-index: 9999 !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;">
+        <div class="chat-header-left">
+            <a asp-controller="AdminDashboard" asp-action="Index" class="back-button">
+                <i class="fas fa-arrow-left"></i>
+                <span>Quay lại</span>
+            </a>
+            <h1 class="chat-title">
+                <i class="fas fa-comments"></i>
+                Hỗ Trợ Khách Hàng
+            </h1>
+        </div>
+        
+        <div class="chat-header-right">
+            <!-- Working Hours -->
+            <div class="header-badge" id="admin-working-hours">
+                <i class="fas fa-clock"></i>
+                <span id="admin-working-hours-text">Đang tải...</span>
+            </div>
+            
+            <!-- Online Status -->
+            <div class="online-badge">
+                <i class="fas fa-circle"></i>
+                <span>Online</span>
+            </div>
+
+            <!-- Notification & Message Icons -->
+            <div class="header-icons">
+                <!-- Notification Icon -->
+                <div class="dropdown">
+                    <a class="notification-icon" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge-count" id="notificationCount" style="display: none;">0</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-notifications" aria-labelledby="notificationDropdown">
+                        <li><a class="dropdown-item" href="#">Chưa có thông báo mới</a></li>
+                    </ul>
+                </div>
+
+                <!-- Message Icon -->
+                <div class="dropdown">
+                    <a class="message-icon" href="#" id="messageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-envelope"></i>
+                        <span class="badge-count" id="messageCount" style="display: none;">0</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-messages" aria-labelledby="messageDropdown">
+                        <li>
+                            <a class="dropdown-item message-item" href="#">
+                                <span>Đang tải...</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="user-avatar">
+                    @{
+                        var userInitial = User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "A";
+                    }
+                    @userInitial
+                </div>
+                <span class="user-name">@User.Identity?.Name</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Content -->
+    <div class="chat-content">
+        @RenderBody()
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+
+    <script>
+        // SignalR Connection
+        let connection = null;
+
+        // Load working hours
+        async function loadWorkingHours() {
+            try {
+                const response = await fetch('/api/supportchat/working-hours');
+                if (!response.ok) {
+                    throw new Error('API not found');
+                }
+                const data = await response.json();
+                document.getElementById('admin-working-hours-text').textContent = data.workingHours || '8:00 AM - 10:00 PM';
+            } catch (error) {
+                console.error('Error loading working hours:', error);
+                document.getElementById('admin-working-hours-text').textContent = '8:00 AM - 10:00 PM';
+            }
+        }
+
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            if (!dateString) return 'Không rõ';
+            
+            let date;
+            if (dateString.includes('T') || dateString.includes('-')) {
+                date = new Date(dateString);
+            } else if (dateString.includes('/')) {
+                const parts = dateString.split(/[\/\s:]/);
+                if (parts.length >= 3) {
+                    const day = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const year = parseInt(parts[2]);
+                    const hour = parts[3] ? parseInt(parts[3]) : 0;
+                    const minute = parts[4] ? parseInt(parts[4]) : 0;
+                    date = new Date(year, month, day, hour, minute);
+                }
+            }
+            
+            if (!date || isNaN(date.getTime())) return 'Không rõ';
+            
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            
+            if (seconds < 60) return 'Vừa xong';
+            if (seconds < 3600) return Math.floor(seconds / 60) + ' phút trước';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + ' giờ trước';
+            if (seconds < 259200) return Math.floor(seconds / 86400) + ' ngày trước';
+            
+            return date.toLocaleDateString('vi-VN', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
+        }
+
+        // Load unread message count
+        async function loadUnreadChatCount() {
+            try {
+                const response = await fetch('/api/supportchat/unread-count');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateChatBadge(data.unreadCount || 0);
+                }
+            } catch (error) {
+                console.error('Error loading unread chat count:', error);
+            }
+        }
+
+        // Update chat badge
+        function updateChatBadge(count) {
+            const badge = document.getElementById('messageCount');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'inline-block';
+                    badge.style.backgroundColor = '#ef4444';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+            loadRecentMessages();
+        }
+
+        // Load recent messages
+        async function loadRecentMessages() {
+            try {
+                const response = await fetch('/api/supportchat/recent-messages?limit=5');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayMessages(data.conversations || []);
+                }
+            } catch (error) {
+                console.error('Error loading recent messages:', error);
+            }
+        }
+
+        // Display messages in dropdown
+        function displayMessages(conversations) {
+            const messageList = document.querySelector('.dropdown-menu-messages');
+            if (!messageList) return;
+
+            // Chỉ hiển thị conversation có tin nhắn mới từ khách hàng (unreadByStaff > 0)
+            const unreadConversations = conversations.filter(conv => conv.unreadByStaff > 0);
+
+            if (unreadConversations.length === 0) {
+                messageList.innerHTML = `
+                    <li>
+                        <a class="dropdown-item message-item" href="#">
+                            <span>Chưa có tin nhắn mới</span>
+                        </a>
+                    </li>
+                    <li class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-center" href="/Admin/Chat">
+                            <strong>Xem tất cả tin nhắn</strong>
+                        </a>
+                    </li>
+                `;
+                return;
+            }
+
+            let html = '';
+            unreadConversations.forEach(conv => {
+                const unreadClass = conv.unreadByStaff > 0 ? 'unread' : '';
+                const customerName = conv.customerName || 'Khách hàng';
+                
+                // Parse attachment message
+                let lastMessage = conv.lastMessage || 'Chưa có tin nhắn';
+                if (conv.lastMessage && conv.lastMessage.startsWith('[IMAGE:')) {
+                    lastMessage = '📷 Đã gửi ảnh';
+                } else if (conv.lastMessage && conv.lastMessage.startsWith('[Đã gửi ảnh]')) {
+                    lastMessage = '📷 Đã gửi ảnh';
+                } else if (conv.lastMessage && conv.lastMessage.startsWith('[ATTACHMENT:')) {
+                    try {
+                        const lastBracket = conv.lastMessage.lastIndexOf(']');
+                        let jsonStr = lastBracket === -1 ? conv.lastMessage.substring(12) : conv.lastMessage.substring(12, lastBracket);
+                        
+                        // Handle incomplete JSON
+                        if (lastBracket === -1) {
+                            const quoteCount = (jsonStr.match(/"/g) || []).length;
+                            if (quoteCount % 2 === 1) {
+                                const lastColon = jsonStr.lastIndexOf(':');
+                                if (lastColon > 0) {
+                                    const beforeColon = jsonStr.substring(0, lastColon);
+                                    const lastComma = beforeColon.lastIndexOf(',');
+                                    if (lastComma > 0) jsonStr = jsonStr.substring(0, lastComma);
+                                }
+                            }
+                            if (!jsonStr.endsWith('}')) jsonStr += '}';
+                        }
+                        
+                        const attachment = JSON.parse(jsonStr);
+                        if (attachment.type === 'product') {
+                            const productName = (attachment.productName || 'Sản phẩm').trim().substring(0, 30);
+                            lastMessage = '🌸 ' + (productName || 'Sản phẩm');
+                        } else if (attachment.type === 'order') {
+                            lastMessage = '📦 Đơn hàng #' + (attachment.orderId || '');
+                        } else if (attachment.type === 'blog') {
+                            lastMessage = '📰 ' + (attachment.title || 'Bài viết').substring(0, 35);
+                        } else {
+                            lastMessage = '📎 Đính kèm';
+                        }
+                    } catch (e) {
+                        lastMessage = '📎 Đính kèm';
+                    }
+                } else {
+                    lastMessage = lastMessage.substring(0, 60) + (lastMessage.length > 60 ? '...' : '');
+                }
+                
+                const timeAgo = formatTimeAgo(conv.lastMessageAt);
+
+                html += `
+                    <li>
+                        <a class="dropdown-item message-item ${unreadClass}" 
+                           href="/Admin/Chat?conversationId=${conv.id}"
+                           style="display: flex; align-items: start; gap: 12px;">
+                            <div class="message-avatar">
+                                <i class="fas fa-user-circle" style="font-size: 2.5rem; color: #6366f1;"></i>
+                            </div>
+                            <div class="message-content" style="flex: 1; min-width: 0;">
+                                <strong>${customerName}</strong>
+                                <span>${lastMessage}</span>
+                                <small class="notification-time">
+                                    <i class="far fa-clock"></i> ${timeAgo}
+                                    ${conv.unreadByStaff > 0 ? `<span style="color: #ef4444; font-weight: 600;"> • ${conv.unreadByStaff} mới</span>` : ''}
+                                </small>
+                            </div>
+                        </a>
+                    </li>
+                `;
+            });
+
+            html += `
+                <li class="dropdown-divider"></li>
+                <li>
+                    <a class="dropdown-item text-center" href="/Admin/Chat">
+                        <strong>Xem tất cả tin nhắn</strong>
+                    </a>
+                </li>
+            `;
+
+            messageList.innerHTML = html;
+        }
+
+        // Get notification icon
+        function getNotificationIcon(type, message) {
+            if (message.includes('🛒') || message.includes('Đơn hàng mới')) return '<i class="fas fa-shopping-cart notification-icon success"></i>';
+            if (message.includes('🔄') || message.includes('Đổi hàng') || message.includes('Hoàn tiền')) return '<i class="fas fa-exchange-alt notification-icon danger"></i>';
+            if (message.includes('⭐') || message.includes('đánh giá')) return '<i class="fas fa-star notification-icon info"></i>';
+            if (message.includes('🚨') || message.includes('HẾT HÀNG')) return '<i class="fas fa-exclamation-triangle notification-icon danger"></i>';
+            if (message.includes('⚠️') || message.includes('Cảnh báo')) return '<i class="fas fa-exclamation-circle notification-icon warning"></i>';
+            
+            if (type === 'success') return '<i class="fas fa-check-circle notification-icon success"></i>';
+            if (type === 'danger') return '<i class="fas fa-times-circle notification-icon danger"></i>';
+            if (type === 'warning') return '<i class="fas fa-exclamation-circle notification-icon warning"></i>';
+            return '<i class="fas fa-info-circle notification-icon info"></i>';
+        }
+
+        // Load notifications
+        function loadNotifications() {
+            fetch('/api/NotificationApi/GetNotifications?take=20')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        const notificationList = document.querySelector('.dropdown-menu-notifications');
+                        notificationList.innerHTML = '';
+
+                        if (result.data.length === 0) {
+                            notificationList.innerHTML = '<li><a class="dropdown-item notification-item" href="#"><span>Chưa có thông báo mới</span></a></li>';
+                        } else {
+                            result.data.forEach(notif => {
+                                const li = document.createElement('li');
+                                const icon = getNotificationIcon(notif.type, notif.message);
+                                const timeAgo = formatTimeAgo(notif.createdAt);
+                                
+                                li.innerHTML = `
+                                    <div class="dropdown-item notification-item ${notif.isRead ? '' : 'unread'}" data-id="${notif.id}" data-type="${notif.type}">
+                                        ${icon}
+                                        <div class="notification-content">
+                                            <a href="${notif.link || '#'}" onclick="markAsRead(${notif.id})">
+                                                <span>${notif.message}</span>
+                                                <div class="notification-time">
+                                                    <i class="far fa-clock"></i>
+                                                    <span>${timeAgo}</span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>`;
+                                notificationList.appendChild(li);
+                            });
+
+                            const divider = document.createElement('li');
+                            divider.className = 'dropdown-divider';
+                            notificationList.appendChild(divider);
+
+                            const viewAllLi = document.createElement('li');
+                            const viewAllLink = document.createElement('a');
+                            viewAllLink.className = 'dropdown-item text-center';
+                            viewAllLink.href = '#';
+                            viewAllLink.innerHTML = '<strong>Xem tất cả</strong>';
+                            viewAllLink.onclick = openNotificationModal;
+                            viewAllLi.appendChild(viewAllLink);
+                            notificationList.appendChild(viewAllLi);
+                        }
+
+                        const badge = document.getElementById('notificationCount');
+                        badge.textContent = result.unreadCount;
+                        badge.style.display = result.unreadCount > 0 ? 'inline' : 'none';
+                    }
+                })
+                .catch(err => console.error('Lỗi load thông báo:', err));
+        }
+
+        // Mark notification as read
+        window.markAsRead = function(notificationId) {
+            fetch(`/api/NotificationApi/MarkAsRead/${notificationId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        const badge = document.getElementById('notificationCount');
+                        badge.textContent = result.unreadCount;
+                        badge.style.display = result.unreadCount > 0 ? 'inline' : 'none';
+                        
+                        const item = document.querySelector(`[data-id="${notificationId}"]`);
+                        if (item) item.classList.remove('unread');
+                    }
+                });
+        }
+
+        // Connect SignalR for notifications
+        async function connectNotificationHub() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/notificationHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveNotification", function (notification) {
+                loadNotifications();
+            });
+
+            connection.on("NewChatMessage", function (data) {
+                console.log("💬 Tin nhắn mới từ:", data.customerName);
+                updateChatBadge(data.unreadCount);
+                // Force reload dropdown immediately
+                loadRecentMessages();
+            });
+
+            try {
+                await connection.start();
+                console.log('SignalR Connected');
+                loadNotifications();
+                loadUnreadChatCount();
+            } catch (error) {
+                console.error('SignalR Connection Error:', error);
+            }
+        }
+
+        // Open notification modal
+        window.openNotificationModal = function(event) {
+            event.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+            modal.show();
+            loadAllNotificationsForModal();
+        }
+
+        // Load all notifications for modal
+        function loadAllNotificationsForModal() {
+            const modalList = document.getElementById('modalNotificationList');
+            modalList.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            fetch('/api/NotificationApi/GetNotifications?take=100')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        modalList.innerHTML = '';
+
+                        if (result.data.length === 0) {
+                            modalList.innerHTML = '<div class="text-center text-muted py-4"><i class="fas fa-bell-slash fa-3x mb-3"></i><p>Chưa có thông báo nào</p></div>';
+                        } else {
+                            result.data.forEach(notif => {
+                                const div = document.createElement('div');
+                                div.className = `notification-item ${notif.isRead ? '' : 'unread'}`;
+                                div.setAttribute('data-id', notif.id);
+                                div.setAttribute('data-type', notif.type);
+                                
+                                const icon = getNotificationIcon(notif.type, notif.message);
+                                const timeAgo = formatTimeAgo(notif.createdAt);
+                                
+                                div.innerHTML = `
+                                    ${icon}
+                                    <div class="notification-content flex-grow-1">
+                                        <a href="${notif.link || '#'}" onclick="markAsReadAndClose(${notif.id})" class="text-decoration-none">
+                                            <span class="${notif.isRead ? 'text-muted' : 'fw-bold'}">${notif.message}</span>
+                                            <div class="notification-time">
+                                                <i class="far fa-clock"></i>
+                                                <span>${timeAgo}</span>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="ms-3 d-flex gap-1">
+                                        ${!notif.isRead ? `<button class="btn btn-sm btn-outline-success" onclick="markAsReadInModal(${notif.id})" title="Đánh dấu đã đọc"><i class="fas fa-check"></i></button>` : ''}
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotificationInModal(${notif.id})" title="Xóa"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                `;
+                                modalList.appendChild(div);
+                            });
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi load thông báo:', err);
+                    modalList.innerHTML = '<div class="alert alert-danger">Lỗi tải thông báo. Vui lòng thử lại!</div>';
+                });
+        }
+
+        // Mark as read and close modal
+        window.markAsReadAndClose = function(notificationId) {
+            markAsRead(notificationId);
+            bootstrap.Modal.getInstance(document.getElementById('notificationModal')).hide();
+        }
+
+        // Mark as read in modal
+        window.markAsReadInModal = function(notificationId) {
+            fetch(`/api/NotificationApi/MarkAsRead/${notificationId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        loadNotifications();
+                        loadAllNotificationsForModal();
+                    }
+                });
+        }
+
+        // Delete notification in modal
+        window.deleteNotificationInModal = function(notificationId) {
+            if (confirm('Bạn có chắc muốn xóa thông báo này?')) {
+                fetch(`/api/NotificationApi/DeleteNotification/${notificationId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            loadNotifications();
+                            loadAllNotificationsForModal();
+                        }
+                    });
+            }
+        }
+
+        // Mark all as read in modal
+        window.markAllAsReadModal = function() {
+            fetch('/api/NotificationApi/MarkAllAsRead', { method: 'POST' })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        loadNotifications();
+                        loadAllNotificationsForModal();
+                    }
+                });
+        }
+
+        // Delete all read notifications in modal
+        window.deleteAllReadModal = function() {
+            if (confirm('Bạn có chắc muốn xóa tất cả thông báo đã đọc?')) {
+                fetch('/api/NotificationApi/DeleteAllRead', { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            loadNotifications();
+                            loadAllNotificationsForModal();
+                        }
+                    });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWorkingHours();
+            connectNotificationHub();
+            
+            // Polling fallback
+            setInterval(loadUnreadChatCount, 30000);
+        });
+    </script>
+
+    <!-- Notification Modal -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">
+                        <i class="fas fa-bell me-2"></i>Tất cả thông báo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="notification-actions-bar mb-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="markAllAsReadModal()">
+                            <i class="fas fa-check-double"></i> Đánh dấu tất cả đã đọc
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAllReadModal()">
+                            <i class="fas fa-trash"></i> Xóa tất cả đã đọc
+                        </button>
+                    </div>
+                    <div id="modalNotificationList" class="notification-list">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

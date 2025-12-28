@@ -1,0 +1,1610 @@
+@model IEnumerable<Bloomie.Models.Entities.Order>
+@using Bloomie.Data
+@using Bloomie.Models.Entities
+
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<section class="checkout-section">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-transparent py-2">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Home")">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span>&gt;</span>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "ShoppingCart")">
+                        <i class="bi bi-cart-fill"></i> Giỏ hàng
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <span>&gt;</span>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    Thanh toán
+                </li>
+            </ol>
+        </nav>
+
+        <h2 class="mb-4">Thanh toán</h2>
+
+        <form asp-action="Checkout" method="post" class="checkout-form">
+            <div class="row">
+                <!-- Thông tin giao hàng -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Thông tin giao hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="userName" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="userName" name="userName" value="@ViewBag.UserName" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="userEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="userEmail" name="userEmail" value="@ViewBag.UserEmail" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" value="@ViewBag.UserPhone" required />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="ward" name="ward" required>
+                                        <option value="">Chọn Phường/Xã</option>
+                                    </select>
+                                    <input type="hidden" id="wardCode" name="wardCode" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label for="address" class="form-label">Số nhà, đường <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="Ví dụ: 123 Đường ABC" required />
+                                </div>
+                            </div>
+                            <input type="hidden" id="shippingAddress" name="shippingAddress" />
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Ghi chú đơn hàng</label>
+                                <textarea class="form-control" id="note" name="note" rows="3" placeholder="Nhập ghi chú cho đơn hàng (không bắt buộc)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phương thức thanh toán -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Phương thức thanh toán</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="payment-method">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="cod" value="COD" checked />
+                                    <label class="form-check-label" for="cod">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-money-bill-wave me-3 text-success" style="font-size: 1.5rem;"></i>
+                                            <div>
+                                                <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                                <br /><small class="text-muted">Thanh toán bằng tiền mặt khi nhận hàng</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="momo" value="Momo" />
+                                    <label class="form-check-label" for="momo">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="Momo" class="me-3" style="width: 30px; height: 30px;" />
+                                            <div>
+                                                <strong>Ví điện tử Momo</strong>
+                                                <br /><small class="text-muted">Thanh toán nhanh qua ứng dụng Momo</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="vnpay" value="VNPAY" />
+                                    <label class="form-check-label" for="vnpay">
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/10/Logo-VNPAY-QR-1.png" alt="VNPAY" class="me-3" style="width: 30px; height: 30px;" />
+                                            <div>
+                                                <strong>Thanh toán VNPAY</strong>
+                                                <br /><small class="text-muted">Thanh toán qua VNPAY với nhiều ngân hàng</small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tóm tắt đơn hàng -->
+                <div class="col-lg-4">
+                    <div class="card sticky-top">
+                        <div class="card-header">
+                            <h5 class="mb-0">Tóm tắt đơn hàng</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Danh sách sản phẩm -->
+                            <div class="order-items mb-3">
+                                @if (ViewBag.CartItemsDisplay != null)
+                                {
+                                    foreach (var item in ViewBag.CartItemsDisplay)
+                                    {
+                                        if (item == null) { continue; }
+                                        <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                            @{
+                                                var product = item.Product;
+                                                string firstImageUrl = null;
+                                                if (!string.IsNullOrEmpty(product?.ImageUrl))
+                                                {
+                                                    firstImageUrl = product.ImageUrl;
+                                                }
+                                                else if (product?.Images != null && product.Images.Count > 0)
+                                                {
+                                                    firstImageUrl = product.Images[0]?.Url;
+                                                }
+                                                var placeholderUrl = "/images/no-image.png";
+                                                var showImageUrl = !string.IsNullOrEmpty(firstImageUrl) ? firstImageUrl : placeholderUrl;
+                                            }
+                                            <img src="@showImageUrl" alt="@product?.Name" class="me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;" />
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">@(product?.Name ?? "[Không có tên]")</h6>
+                                                <small class="text-muted">Số lượng: @item.Quantity</small>
+                                                @if (item.IsGift)
+                                                {
+                                                    <br />
+                                                    <span class="badge bg-success">Quà tặng</span>
+                                                }
+                                                @if (item.DeliveryDate != null && item.DeliveryTime != null)
+                                                {
+                                                    <br />
+                                                    <small class="text-muted">Giao: @item.DeliveryDate?.ToString("dd/MM/yyyy") @item.DeliveryTime</small>
+                                                }
+                                            </div>
+                                            <div class="text-end">
+                                                @{
+                                                    var currentPrice = product?.Price ?? 0;
+                                                    var giftDiscount = item.Discount ?? 0;
+                                                    
+                                                    // ⭐ Lấy giá gốc từ OriginalPrice (nếu là Gift item)
+                                                    decimal? originalPrice = product?.OriginalPrice;
+                                                }
+                                                @if (item.IsGift)
+                                                {
+                                                    <!-- Gift item: hiển thị currentPrice (đã trừ ProductDiscount, chưa trừ Gift discount) -->
+                                                    @if (originalPrice.HasValue && originalPrice > currentPrice)
+                                                    {
+                                                        <div class="text-danger fw-bold">@currentPrice.ToString("#,##0") đ</div>
+                                                        <small class="text-muted"><del>@originalPrice.Value.ToString("#,##0") đ</del></small>
+                                                    }
+                                                    else
+                                                    {
+                                                        <strong>@currentPrice.ToString("#,##0") đ</strong>
+                                                    }
+                                                }
+                                                else if (giftDiscount > 0)
+                                                {
+                                                    <!-- Item thường có discount -->
+                                                    <div class="text-danger fw-bold">@((currentPrice - giftDiscount).ToString("#,##0")) đ</div>
+                                                    <small class="text-muted"><del>@currentPrice.ToString("#,##0") đ</del></small>
+                                                }
+                                                else
+                                                {
+                                                    <!-- Không có discount -->
+                                                    <strong>@currentPrice.ToString("#,##0") đ</strong>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Tính toán -->
+                            <div class="order-summary">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Tạm tính:</span>
+                                    <span>@((ViewBag.Subtotal ?? 0).ToString("#,##0")) đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-muted">
+                                    <span>Số lượng:</span>
+                                    <span>@(ViewBag.TotalQuantity ?? 0) sản phẩm</span>
+                                </div>
+                                
+                                <!-- Voucher Section -->
+                                @{
+                                    var availableVouchers = ViewBag.AvailableVouchers as List<UserVoucher>;
+                                }
+                                @if (availableVouchers != null && availableVouchers.Any())
+                                {
+                                    var discountVouchers = availableVouchers.Where(v => 
+                                        v.PromotionCode?.Promotion?.Type == PromotionType.Order ||
+                                        v.PromotionCode?.Promotion?.Type == PromotionType.Product ||
+                                        v.PromotionCode?.Promotion?.Type == PromotionType.Gift
+                                    ).ToList();
+                                    
+                                    var shippingVouchers = availableVouchers.Where(v => 
+                                        v.PromotionCode?.Promotion?.Type == PromotionType.Shipping
+                                    ).ToList();
+                                    
+                                    var preselectedVoucherId = ViewBag.PreselectedVoucherId as int?;
+                                    
+                                    <div class="voucher-section mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span><i class="fas fa-ticket-alt me-1"></i>Chọn voucher:</span>
+                                            <a href="@Url.Action("MyVouchers", "Promotion")" class="btn btn-sm btn-outline-primary">
+                                                Xem tất cả (@availableVouchers.Count)
+                                            </a>
+                                        </div>
+                                        
+                                        @* Voucher giảm giá *@
+                                        @if (discountVouchers.Any())
+                                        {
+                                            <label class="form-label small fw-bold mb-1"><i class="fas fa-tags me-1"></i>Voucher giảm giá:</label>
+                                            <select class="form-select mb-2" id="discountVoucherSelect" name="selectedDiscountVoucherId">
+                                                <option value="">-- Chọn voucher giảm giá --</option>
+                                                @foreach (var voucher in discountVouchers)
+                                                {
+                                                    var promotion = voucher.PromotionCode?.Promotion;
+                                                    var voucherText = "";
+                                                    
+                                                    // Kiểm tra nếu là Gift promotion
+                                                    if (promotion?.Type == Bloomie.Models.Entities.PromotionType.Gift)
+                                                    {
+                                                        var giftPromo = promotion.PromotionGifts?.FirstOrDefault();
+                                                        if (giftPromo != null)
+                                                        {
+                                                            var discountText = "";
+                                                            if (giftPromo.GiftDiscountType == "free")
+                                                            {
+                                                                discountText = "Tặng miễn phí";
+                                                            }
+                                                            else if (giftPromo.GiftDiscountType == "percent" && giftPromo.GiftDiscountValue.HasValue)
+                                                            {
+                                                                discountText = $"Giảm {giftPromo.GiftDiscountValue}% sản phẩm tặng";
+                                                            }
+                                                            else if (giftPromo.GiftDiscountType == "money" && giftPromo.GiftDiscountMoneyValue.HasValue)
+                                                            {
+                                                                discountText = $"Giảm {giftPromo.GiftDiscountMoneyValue:N0}₫ sản phẩm tặng";
+                                                            }
+                                                            voucherText = $"{voucher.PromotionCode?.Code} - {discountText}";
+                                                        }
+                                                        else
+                                                        {
+                                                            voucherText = $"{voucher.PromotionCode?.Code} - Tặng quà";
+                                                        }
+                                                    }
+                                                    else if (voucher.PromotionCode?.IsPercent == true)
+                                                    {
+                                                        voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value}%";
+                                                        if (voucher.PromotionCode.MaxDiscount.HasValue)
+                                                        {
+                                                            voucherText += $" (giảm tối đa {voucher.PromotionCode.MaxDiscount.Value:N0}đ)";
+                                                        }
+                                                    }
+                                                    else if (voucher.PromotionCode?.Value.HasValue == true)
+                                                    {
+                                                        voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value.Value:N0}₫";
+                                                    }
+                                                    
+                                                    var isSelected = preselectedVoucherId.HasValue && voucher.Id == preselectedVoucherId.Value;
+                                                    var promotionType = promotion?.Type.ToString() ?? "";
+                                                    var applyDistricts = promotion?.ApplyDistricts ?? "";
+                                                    <option value="@voucher.Id" 
+                                                            data-voucher-type="@(voucher.PromotionCode?.IsPercent == true ? "percent" : "fixed")"
+                                                            data-voucher-value="@(voucher.PromotionCode?.Value ?? 0)"
+                                                            data-voucher-max="@(voucher.PromotionCode?.MaxDiscount ?? 0)"
+                                                            data-promotion-type="@promotionType"
+                                                            data-apply-districts='@applyDistricts'
+                                                            data-allow-combine-order="@(promotion?.AllowCombineOrder == true ? "true" : "false")"
+                                                            data-allow-combine-product="@(promotion?.AllowCombineProduct == true ? "true" : "false")"
+                                                            data-allow-combine-shipping="@(promotion?.AllowCombineShipping == true ? "true" : "false")"
+                                                            selected="@isSelected">
+                                                        @voucherText
+                                                    </option>
+                                                }
+                                            </select>
+                                        }
+                                        
+                                        @* Voucher vận chuyển *@
+                                        @if (shippingVouchers.Any())
+                                        {
+                                            <label class="form-label small fw-bold mb-1 mt-2"><i class="fas fa-shipping-fast me-1"></i>Voucher vận chuyển:</label>
+                                            <select class="form-select mb-2" id="shippingVoucherSelect" name="selectedShippingVoucherId">
+                                                <option value="">-- Chọn voucher vận chuyển --</option>
+                                                @foreach (var voucher in shippingVouchers)
+                                                {
+                                                    var promotion = voucher.PromotionCode?.Promotion;
+                                                    var voucherText = "";
+                                                    
+                                                    if (voucher.PromotionCode?.IsPercent == true)
+                                                    {
+                                                        voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value}% phí ship";
+                                                        if (voucher.PromotionCode.MaxDiscount.HasValue)
+                                                        {
+                                                            voucherText += $" (giảm tối đa {voucher.PromotionCode.MaxDiscount.Value:N0}đ)";
+                                                        }
+                                                    }
+                                                    else if (voucher.PromotionCode?.Value.HasValue == true)
+                                                    {
+                                                        voucherText = $"{voucher.PromotionCode.Code} - Giảm {voucher.PromotionCode.Value.Value:N0}₫ phí ship";
+                                                    }
+                                                    
+                                                    var isSelected = preselectedVoucherId.HasValue && voucher.Id == preselectedVoucherId.Value;
+                                                    var promotionType = promotion?.Type.ToString() ?? "";
+                                                    var applyDistricts = promotion?.ApplyDistricts ?? "";
+                                                    <option value="@voucher.Id" 
+                                                            data-voucher-type="@(voucher.PromotionCode?.IsPercent == true ? "percent" : "fixed")"
+                                                            data-voucher-value="@(voucher.PromotionCode?.Value ?? 0)"
+                                                            data-voucher-max="@(voucher.PromotionCode?.MaxDiscount ?? 0)"
+                                                            data-promotion-type="@promotionType"
+                                                            data-apply-districts='@applyDistricts'
+                                                            data-allow-combine-order="@(promotion?.AllowCombineOrder == true ? "true" : "false")"
+                                                            data-allow-combine-product="@(promotion?.AllowCombineProduct == true ? "true" : "false")"
+                                                            data-allow-combine-shipping="@(promotion?.AllowCombineShipping == true ? "true" : "false")"
+                                                            selected="@isSelected">
+                                                        @voucherText
+                                                    </option>
+                                                }
+                                            </select>
+                                        }
+                                        
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle me-1"></i>Voucher sẽ được áp dụng tự động khi đặt hàng
+                                        </small>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-light py-2 px-3 mb-3" style="font-size: 0.9rem;">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Bạn chưa có voucher nào. <a href="@Url.Action("MyVouchers", "Promotion")" class="text-decoration-none">Xem thêm</a>
+                                    </div>
+                                }
+                                
+                                <!-- Sử dụng điểm tích lũy -->
+                                @{
+                                    var availablePoints = ViewBag.AvailablePoints as int? ?? 0;
+                                    var pointsToVnd = ViewBag.PointsToVnd as int? ?? 100;
+                                }
+                                @if (availablePoints > 0)
+                                {
+                                    <div class="points-section mb-3 p-3 border rounded bg-light">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-bold"><i class="fas fa-coins text-warning me-1"></i>Sử dụng điểm tích lũy</span>
+                                            <span class="badge bg-warning text-dark">@availablePoints điểm</span>
+                                        </div>
+                                        <small class="text-muted d-block mb-2">
+                                            <i class="fas fa-info-circle me-1"></i>@pointsToVnd điểm = @((pointsToVnd * 100).ToString("#,##0"))đ
+                                        </small>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control" id="pointsToUse" name="pointsToUse" 
+                                                   min="0" max="@availablePoints" value="0" placeholder="Nhập số điểm">
+                                            <button class="btn btn-outline-primary" type="button" id="useMaxPoints">
+                                                Dùng hết
+                                            </button>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-success fw-bold">
+                                                Giảm: <span id="pointsDiscountDisplay">0đ</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-light py-2 px-3 mb-3" style="font-size: 0.9rem;">
+                                        <i class="fas fa-coins me-1 text-warning"></i>
+                                        Bạn chưa có điểm tích lũy. <a href="@Url.Action("Index", "CheckIn")" class="text-decoration-none">Điểm danh ngay</a>
+                                    </div>
+                                }
+                                
+                                <!-- Hiển thị tổng giảm giá voucher (PromotionDiscount + GiftVoucherDiscount) -->
+                                <div class="d-flex justify-content-between mb-2 text-success" id="voucherDiscountRow">
+                                    <span>Voucher giảm giá:</span>
+                                    <span id="voucherDiscountAmount">-@(((ViewBag.PromotionDiscount ?? 0) + (ViewBag.GiftVoucherDiscount ?? 0)).ToString("#,##0")) đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success" id="pointsDiscountRow" style="display: none !important;">
+                                    <span>Giảm từ điểm:</span>
+                                    <span id="pointsDiscountAmount">-0đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Phí giao hàng:</span>
+                                    <span id="shippingFeeAmount">@((ViewBag.ShippingFee ?? 0).ToString("#,##0")) đ</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2 text-success" id="shippingVoucherDiscountRow" style="display: none;">
+                                    <span>Voucher vận chuyển:</span>
+                                    <span id="shippingVoucherDiscountAmount">-0 đ</span>
+                                </div>
+                                <hr />
+                                <div class="d-flex justify-content-between mb-3">
+                                    <strong>Tổng cộng:</strong>
+                                    <strong class="text-danger">@((ViewBag.Total ?? 0).ToString("#,##0")) đ</strong>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                <i class="fas fa-credit-card me-2"></i>Đặt hàng
+                            </button>
+
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    Bằng việc đặt hàng, bạn đồng ý với <a href="@Url.Action("TermsOfService", "Home")" class="text-decoration-none" target="_blank">Điều khoản sử dụng</a> và <a href="@Url.Action("PrivacyPolicy", "Home")" class="text-decoration-none" target="_blank">Chính sách bảo mật</a> của chúng tôi.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+<style>
+    /* Animations */
+    .breadcrumb {
+        animation: slideDown 0.6s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .container {
+        animation: fadeInUp 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        font-size: 1rem;
+    }
+
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .breadcrumb-item a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #D0021B;
+    }
+
+    .breadcrumb-item.active {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        display: none;
+    }
+
+    .breadcrumb-item span {
+        color: #999;
+        margin: 0 10px;
+    }
+
+    .breadcrumb-item i {
+        margin-right: 5px;
+    }
+
+    .checkout-section {
+        padding: 40px 0;
+    }
+
+    .checkout-section h2 {
+        font-family: 'Roboto', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #D0021B;
+        text-align: center;
+        position: relative;
+        margin-bottom: 35px;
+    }
+
+    .checkout-section h2::after {
+        content: '';
+        width: 80px;
+        height: 4px;
+        background: #D0021B;
+        position: absolute;
+        bottom: -12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .breadcrumb {
+        font-size: 1rem;
+        background-color: transparent;
+        padding: 0 15px;
+        margin: 0;
+    }
+
+    .breadcrumb-item a {
+        color: #666;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-item a:hover {
+        color: #D0021B;
+    }
+
+    .breadcrumb-item.active {
+        color: #333;
+        font-weight: 500;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 10px 10px 0 0 !important;
+        font-weight: 600;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+
+    .form-control {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px 15px;
+        font-size: 0.95rem;
+    }
+
+    .form-control:focus {
+        border-color: #D0021B;
+        box-shadow: 0 0 0 0.2rem rgba(208, 2, 27, 0.25);
+    }
+
+    .form-check-input:checked {
+        background-color: #D0021B;
+        border-color: #D0021B;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+    .form-check-label:hover {
+        background-color: #f8f9fa;
+    }
+
+    .payment-method .form-check {
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: border-color 0.3s ease;
+    }
+
+    .payment-method .form-check-input:checked ~ .form-check-label {
+        border-color: #D0021B;
+        background-color: #fff5f5;
+    }
+
+    .sticky-top {
+        top: 20px;
+    }
+
+    .order-items {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .order-summary {
+        border-top: 1px solid #dee2e6;
+        padding-top: 15px;
+    }
+
+    .btn-primary {
+        background-color: #D0021B;
+        border-color: #D0021B;
+        font-weight: 600;
+        padding: 12px;
+    }
+
+    .btn-primary:hover {
+        background-color: #F5A623;
+        border-color: #F5A623;
+    }
+
+    .text-danger {
+        color: #D0021B !important;
+    }
+
+    .text-success {
+        color: #28a745 !important;
+    }
+</style>
+
+<script>
+    // Track if user manually changed voucher
+    let userChangedDiscountVoucher = false;
+    let userChangedShippingVoucher = false;
+    
+    // Load danh sách phường/xã từ API provinces.open-api.vn
+    document.addEventListener('DOMContentLoaded', async function() {
+        // ⭐ Hiển thị notification nếu có message từ backend
+        @if (TempData["error"] != null)
+        {
+            <text>
+            showGlobalNotification('@Html.Raw(TempData["error"])', 'error');
+            </text>
+        }
+        @if (TempData["success"] != null)
+        {
+            <text>
+            showGlobalNotification('@Html.Raw(TempData["success"])', 'success');
+            </text>
+        }
+        @if (TempData["warning"] != null)
+        {
+            <text>
+            showGlobalNotification('@Html.Raw(TempData["warning"])', 'error');
+            </text>
+        }
+        
+        // ⭐ Hiển thị notification từ sessionStorage (sau khi reload từ Gift voucher)
+        const pendingNotificationJson = sessionStorage.getItem('pendingNotification');
+        if (pendingNotificationJson) {
+            try {
+                const notification = JSON.parse(pendingNotificationJson);
+                showGlobalNotification(notification.message, notification.type);
+                sessionStorage.removeItem('pendingNotification');
+            } catch (e) {
+                console.error('Error showing pending notification:', e);
+            }
+        }
+        
+        const wardSelect = document.getElementById('ward');
+        wardSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        try {
+            const res = await fetch('https://provinces.open-api.vn/api/v2/p/79?depth=2');
+            const data = await res.json();
+            if (data && data.wards && Array.isArray(data.wards)) {
+                data.wards.forEach(ward => {
+                    const option = document.createElement('option');
+                    option.value = ward.code; // Lưu wardCode
+                    option.textContent = ward.name + (ward.parent_name ? ' (' + ward.parent_name + ')' : '');
+                    option.setAttribute('data-name', ward.name); // Lưu tên để dùng sau
+                    wardSelect.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading wards:', error);
+        }
+        
+        // Restore form data từ sessionStorage nếu có (sau khi reload từ Gift voucher)
+        const preservedFormDataJson = sessionStorage.getItem('preservedFormData');
+        if (preservedFormDataJson) {
+            try {
+                const formData = JSON.parse(preservedFormDataJson);
+                
+                // Restore các trường form
+                if (formData.userName) document.getElementById('userName').value = formData.userName;
+                if (formData.userEmail) document.getElementById('userEmail').value = formData.userEmail;
+                if (formData.phone) document.getElementById('phone').value = formData.phone;
+                if (formData.address) document.getElementById('address').value = formData.address;
+                if (formData.note) document.getElementById('note').value = formData.note;
+                if (formData.pointsToUse) document.getElementById('pointsToUse').value = formData.pointsToUse;
+                
+                // Restore ward (cần đợi wards được load xong)
+                if (formData.ward) {
+                    const wardSelect = document.getElementById('ward');
+                    wardSelect.value = formData.ward;
+                    if (formData.wardCode) {
+                        document.getElementById('wardCode').value = formData.wardCode;
+                    }
+                    // Trigger update shipping address và fee
+                    updateShippingAddress();
+                    if (formData.ward) {
+                        // Fetch shipping fee
+                        fetch(`/Order/GetShippingFee?wardCode=${formData.ward}`)
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    updateShippingFee(result.fee);
+                                }
+                            })
+                            .catch(error => console.error('Error getting shipping fee:', error));
+                    }
+                }
+                
+                // Restore payment method
+                if (formData.paymentMethod) {
+                    const paymentRadio = document.querySelector(`input[name="paymentMethod"][value="${formData.paymentMethod}"]`);
+                    if (paymentRadio) paymentRadio.checked = true;
+                }
+                
+                // Restore discount voucher nếu có (sau khi bỏ Gift voucher)
+                if (formData.discountVoucherId) {
+                    const discountVoucherSelect = document.getElementById('discountVoucherSelect');
+                    if (discountVoucherSelect) {
+                        discountVoucherSelect.value = formData.discountVoucherId;
+                    }
+                }
+                
+                // Clear sessionStorage
+                sessionStorage.removeItem('preservedFormData');
+            } catch (e) {
+                console.error('Error restoring form data:', e);
+            }
+        }
+        
+        // Khởi tạo xử lý voucher sau khi DOM ready
+        initializeVoucherHandler();
+    });
+
+    // Tính phí ship khi chọn phường/xã
+    document.getElementById('ward').addEventListener('change', async function() {
+        const wardCode = this.value;
+        const wardName = this.options[this.selectedIndex]?.getAttribute('data-name') || this.options[this.selectedIndex]?.text;
+        
+        // Lưu wardCode vào hidden input
+        document.getElementById('wardCode').value = wardCode;
+        
+        updateShippingAddress();
+        
+        if (!wardCode) {
+            updateShippingFee(0);
+            return;
+        }
+        
+        // Validate shipping voucher khi chọn phường/xã
+        const shippingVoucherSelect = document.getElementById('shippingVoucherSelect');
+        if (shippingVoucherSelect && shippingVoucherSelect.value) {
+            const selectedOption = shippingVoucherSelect.options[shippingVoucherSelect.selectedIndex];
+            const applyDistrictsJson = selectedOption.getAttribute('data-apply-districts');
+            
+            if (applyDistrictsJson && applyDistrictsJson.trim() !== '') {
+                try {
+                    const applyDistricts = JSON.parse(applyDistrictsJson);
+                    if (applyDistricts && applyDistricts.length > 0) {
+                        const isWardValid = applyDistricts.some(district => wardName.includes(district));
+                        
+                        if (!isWardValid) {
+                            // Hiển thị cảnh báo nhưng KHÔNG xóa voucher
+                            const voucherWarning = document.getElementById('shippingVoucherWarning');
+                            if (!voucherWarning) {
+                                const warningDiv = document.createElement('div');
+                                warningDiv.id = 'shippingVoucherWarning';
+                                warningDiv.className = 'alert alert-warning mt-2';
+                                warningDiv.innerHTML = `
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Voucher vận chuyển không áp dụng cho địa chỉ này!</strong><br>
+                                    <small>Voucher chỉ áp dụng cho: ${applyDistricts.join(', ')}</small>
+                                `;
+                                shippingVoucherSelect.parentElement.appendChild(warningDiv);
+                            }
+                            
+                            // Hiển thị notification lỗi
+                            showGlobalNotification(`Voucher vận chuyển không áp dụng cho địa chỉ này! Chỉ áp dụng cho: ${applyDistricts.join(', ')}`, 'error');
+                        } else {
+                            // Xóa warning nếu voucher hợp lệ
+                            const voucherWarning = document.getElementById('shippingVoucherWarning');
+                            if (voucherWarning) {
+                                voucherWarning.remove();
+                            }
+                            
+                            // Hiển thị notification thành công khi địa chỉ hợp lệ
+                            const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+                            const voucherType = selectedOption.getAttribute('data-voucher-type');
+                            let discountText = '';
+                            if (voucherType === 'percent') {
+                                discountText = `${voucherValue}%`;
+                            } else {
+                                discountText = `${voucherValue.toLocaleString('vi-VN')}đ`;
+                            }
+                            showGlobalNotification(`Áp dụng voucher vận chuyển thành công! Giảm ${discountText}`, 'success');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error validating shipping voucher:', e);
+                }
+            }
+        }
+        
+        // Validate discount voucher nếu có điều kiện address
+        const discountVoucherSelect = document.getElementById('discountVoucherSelect');
+        if (discountVoucherSelect && discountVoucherSelect.value) {
+            const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+            const applyDistrictsJson = selectedOption.getAttribute('data-apply-districts');
+            
+            if (applyDistrictsJson && applyDistrictsJson.trim() !== '') {
+                try {
+                    const applyDistricts = JSON.parse(applyDistrictsJson);
+                    if (applyDistricts && applyDistricts.length > 0) {
+                        const isWardValid = applyDistricts.some(district => wardName.includes(district));
+                        
+                        if (!isWardValid) {
+                            // Hiển thị cảnh báo nhưng KHÔNG xóa voucher
+                            const voucherWarning = document.getElementById('discountVoucherWarning');
+                            if (!voucherWarning) {
+                                const warningDiv = document.createElement('div');
+                                warningDiv.id = 'discountVoucherWarning';
+                                warningDiv.className = 'alert alert-warning mt-2';
+                                warningDiv.innerHTML = `
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Voucher giảm giá không áp dụng cho địa chỉ này!</strong><br>
+                                    <small>Voucher chỉ áp dụng cho: ${applyDistricts.join(', ')}</small>
+                                `;
+                                discountVoucherSelect.parentElement.appendChild(warningDiv);
+                            }
+                            
+                            // Hiển thị notification lỗi
+                            showGlobalNotification(`Voucher không áp dụng cho địa chỉ này! Chỉ áp dụng cho: ${applyDistricts.join(', ')}`, 'error');
+                        } else {
+                            // Xóa warning nếu voucher hợp lệ
+                            const voucherWarning = document.getElementById('discountVoucherWarning');
+                            if (voucherWarning) {
+                                voucherWarning.remove();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error validating discount voucher:', e);
+                }
+            }
+        }
+
+        try {
+            const response = await fetch(`/Order/GetShippingFee?wardCode=${wardCode}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                updateShippingFee(result.fee);
+            } else {
+                alert(result.message || 'Phường/xã này chưa hỗ trợ giao hàng');
+                this.value = '';
+                document.getElementById('wardCode').value = '';
+                updateShippingFee(0);
+            }
+        } catch (error) {
+            console.error('Error getting shipping fee:', error);
+            alert('Không thể tải phí giao hàng. Vui lòng thử lại.');
+        }
+    });
+
+    // Cập nhật phí ship và tổng tiền trên UI
+    function updateShippingFee(fee) {
+        // Nếu không truyền fee, lấy fee hiện tại từ UI
+        if (fee === undefined) {
+            const summaryDivs = document.querySelectorAll('.order-summary .d-flex');
+            summaryDivs.forEach(div => {
+                const firstSpan = div.querySelector('span:first-child');
+                if (firstSpan && firstSpan.textContent.includes('Phí giao hàng')) {
+                    const lastSpan = div.querySelector('span:last-child');
+                    if (lastSpan) {
+                        const feeText = lastSpan.textContent.replace(/[^\d]/g, '');
+                        fee = parseInt(feeText) || 0;
+                    }
+                }
+            });
+            if (fee === undefined) fee = 0;
+        }
+        
+        // Tìm và cập nhật phí giao hàng (dòng thứ 3 hoặc 4 trong order-summary)
+        const summaryDivs = document.querySelectorAll('.order-summary .d-flex');
+        summaryDivs.forEach(div => {
+            const firstSpan = div.querySelector('span:first-child');
+            if (firstSpan && firstSpan.textContent.includes('Phí giao hàng')) {
+                const lastSpan = div.querySelector('span:last-child');
+                if (lastSpan) {
+                    lastSpan.textContent = fee.toLocaleString('vi-VN') + ' đ';
+                }
+            }
+        });
+        
+        // Tính shipping discount từ voucher vận chuyển
+        let shippingDiscount = 0;
+        let isShippingVoucherValid = true; // Mặc định là hợp lệ
+        
+        const shippingVoucherSelect = document.getElementById('shippingVoucherSelect');
+        if (shippingVoucherSelect && shippingVoucherSelect.value) {
+            const selectedOption = shippingVoucherSelect.options[shippingVoucherSelect.selectedIndex];
+            const applyDistrictsJson = selectedOption.getAttribute('data-apply-districts');
+            
+            // Check xem voucher có hợp lệ cho địa chỉ không
+            if (applyDistrictsJson && applyDistrictsJson.trim() !== '') {
+                try {
+                    const applyDistricts = JSON.parse(applyDistrictsJson);
+                    if (applyDistricts && applyDistricts.length > 0) {
+                        const wardSelect = document.getElementById('ward');
+                        const wardName = wardSelect.options[wardSelect.selectedIndex]?.getAttribute('data-name') || '';
+                        isShippingVoucherValid = applyDistricts.some(district => wardName.includes(district));
+                    }
+                } catch (e) {
+                    console.error('Error checking shipping voucher validity:', e);
+                }
+            }
+            
+            // Chỉ tính discount nếu voucher hợp lệ
+            if (isShippingVoucherValid) {
+                const voucherType = selectedOption.getAttribute('data-voucher-type');
+                const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+                const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max') || 0);
+                
+                if (voucherType === 'percent') {
+                    shippingDiscount = (fee * voucherValue) / 100;
+                } else {
+                    shippingDiscount = Math.min(voucherValue, fee); // Không thể giảm quá phí ship
+                }
+                
+                if (voucherMax > 0 && shippingDiscount > voucherMax) {
+                    shippingDiscount = voucherMax;
+                }
+                
+                // Không giảm quá phí ship
+                if (shippingDiscount > fee) {
+                    shippingDiscount = fee;
+                }
+            }
+        }
+        
+        // Tính lại tổng tiền
+        const subtotal = @(ViewBag.Subtotal ?? 0);
+        const giftVoucherDiscount = @(ViewBag.GiftVoucherDiscount ?? 0);
+        const promotionDiscountFromBackend = @(ViewBag.PromotionDiscount ?? 0);
+        let discountVoucherDiscount = 0;
+        
+        // Get discount voucher discount (ưu tiên user selection nếu đã thay đổi)
+        const discountVoucherSelect = document.getElementById('discountVoucherSelect');
+        if (userChangedDiscountVoucher && discountVoucherSelect && discountVoucherSelect.value) {
+            // User đã chọn voucher mới, tính lại
+            const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+            const voucherType = selectedOption.getAttribute('data-voucher-type');
+            const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+            const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max') || 0);
+            
+            if (voucherType === 'percent') {
+                discountVoucherDiscount = (subtotal * voucherValue) / 100;
+            } else {
+                discountVoucherDiscount = voucherValue;
+            }
+            
+            if (voucherMax > 0 && discountVoucherDiscount > voucherMax) {
+                discountVoucherDiscount = voucherMax;
+            }
+        } else if (!userChangedDiscountVoucher && promotionDiscountFromBackend > 0) {
+            // Chưa thay đổi, dùng giá trị từ backend
+            discountVoucherDiscount = promotionDiscountFromBackend;
+        } else if (discountVoucherSelect && discountVoucherSelect.value) {
+            // Chọn voucher mới, tính lại
+            const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+            const voucherType = selectedOption.getAttribute('data-voucher-type');
+            const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+            const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max') || 0);
+            
+            if (voucherType === 'percent') {
+                discountVoucherDiscount = (subtotal * voucherValue) / 100;
+            } else {
+                discountVoucherDiscount = voucherValue;
+            }
+            
+            if (voucherMax > 0 && discountVoucherDiscount > voucherMax) {
+                discountVoucherDiscount = voucherMax;
+            }
+        }
+        
+        // Get points discount if any
+        let pointsDiscount = 0;
+        const pointsToUseInput = document.getElementById('pointsToUse');
+        if (pointsToUseInput) {
+            const pointsUsed = parseInt(pointsToUseInput.value) || 0;
+            const pointsToVnd = @(ViewBag.PointsToVnd ?? 100);
+            pointsDiscount = pointsUsed * pointsToVnd;
+        }
+        
+        const total = subtotal - giftVoucherDiscount - discountVoucherDiscount - pointsDiscount + fee - shippingDiscount;
+        
+        // Update shipping fee display (giữ nguyên không gạch ngang)
+        const shippingFeeElement = document.getElementById('shippingFeeAmount');
+        if (shippingFeeElement) {
+            shippingFeeElement.textContent = fee.toLocaleString('vi-VN') + ' đ';
+        }
+        
+        // Update shipping voucher discount display
+        const shippingVoucherDiscountRow = document.getElementById('shippingVoucherDiscountRow');
+        const shippingVoucherDiscountAmount = document.getElementById('shippingVoucherDiscountAmount');
+        if (shippingVoucherDiscountRow && shippingVoucherDiscountAmount) {
+            // Hiển thị dòng nếu có chọn shipping voucher (dù hợp lệ hay không)
+            if (shippingVoucherSelect && shippingVoucherSelect.value) {
+                shippingVoucherDiscountAmount.textContent = '-' + shippingDiscount.toLocaleString('vi-VN') + ' đ';
+                shippingVoucherDiscountRow.style.display = 'flex';
+            } else {
+                shippingVoucherDiscountRow.style.display = 'none';
+            }
+        }
+        
+        const totalElement = document.querySelector('.order-summary strong.text-danger');
+        if (totalElement) {
+            totalElement.textContent = total.toLocaleString('vi-VN') + ' đ';
+        }
+    }
+
+    // Tự động tạo địa chỉ giao hàng từ các trường
+    function updateShippingAddress() {
+        const wardSelect = document.getElementById('ward');
+        const wardName = wardSelect.options[wardSelect.selectedIndex]?.getAttribute('data-name') || '';
+        const address = document.getElementById('address').value;
+        const shippingAddress = document.getElementById('shippingAddress');
+        
+        if (wardName && address) {
+            shippingAddress.value = `${address}, ${wardName}, Thành phố Hồ Chí Minh`;
+        } else {
+            shippingAddress.value = '';
+        }
+    }
+
+    // Lắng nghe sự kiện thay đổi địa chỉ
+    document.getElementById('address').addEventListener('input', updateShippingAddress);
+
+    // Hàm khởi tạo xử lý 2 loại voucher
+    function initializeVoucherHandler() {
+        // Lắng nghe sự kiện chọn voucher giảm giá
+        const discountVoucherSelect = document.getElementById('discountVoucherSelect');
+        const shippingVoucherSelect = document.getElementById('shippingVoucherSelect');
+        
+        // Function tính toán và cập nhật voucher discount
+        function updateVoucherDiscount() {
+            const giftVoucherDiscount = @(ViewBag.GiftVoucherDiscount ?? 0);
+            const promotionDiscountFromBackend = @(ViewBag.PromotionDiscount ?? 0);
+            const subtotal = @(ViewBag.Subtotal ?? 0);
+            let totalVoucherDiscount = 0;
+            
+            // Tính discount voucher giảm giá (ưu tiên user selection nếu đã thay đổi)
+            if (userChangedDiscountVoucher && discountVoucherSelect && discountVoucherSelect.value) {
+                // User đã chọn voucher mới
+                const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+                const voucherType = selectedOption.getAttribute('data-voucher-type');
+                const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+                const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max') || 0);
+                const promotionType = selectedOption.getAttribute('data-promotion-type');
+                
+                // Gift voucher không tính discount ở đây (đã được xử lý trong event listener)
+                if (promotionType !== 'Gift') {
+                    // Tính discount cho voucher bình thường
+                    if (voucherType === 'percent') {
+                        totalVoucherDiscount = (subtotal * voucherValue) / 100;
+                    } else {
+                        totalVoucherDiscount = voucherValue;
+                    }
+                    
+                    if (voucherMax > 0 && totalVoucherDiscount > voucherMax) {
+                        totalVoucherDiscount = voucherMax;
+                    }
+                }
+            } else if (!userChangedDiscountVoucher && promotionDiscountFromBackend > 0) {
+                // Chưa thay đổi, dùng giá trị từ backend
+                totalVoucherDiscount = promotionDiscountFromBackend;
+            } else if (discountVoucherSelect && discountVoucherSelect.value) {
+                // Chọn voucher mới, tính lại
+                const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+                const voucherType = selectedOption.getAttribute('data-voucher-type');
+                const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value') || 0);
+                const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max') || 0);
+                const promotionType = selectedOption.getAttribute('data-promotion-type');
+                
+                // Gift voucher không tính discount ở đây (đã được xử lý trong event listener)
+                if (promotionType !== 'Gift') {
+                    // Tính discount cho voucher bình thường
+                    if (voucherType === 'percent') {
+                        totalVoucherDiscount = (subtotal * voucherValue) / 100;
+                    } else {
+                        totalVoucherDiscount = voucherValue;
+                    }
+                    
+                    if (voucherMax > 0 && totalVoucherDiscount > voucherMax) {
+                        totalVoucherDiscount = voucherMax;
+                    }
+                }
+            }
+            
+            // Cập nhật hiển thị tổng discount (gift voucher + voucher)
+            const voucherDiscountRow = document.getElementById('voucherDiscountRow');
+            const discountElement = document.getElementById('voucherDiscountAmount');
+            const totalDiscount = giftVoucherDiscount + totalVoucherDiscount;
+            
+            if (voucherDiscountRow && discountElement) {
+                discountElement.textContent = '-' + totalDiscount.toLocaleString('vi-VN') + ' đ';
+                voucherDiscountRow.style.display = 'flex';
+            }
+            
+            // Recalculate total
+            const wardSelect = document.getElementById('ward');
+            if (wardSelect && wardSelect.value) {
+                wardSelect.dispatchEvent(new Event('change'));
+            } else {
+                updateShippingFee(0);
+            }
+        }
+        
+        // Lắng nghe thay đổi voucher giảm giá
+        if (discountVoucherSelect) {
+            discountVoucherSelect.addEventListener('change', function() {
+                userChangedDiscountVoucher = true; // Đánh dấu user đã thay đổi
+                
+                const selectedOption = this.options[this.selectedIndex];
+                const promotionType = selectedOption ? selectedOption.getAttribute('data-promotion-type') : '';
+                const currentUrl = new URL(window.location.href);
+                const currentVoucherCode = currentUrl.searchParams.get('voucherCode');
+                
+                // ⭐ Kiểm tra xem trang hiện tại có gift items không
+                const hasGiftItems = document.querySelector('.badge.bg-success') !== null;
+                
+                // Lấy shipping voucher ID nếu đang có chọn để preserve khi reload
+                const shippingVoucherSelect = document.getElementById('shippingVoucherSelect');
+                const shippingVoucherId = shippingVoucherSelect && shippingVoucherSelect.value ? shippingVoucherSelect.value : '';
+                
+                // ⭐ Nếu đang có gift items mà chọn voucher KHÔNG PHẢI Gift → Reload để xóa gift items
+                if (hasGiftItems && promotionType !== 'Gift') {
+                    // Lưu form data
+                    const formData = {
+                        userName: document.getElementById('userName')?.value || '',
+                        userEmail: document.getElementById('userEmail')?.value || '',
+                        phone: document.getElementById('phone')?.value || '',
+                        ward: document.getElementById('ward')?.value || '',
+                        wardCode: document.getElementById('wardCode')?.value || '',
+                        address: document.getElementById('address')?.value || '',
+                        note: document.getElementById('note')?.value || '',
+                        pointsToUse: document.getElementById('pointsToUse')?.value || '0',
+                        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'COD'
+                    };
+                    sessionStorage.setItem('preservedFormData', JSON.stringify(formData));
+                    if (shippingVoucherId) {
+                        sessionStorage.setItem('preservedShippingVoucherId', shippingVoucherId);
+                    }
+                    
+                    // ⭐ Đồng bộ voucher mới vào session (xóa gift items)
+                    const selectedVoucherId = this.value;
+                    if (selectedVoucherId) {
+                        fetch('/ShoppingCart/ApplyVoucherAjax', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'selectedVoucherId=' + selectedVoucherId
+                        }).then(() => {
+                            // Reload trang để cập nhật UI (xóa gift items)
+                            window.location.href = '/Order/Checkout?selectedVoucherId=' + selectedVoucherId;
+                        }).catch(err => console.error('Failed to sync voucher:', err));
+                    } else {
+                        // Xóa voucher (chọn option trống)
+                        fetch('/ShoppingCart/ApplyVoucherAjax', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'selectedVoucherId='
+                        }).then(() => {
+                            window.location.href = '/Order/Checkout';
+                        }).catch(err => console.error('Failed to clear voucher:', err));
+                    }
+                    return; // Dừng xử lý, đợi reload
+                }
+                
+                // ⭐ Kiểm tra kết hợp khuyến mãi NGAY KHI CHỌN (chỉ cho voucher KHÔNG phải Gift)
+                if (selectedOption && selectedOption.value && shippingVoucherId && promotionType !== 'Gift') {
+                    const allowCombineShipping = selectedOption.getAttribute('data-allow-combine-shipping');
+                    
+                    if (allowCombineShipping !== 'true') {
+                        // Không cho phép kết hợp với voucher vận chuyển
+                        showGlobalNotification('Voucher giảm giá này không cho phép kết hợp với voucher vận chuyển!', 'error');
+                        // ⭐ Bỏ chọn VOUCHER GIẢM GIÁ (giữ nguyên voucher vận chuyển)
+                        this.value = '';
+                        // Trigger update để tính lại
+                        updateVoucherDiscount();
+                        return; // Dừng xử lý
+                    }
+                }
+                
+                // Nếu chọn Gift voucher → Reload trực tiếp, KHÔNG gọi AJAX
+                if (selectedOption && selectedOption.value && promotionType === 'Gift') {
+                    const voucherCode = selectedOption.textContent.split(' - ')[0].trim();
+                    
+                    // Lưu shipping voucher vào sessionStorage để restore sau khi reload
+                    if (shippingVoucherId) {
+                        sessionStorage.setItem('preservedShippingVoucherId', shippingVoucherId);
+                    }
+                    
+                    // Lưu tất cả form data vào sessionStorage
+                    const formData = {
+                        userName: document.getElementById('userName')?.value || '',
+                        userEmail: document.getElementById('userEmail')?.value || '',
+                        phone: document.getElementById('phone')?.value || '',
+                        ward: document.getElementById('ward')?.value || '',
+                        wardCode: document.getElementById('wardCode')?.value || '',
+                        address: document.getElementById('address')?.value || '',
+                        note: document.getElementById('note')?.value || '',
+                        pointsToUse: document.getElementById('pointsToUse')?.value || '0',
+                        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'COD'
+                    };
+                    sessionStorage.setItem('preservedFormData', JSON.stringify(formData));
+                    
+                    // Reload page với gift voucher code
+                    window.location.href = `/Order/Checkout?voucherCode=${encodeURIComponent(voucherCode)}`;
+                    return;
+                }
+                
+                // Check xem voucherCode trong URL có phải là Gift voucher đang được chọn không
+                let isCurrentVoucherGift = false;
+                if (currentVoucherCode && discountVoucherSelect) {
+                    // Tìm option có code khớp với currentVoucherCode
+                    const options = Array.from(discountVoucherSelect.options);
+                    const matchingOption = options.find(opt => {
+                        const optText = opt.textContent || '';
+                        const optCode = optText.split(' - ')[0].trim();
+                        return optCode === currentVoucherCode && opt.getAttribute('data-promotion-type') === 'Gift';
+                    });
+                    isCurrentVoucherGift = !!matchingOption;
+                }
+                
+                // Chỉ reload nếu đang có Gift voucher trong URL và đang chuyển sang voucher khác
+                if (currentVoucherCode && isCurrentVoucherGift) {
+                    // Lưu shipping voucher vào sessionStorage để restore sau khi reload
+                    if (shippingVoucherId) {
+                        sessionStorage.setItem('preservedShippingVoucherId', shippingVoucherId);
+                    }
+                    
+                    // Lưu tất cả form data vào sessionStorage
+                    const formData = {
+                        userName: document.getElementById('userName')?.value || '',
+                        userEmail: document.getElementById('userEmail')?.value || '',
+                        phone: document.getElementById('phone')?.value || '',
+                        ward: document.getElementById('ward')?.value || '',
+                        wardCode: document.getElementById('wardCode')?.value || '',
+                        address: document.getElementById('address')?.value || '',
+                        note: document.getElementById('note')?.value || '',
+                        pointsToUse: document.getElementById('pointsToUse')?.value || '0',
+                        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'COD',
+                        discountVoucherId: selectedOption?.value || '' // Lưu discount voucher mới được chọn
+                    };
+                    sessionStorage.setItem('preservedFormData', JSON.stringify(formData));
+                    
+                    // ⭐ Lưu notification để hiển thị sau khi reload
+                    if (selectedOption && selectedOption.value) {
+                        const newPromotionType = selectedOption.getAttribute('data-promotion-type');
+                        if (newPromotionType !== 'Gift') {
+                            sessionStorage.setItem('pendingNotification', JSON.stringify({
+                                message: 'Áp dụng voucher thành công!',
+                                type: 'success'
+                            }));
+                        }
+                    }
+                    
+                    // Reload page không có voucherCode để xóa quà tặng
+                    window.location.href = '/Order/Checkout';
+                    return;
+                }
+                
+                // ⭐ Voucher bình thường (không phải Gift) → Đồng bộ vào session cart
+                const selectedVoucherId = this.value;
+                if (selectedVoucherId && promotionType !== 'Gift') {
+                    fetch('/ShoppingCart/ApplyVoucherAjax', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'selectedVoucherId=' + selectedVoucherId
+                    }).catch(err => console.error('Failed to sync voucher to cart:', err));
+                }
+                
+                // Voucher bình thường, update bình thường
+                updateVoucherDiscount();
+                
+                // Hiển thị notification khi chọn voucher (không hiện nếu là Gift vì sẽ reload)
+                if (selectedOption && selectedOption.value && promotionType !== 'Gift') {
+                    showGlobalNotification('Áp dụng voucher thành công!', 'success');
+                }
+            });
+        }
+        
+        // Lắng nghe thay đổi voucher vận chuyển
+        if (shippingVoucherSelect) {
+            shippingVoucherSelect.addEventListener('change', function() {
+                userChangedShippingVoucher = true; // Đánh dấu user đã thay đổi
+                
+                // Validate địa chỉ cho shipping voucher
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption && selectedOption.value) {
+                    const applyDistrictsJson = selectedOption.getAttribute('data-apply-districts');
+                    
+                    // Lưu thông tin để validate sau
+                    shippingVoucherSelect.setAttribute('data-current-apply-districts', applyDistrictsJson || '');
+                    
+                    // ⭐ Kiểm tra kết hợp khuyến mãi với voucher giảm giá
+                    const discountVoucherSelect = document.getElementById('discountVoucherSelect');
+                    if (discountVoucherSelect && discountVoucherSelect.value) {
+                        const discountOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+                        const discountPromotionType = discountOption.getAttribute('data-promotion-type');
+                        const allowCombineOrder = selectedOption.getAttribute('data-allow-combine-order');
+                        const allowCombineProduct = selectedOption.getAttribute('data-allow-combine-product');
+                        
+                        // Kiểm tra theo loại voucher giảm giá
+                        if (discountPromotionType === 'Order' && allowCombineOrder !== 'true') {
+                            showGlobalNotification('Voucher vận chuyển này không cho phép kết hợp với voucher giảm giá đơn hàng!', 'error');
+                            // Bỏ chọn voucher vận chuyển
+                            this.value = '';
+                            return;
+                        }
+                        
+                        if (discountPromotionType === 'Product' && allowCombineProduct !== 'true') {
+                            showGlobalNotification('Voucher vận chuyển này không cho phép kết hợp với voucher giảm giá sản phẩm!', 'error');
+                            // Bỏ chọn voucher vận chuyển
+                            this.value = '';
+                            return;
+                        }
+                        
+                        if (discountPromotionType === 'Gift' && allowCombineOrder !== 'true') {
+                            showGlobalNotification('Voucher vận chuyển này không cho phép kết hợp với voucher quà tặng!', 'error');
+                            // Bỏ chọn voucher vận chuyển
+                            this.value = '';
+                            return;
+                        }
+                    }
+                    
+                    // Hiển thị notification khi chọn voucher vận chuyển
+                    showGlobalNotification('Voucher vận chuyển sẽ được áp dụng sau khi chọn địa chỉ.', 'success');
+                }
+                
+                // Trigger update shipping fee để tính lại
+                const wardSelect = document.getElementById('ward');
+                if (wardSelect && wardSelect.value) {
+                    wardSelect.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+        
+        // Restore shipping voucher từ sessionStorage nếu có (sau khi reload từ Gift voucher)
+        let shippingVoucherRestored = false;
+        const preservedShippingVoucherId = sessionStorage.getItem('preservedShippingVoucherId');
+        if (preservedShippingVoucherId && shippingVoucherSelect) {
+            // Set value cho shipping voucher select
+            shippingVoucherSelect.value = preservedShippingVoucherId;
+            
+            // Clear sessionStorage
+            sessionStorage.removeItem('preservedShippingVoucherId');
+            
+            // Đánh dấu đã restore
+            shippingVoucherRestored = true;
+            
+            // Hiển thị notification
+            if (shippingVoucherSelect.value) {
+                showGlobalNotification('Voucher vận chuyển sẽ được áp dụng sau khi chọn địa chỉ.', 'success');
+            }
+        }
+        
+        // Trigger initial update
+        updateVoucherDiscount();
+        
+        // Check nếu có preselected voucher từ trang Ví voucher và hiển thị notification
+        // (chỉ hiển thị nếu không phải là shipping voucher đã được restore từ sessionStorage)
+        const preselectedVoucherId = @(ViewBag.PreselectedVoucherId ?? 0);
+        if (preselectedVoucherId > 0) {
+            // Check xem voucher này thuộc loại nào
+            let voucherType = '';
+            let isValid = false;
+            
+            // Check discount voucher
+            if (discountVoucherSelect && discountVoucherSelect.value == preselectedVoucherId) {
+                const selectedOption = discountVoucherSelect.options[discountVoucherSelect.selectedIndex];
+                const promotionType = selectedOption.getAttribute('data-promotion-type');
+                
+                // ⭐ KHÔNG hiển thị notification cho Gift voucher (đã được xử lý bởi TempData)
+                if (promotionType !== 'Gift') {
+                    voucherType = 'discount';
+                    isValid = true;
+                }
+            }
+            
+            // Check shipping voucher (chỉ xử lý nếu chưa restore từ sessionStorage)
+            if (!shippingVoucherRestored && shippingVoucherSelect && shippingVoucherSelect.value == preselectedVoucherId) {
+                voucherType = 'shipping';
+                const selectedOption = shippingVoucherSelect.options[shippingVoucherSelect.selectedIndex];
+                const applyDistrictsJson = selectedOption.getAttribute('data-apply-districts');
+                
+                // Nếu có điều kiện địa chỉ nhưng chưa chọn ward thì tạm coi là hợp lệ
+                if (!applyDistrictsJson || applyDistrictsJson.trim() === '') {
+                    isValid = true;
+                } else {
+                    // Chờ user chọn địa chỉ rồi mới validate
+                    isValid = true;
+                }
+            }
+            
+            // Hiển thị notification
+            if (isValid) {
+                if (voucherType === 'shipping') {
+                    showGlobalNotification('Voucher vận chuyển sẽ được áp dụng sau khi chọn địa chỉ.', 'success');
+                } else if (voucherType === 'discount') {
+                    showGlobalNotification('Áp dụng voucher thành công!', 'success');
+                }
+            }
+        }
+    }
+
+    // Xử lý điểm tích lũy
+    const pointsToUseInput = document.getElementById('pointsToUse');
+    const useMaxPointsBtn = document.getElementById('useMaxPoints');
+    const pointsDiscountDisplay = document.getElementById('pointsDiscountDisplay');
+    const pointsDiscountAmount = document.getElementById('pointsDiscountAmount');
+    const pointsDiscountRow = document.getElementById('pointsDiscountRow');
+    
+    if (pointsToUseInput) {
+        const availablePoints = @(ViewBag.AvailablePoints ?? 0);
+        const pointsToVnd = @(ViewBag.PointsToVnd ?? 100);
+        
+        // Hàm cập nhật hiển thị discount từ điểm
+        function updatePointsDiscount() {
+            const pointsUsed = parseInt(pointsToUseInput.value) || 0;
+            
+            // Validate
+            if (pointsUsed > availablePoints) {
+                pointsToUseInput.value = availablePoints;
+                return updatePointsDiscount();
+            }
+            
+            if (pointsUsed < 0) {
+                pointsToUseInput.value = 0;
+                return updatePointsDiscount();
+            }
+            
+            // Tính discount (1 điểm = 100đ)
+            const discount = pointsUsed * pointsToVnd;
+            
+            // Hiển thị
+            if (pointsDiscountDisplay) {
+                pointsDiscountDisplay.textContent = discount.toLocaleString('vi-VN') + 'đ';
+            }
+            
+            if (pointsDiscountAmount && pointsDiscountRow) {
+                if (pointsUsed > 0) {
+                    pointsDiscountAmount.textContent = '-' + discount.toLocaleString('vi-VN') + 'đ';
+                    pointsDiscountRow.style.display = 'flex';
+                } else {
+                    pointsDiscountRow.style.display = 'none';
+                }
+            }
+            
+            // Cập nhật tổng tiền
+            updateShippingFee();
+        }
+        
+        // Dùng hết điểm
+        if (useMaxPointsBtn) {
+            useMaxPointsBtn.addEventListener('click', function() {
+                // Tính số điểm tối đa có thể dùng dựa trên tổng tiền
+                const subtotal = @(ViewBag.Subtotal ?? 0);
+                const itemDiscounts = @(ViewBag.ItemDiscounts ?? 0);
+                const giftVoucherDiscount = @(ViewBag.GiftVoucherDiscount ?? 0);
+                const promotionDiscount = @(ViewBag.PromotionDiscount ?? 0);
+                
+                // Lấy voucher discount hiện tại
+                const voucherSelect = document.getElementById('voucherSelect');
+                let voucherDiscount = 0;
+                if (voucherSelect && voucherSelect.value) {
+                    const selectedOption = voucherSelect.options[voucherSelect.selectedIndex];
+                    const voucherType = selectedOption.getAttribute('data-voucher-type');
+                    const voucherValue = parseFloat(selectedOption.getAttribute('data-voucher-value')) || 0;
+                    const voucherMax = parseFloat(selectedOption.getAttribute('data-voucher-max')) || 0;
+                    
+                    if (voucherType === 'percent') {
+                        voucherDiscount = (subtotal * voucherValue) / 100;
+                    } else {
+                        voucherDiscount = voucherValue;
+                    }
+                    
+                    if (voucherMax > 0 && voucherDiscount > voucherMax) {
+                        voucherDiscount = voucherMax;
+                    }
+                }
+                
+                // Tính phí ship (nếu đã chọn)
+                const wardSelect = document.getElementById('ward');
+                const shippingFeeText = document.querySelector('.order-summary').querySelectorAll('.d-flex')[2]?.querySelector('span:last-child')?.textContent || '0';
+                const shippingFee = parseInt(shippingFeeText.replace(/[^\d]/g, '')) || 0;
+                
+                // Tổng tiền trước khi dùng điểm
+                const totalBeforePoints = subtotal - itemDiscounts - giftVoucherDiscount - promotionDiscount - voucherDiscount + shippingFee;
+                
+                // Số điểm tối đa có thể dùng
+                const maxPointsCanUse = Math.min(availablePoints, Math.floor(totalBeforePoints / pointsToVnd));
+                
+                pointsToUseInput.value = maxPointsCanUse;
+                updatePointsDiscount();
+            });
+        }
+        
+        // Lắng nghe thay đổi input điểm
+        pointsToUseInput.addEventListener('input', updatePointsDiscount);
+        pointsToUseInput.addEventListener('change', updatePointsDiscount);
+    }
+
+    // Validation form trước khi submit
+    document.querySelector('.checkout-form').addEventListener('submit', function(e) {
+        const ward = document.getElementById('ward').value;
+        const address = document.getElementById('address').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+
+        if (!ward) {
+            e.preventDefault();
+            alert('Vui lòng chọn Phường/Xã.');
+            document.getElementById('ward').focus();
+            return;
+        }
+
+        if (!address) {
+            e.preventDefault();
+            alert('Vui lòng nhập số nhà, đường.');
+            document.getElementById('address').focus();
+            return;
+        }
+
+        if (!phone) {
+            e.preventDefault();
+            alert('Vui lòng nhập số điện thoại.');
+            document.getElementById('phone').focus();
+            return;
+        }
+
+        if (!paymentMethod) {
+            e.preventDefault();
+            alert('Vui lòng chọn phương thức thanh toán.');
+            return;
+        }
+
+        // Cập nhật địa chỉ giao hàng trước khi submit
+        updateShippingAddress();
+    });
+</script>
+}

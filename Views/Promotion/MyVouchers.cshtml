@@ -1,0 +1,1351 @@
+@model IEnumerable<Bloomie.Models.Entities.UserVoucher>
+
+@{
+    ViewData["Title"] = "Ví Voucher";
+    var currentTab = ViewBag.CurrentTab ?? "available";
+    
+    var availableCount = Model.Count(v => !v.IsUsed && v.ExpiryDate > DateTime.Now);
+    var usedCount = Model.Count(v => v.IsUsed);
+    var expiredCount = Model.Count(v => !v.IsUsed && v.ExpiryDate <= DateTime.Now);
+}
+
+<!-- Simple Customer-Friendly Header -->
+<div class="customer-header">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")"><i class="fas fa-home me-1"></i>Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("VoucherCampaigns", "Promotion")">Khuyến mãi</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Ví Voucher</li>
+            </ol>
+        </nav>
+
+        <!-- Simple Title -->
+        <div class="header-title-section">
+            <h1 class="header-title">
+                <i class="fas fa-wallet me-2"></i>
+                Ví Voucher
+            </h1>
+            <p class="header-subtitle">Quản lý và sử dụng voucher giảm giá của bạn</p>
+        </div>
+    </div>
+</div>
+
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+
+            <!-- Tabs Navigation -->
+            <ul class="nav nav-pills mb-4" id="voucherTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(currentTab == "available" ? "active" : "")" 
+                       href="@Url.Action("MyVouchers", new { tab = "available" })">
+                        <i class="fas fa-tag me-1"></i>Khả Dụng
+                        @if (availableCount > 0)
+                        {
+                            <span class="badge bg-success ms-1">@availableCount</span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(currentTab == "used" ? "active" : "")" 
+                       href="@Url.Action("MyVouchers", new { tab = "used" })">
+                        <i class="fas fa-check-circle me-1"></i>Đã Sử Dụng
+                        @if (usedCount > 0)
+                        {
+                            <span class="badge bg-secondary ms-1">@usedCount</span>
+                        }
+                    </a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(currentTab == "expired" ? "active" : "")" 
+                       href="@Url.Action("MyVouchers", new { tab = "expired" })">
+                        <i class="fas fa-times-circle me-1"></i>Hết Hạn
+                        @if (expiredCount > 0)
+                        {
+                            <span class="badge bg-danger ms-1">@expiredCount</span>
+                        }
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Vouchers List -->
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="fas fa-info-circle fa-3x mb-3"></i>
+                    <h4>
+                        @if (currentTab == "available")
+                        {
+                            <span>Bạn chưa có voucher nào!</span>
+                        }
+                        else if (currentTab == "used")
+                        {
+                            <span>Bạn chưa sử dụng voucher nào!</span>
+                        }
+                        else
+                        {
+                            <span>Bạn không có voucher nào hết hạn!</span>
+                        }
+                    </h4>
+                    <p class="mb-3">Hãy khám phá các chương trình khuyến mãi và thu thập voucher!</p>
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                        <i class="fas fa-shopping-bag me-1"></i>Mua Sắm Ngay
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var voucher in Model)
+                    {
+                        var promotion = voucher.PromotionCode?.Promotion;
+                        var isExpired = voucher.ExpiryDate <= DateTime.Now;
+                        var isUsed = voucher.IsUsed;
+                        var daysLeft = (voucher.ExpiryDate - DateTime.Now).Days;
+                        var modalId = $"voucherModal_{voucher.Id}";
+
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100 @(isExpired || isUsed ? "opacity-75" : "border-primary") voucher-card" 
+                                 style="cursor: pointer;"
+                                 data-modal-target="@modalId">
+                                <div class="card-body">
+                                    <!-- Status Badge -->
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        @if (isUsed)
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-check-circle me-1"></i>Đã Sử Dụng
+                                            </span>
+                                        }
+                                        else if (isExpired)
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>Hết Hạn
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-tag me-1"></i>Khả Dụng
+                                            </span>
+                                        }
+
+                                        <!-- Source Badge -->
+                                        @if (!string.IsNullOrEmpty(voucher.Source))
+                                        {
+                                            var sourceIcon = voucher.Source switch
+                                            {
+                                                "LuckyWheel" => "dice",
+                                                "FlashSale" => "bolt",
+                                                "Birthday" => "birthday-cake",
+                                                "Referral" => "user-friends",
+                                                "AdminGift" => "gift",
+                                                _ => "tag"
+                                            };
+                                            var sourceName = voucher.Source switch
+                                            {
+                                                "LuckyWheel" => "Vòng Quay",
+                                                "FlashSale" => "Flash Sale",
+                                                "Birthday" => "Sinh Nhật",
+                                                "Referral" => "Giới Thiệu",
+                                                "AdminGift" => "Quà Tặng",
+                                                _ => voucher.Source
+                                            };
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-@sourceIcon me-1"></i>@(sourceName == "Campaign" ? "Chương trình" : sourceName)
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <!-- Promotion Name -->
+                                    <h5 class="card-title">
+                                        @(promotion?.Name ?? "Voucher")
+                                    </h5>
+
+                                    <!-- Voucher Code -->
+                                    <div class="mb-2">
+                                        <strong>Mã:</strong> 
+                                        <code class="bg-light px-2 py-1 rounded">@voucher.PromotionCode?.Code</code>
+                                    </div>
+
+                                    <!-- Discount Value -->
+                                    <div class="mb-2">
+                                        <strong>Giảm giá:</strong>
+                                        @{
+                                            var promotionType = promotion?.Type;
+                                            var giftInfo = promotionType == Bloomie.Models.Entities.PromotionType.Gift ? promotion?.PromotionGifts?.FirstOrDefault() : null;
+                                        }
+                                        @if (promotionType == Bloomie.Models.Entities.PromotionType.Shipping)
+                                        {
+                                            var shipType = promotion?.ShippingDiscountType;
+                                            if (shipType == "free")
+                                            {
+                                                <span class="text-danger fw-bold">Miễn phí vận chuyển</span>
+                                            }
+                                            else if (shipType == "percent" && voucher.PromotionCode?.Value.HasValue == true)
+                                            {
+                                                <span class="text-danger fw-bold">@voucher.PromotionCode.Value%</span>
+                                            }
+                                            else if (shipType == "money" && voucher.PromotionCode?.Value.HasValue == true)
+                                            {
+                                                <span class="text-danger fw-bold">@voucher.PromotionCode.Value.Value.ToString("N0")₫</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-danger fw-bold">Miễn phí vận chuyển</span>
+                                            }
+                                        }
+                                        else if (promotionType == Bloomie.Models.Entities.PromotionType.Gift && giftInfo != null)
+                                        {
+                                            if (giftInfo.GiftDiscountType == "free")
+                                            {
+                                                <span class="text-danger fw-bold">Tặng @giftInfo.GiftQuantity sản phẩm</span>
+                                            }
+                                            else if (giftInfo.GiftDiscountType == "percent")
+                                            {
+                                                <span class="text-danger fw-bold">@giftInfo.GiftDiscountValue% sản phẩm tặng</span>
+                                            }
+                                            else if (giftInfo.GiftDiscountType == "money")
+                                            {
+                                                <span class="text-danger fw-bold">@((giftInfo.GiftDiscountMoneyValue ?? 0).ToString("N0"))₫ mỗi sản phẩm tặng</span>
+                                            }
+                                        }
+                                        else if (voucher.PromotionCode?.IsPercent == true)
+                                        {
+                                            @if (voucher.PromotionCode.Value.HasValue)
+                                            {
+                                                <span class="text-danger fw-bold">@voucher.PromotionCode.Value.Value% </span>
+                                            }
+                                            @if (voucher.PromotionCode.MaxDiscount.HasValue)
+                                            {
+                                                <span class="text-muted small">(Tối đa @voucher.PromotionCode.MaxDiscount.Value.ToString("N0")₫)</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            @if (voucher.PromotionCode?.Value.HasValue == true)
+                                            {
+                                                <span class="text-danger fw-bold">@voucher.PromotionCode.Value.Value.ToString("N0")₫</span>
+                                            }
+                                        }
+                                    </div>
+
+                                    <!-- Expiry Date -->
+                                    <div class="mb-2">
+                                        <strong>
+                                            @if (isExpired)
+                                            {
+                                                <span class="text-danger">Đã hết hạn:</span>
+                                            }
+                                            else if (isUsed && voucher.UsedDate.HasValue)
+                                            {
+                                                <span>Đã dùng:</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Hạn sử dụng:</span>
+                                            }
+                                        </strong>
+                                        @if (isUsed && voucher.UsedDate.HasValue)
+                                        {
+                                            <span>@voucher.UsedDate.Value.ToString("dd/MM/yyyy")</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@voucher.ExpiryDate.ToString("dd/MM/yyyy")</span>
+                                            @if (!isExpired && !isUsed && daysLeft <= 7)
+                                            {
+                                                <span class="badge bg-warning text-dark ms-1">Còn @daysLeft ngày</span>
+                                            }
+                                        }
+                                    </div>
+                                    
+                                    <!-- Usage Limit Warning - Fixed height container -->
+                                    <div style="min-height: 45px;">
+                                        @if (!isUsed && !isExpired && voucher.PromotionCode?.UsageLimit.HasValue == true)
+                                        {
+                                            var remaining = voucher.PromotionCode.UsageLimit.Value - voucher.PromotionCode.UsedCount;
+                                            @if (remaining <= 0)
+                                            {
+                                                <div class="alert alert-danger py-2 px-2 mb-2 small">
+                                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                                    <strong>Đã hết lượt sử dụng!</strong>
+                                                </div>
+                                            }
+                                            else if (remaining <= 10)
+                                            {
+                                                <div class="alert alert-warning py-2 px-2 mb-2 small">
+                                                    <i class="fas fa-fire me-1"></i>
+                                                    <strong>Sắp hết!</strong> Chỉ còn <strong>@remaining</strong> lượt
+                                                </div>
+                                            }
+                                            else if (remaining <= 50)
+                                            {
+                                                <div class="mb-2 text-muted small">
+                                                    <i class="fas fa-users me-1"></i>Còn <strong>@remaining</strong> lượt sử dụng
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+
+                                    <!-- Collected Date -->
+                                    <div class="mb-2 text-muted small">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        Thu thập: @voucher.CollectedDate.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+
+                                    <!-- Note -->
+                                    @if (!string.IsNullOrEmpty(voucher.Note))
+                                    {
+                                        <div class="alert alert-light mb-2 py-1 px-2 small">
+                                            <i class="fas fa-info-circle me-1"></i>@voucher.Note
+                                        </div>
+                                    }
+
+                                    <!-- Promotion Description -->
+                                    @if (!string.IsNullOrEmpty(promotion?.Description))
+                                    {
+                                        <div class="mt-3 pt-3 border-top">
+                                            <small class="text-muted">@promotion.Description</small>
+                                        </div>
+                                    }
+
+                                    <!-- Action Buttons -->
+                                    @if (!isUsed && !isExpired)
+                                    {
+                                        var usageLimitReached = voucher.PromotionCode?.UsageLimit.HasValue == true && 
+                                                               voucher.PromotionCode.UsedCount >= voucher.PromotionCode.UsageLimit.Value;
+                                        
+                                        <div class="mt-3">
+                                            @if (usageLimitReached)
+                                            {
+                                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                                    <i class="fas fa-ban me-1"></i>Đã Hết Lượt
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-primary btn-sm w-100 use-voucher-btn" data-voucher="@voucher.PromotionCode?.Code">
+                                                    <i class="fas fa-shopping-cart me-1"></i>Sử Dụng Ngay
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else if (isUsed && voucher.OrderId.HasValue)
+                                    {
+                                        <div class="mt-3">
+                                            <a href="@Url.Action("Details", "Order", new { id = voucher.OrderId })" 
+                                               class="btn btn-outline-secondary btn-sm w-100">
+                                                <i class="fas fa-receipt me-1"></i>Xem Đơn Hàng
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Tất cả Modal được render ở đây, BÊN NGOÀI ROW -->
+                @foreach (var voucher in Model)
+                {
+                    var promotion = voucher.PromotionCode?.Promotion;
+                    var isExpired = voucher.ExpiryDate <= DateTime.Now;
+                    var isUsed = voucher.IsUsed;
+                    var daysLeft = (voucher.ExpiryDate - DateTime.Now).Days;
+                    var modalId = $"voucherModal_{voucher.Id}";
+                    
+                <div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@(modalId)Label" aria-hidden="true" data-bs-backdrop="false">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="@(modalId)Label">
+                                    <i class="fas fa-ticket-alt me-2"></i>Chi Tiết Voucher
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="voucher-detail">
+                                                @* <!-- Tên Promotion -->
+                                                <h6 class="text-primary mb-3">@(promotion?.Name ?? "Voucher")</h6> *@
+                                                
+                                                <!-- Mã Voucher -->
+                                                <div class="detail-item mb-3">
+                                                    <strong><i class="fas fa-barcode me-2"></i>Mã Voucher:</strong>
+                                                    <span class="text-danger fw-bold">@voucher.PromotionCode?.Code</span>
+                                                </div>
+                                                
+                                                <!-- Giá trị giảm -->
+                                                <div class="detail-item mb-3">
+                                                    <strong><i class="fas fa-tag me-2"></i>Giá Trị Giảm:</strong>
+                                                    @{
+                                                        var promoType = promotion?.Type;
+                                                        var giftDetail = promoType == Bloomie.Models.Entities.PromotionType.Gift ? promotion?.PromotionGifts?.FirstOrDefault() : null;
+                                                    }
+                                                    @if (promoType == Bloomie.Models.Entities.PromotionType.Shipping)
+                                                    {
+                                                        var shipType = promotion?.ShippingDiscountType;
+                                                        if (shipType == "free")
+                                                        {
+                                                            <span class="text-success fw-bold">Miễn phí vận chuyển</span>
+                                                        }
+                                                        else if (shipType == "percent" && voucher.PromotionCode?.Value.HasValue == true)
+                                                        {
+                                                            <span class="text-success fw-bold">@voucher.PromotionCode.Value%</span>
+                                                        }
+                                                        else if (shipType == "money" && voucher.PromotionCode?.Value.HasValue == true)
+                                                        {
+                                                            <span class="text-success fw-bold">@string.Format("{0:N0}", voucher.PromotionCode.Value.Value)₫</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-success fw-bold">Miễn phí vận chuyển</span>
+                                                        }
+                                                    }
+                                                    else if (promoType == Bloomie.Models.Entities.PromotionType.Gift && giftDetail != null)
+                                                    {
+                                                        if (giftDetail.GiftDiscountType == "free")
+                                                        {
+                                                            <span class="text-success fw-bold">Tặng @giftDetail.GiftQuantity sản phẩm</span>
+                                                        }
+                                                        else if (giftDetail.GiftDiscountType == "percent")
+                                                        {
+                                                            <span class="text-success fw-bold">@giftDetail.GiftDiscountValue% mỗi sản phẩm tặng</span>
+                                                        }
+                                                        else if (giftDetail.GiftDiscountType == "money")
+                                                        {
+                                                            <span class="text-success fw-bold">@string.Format("{0:N0}", giftDetail.GiftDiscountMoneyValue ?? 0)₫ mỗi sản phẩm tặng</span>
+                                                        }
+                                                    }
+                                                    else if (voucher.PromotionCode?.IsPercent == true)
+                                                    {
+                                                        <span class="text-success fw-bold">@voucher.PromotionCode.Value%</span>
+                                                        @if (voucher.PromotionCode.MaxDiscount.HasValue)
+                                                        {
+                                                            <span class="text-muted">(Tối đa @string.Format("{0:N0}", voucher.PromotionCode.MaxDiscount.Value)₫)</span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-success fw-bold">@string.Format("{0:N0}", voucher.PromotionCode?.Value ?? 0)₫</span>
+                                                    }
+                                                </div>                                                
+
+                                                @* <!-- Giới hạn sử dụng -->
+                                                @if (voucher.PromotionCode?.LimitPerCustomer == true)
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-user-clock me-2"></i>Giới Hạn:</strong>
+                                                        <span>1 lần/khách hàng</span>
+                                                    </div>
+                                                } *@
+                                                
+                                                @* @if (voucher.PromotionCode?.UsageLimit.HasValue == true)
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-users me-2"></i>Tổng Lượt Dùng:</strong>
+                                                        <span>@voucher.PromotionCode.UsedCount/@voucher.PromotionCode.UsageLimit.Value</span>
+                                                    </div>
+                                                } *@
+                                                
+                                                <!-- Mô tả -->
+                                                @if (!string.IsNullOrEmpty(promotion?.Description))
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-info-circle me-2"></i>Mô Tả:</strong>
+                                                        <p class="text-muted mb-0">@promotion.Description</p>
+                                                    </div>
+                                                }
+
+                                                <!-- Áp dụng cho sản phẩm, danh mục -->
+                                                @if (promotion?.PromotionProducts?.Any() == true || promotion?.PromotionCategories?.Any() == true)
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-tags me-2"></i>Áp Dụng Cho:</strong>
+                                                        
+                                                        @if (promotion.PromotionProducts?.Any() == true)
+                                                        {
+                                                            var productList = promotion.PromotionProducts.ToList();
+                                                            var productCollapsedId = $"products_{voucher.Id}";
+                                                            <div class="mt-2">
+                                                                <span class="badge bg-primary mb-2">
+                                                                    <i class="fas fa-box me-1"></i>Sản Phẩm (@productList.Count)
+                                                                </span>
+                                                                <ul class="list-unstyled ms-3 mb-2">
+                                                                    @for (int i = 0; i < productList.Count; i++)
+                                                                    {
+                                                                        var pp = productList[i];
+                                                                        <li class="mb-1 small @(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? productCollapsedId : "")">
+                                                                            <i class="fas fa-chevron-right text-primary me-2"></i>
+                                                                            <a href="@Url.Action("Details", "Product", new { id = pp.Product?.Id })" 
+                                                                               target="_blank" 
+                                                                               class="text-decoration-none text-primary">
+                                                                                @pp.Product?.Name
+                                                                                <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+                                                                @if (productList.Count > 3)
+                                                                {
+                                                                    <a class="btn btn-sm btn-outline-primary ms-3" 
+                                                                       data-bs-toggle="collapse" 
+                                                                       href="#@productCollapsedId" 
+                                                                       role="button" 
+                                                                       aria-expanded="false">
+                                                                        <i class="fas fa-angle-down me-1"></i>
+                                                                        <span class="toggle-text">Xem thêm @(productList.Count - 3) sản phẩm</span>
+                                                                    </a>
+                                                                }
+                                                            </div>
+                                                        }
+                                                        
+                                                        @if (promotion.PromotionCategories?.Any() == true)
+                                                        {
+                                                            var categoryList = promotion.PromotionCategories.ToList();
+                                                            var categoryCollapsedId = $"categories_{voucher.Id}";
+                                                            <div class="mt-2">
+                                                                <span class="badge bg-info mb-2">
+                                                                    <i class="fas fa-list me-1"></i>Danh Mục (@categoryList.Count)
+                                                                </span>
+                                                                <ul class="list-unstyled ms-3 mb-0">
+                                                                    @for (int i = 0; i < categoryList.Count; i++)
+                                                                    {
+                                                                        var pc = categoryList[i];
+                                                                        <li class="mb-1 small @(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? categoryCollapsedId : "")">
+                                                                            <i class="fas fa-chevron-right text-info me-2"></i>
+                                                                            <a href="@Url.Action("Index", "Product", new { categoryId = pc.Category?.Id })" 
+                                                                               target="_blank" 
+                                                                               class="text-decoration-none text-info">
+                                                                                @pc.Category?.Name
+                                                                                <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                                                                            </a>
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+                                                                @if (categoryList.Count > 3)
+                                                                {
+                                                                    <a class="btn btn-sm btn-outline-info ms-3 mt-2" 
+                                                                       data-bs-toggle="collapse" 
+                                                                       href="#@categoryCollapsedId" 
+                                                                       role="button" 
+                                                                       aria-expanded="false">
+                                                                        <i class="fas fa-angle-down me-1"></i>
+                                                                        <span class="toggle-text">Xem thêm @(categoryList.Count - 3) danh mục</span>
+                                                                    </a>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                                else if (promotion?.Type == Bloomie.Models.Entities.PromotionType.Product || promotion?.Type == Bloomie.Models.Entities.PromotionType.Order)
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-tags me-2"></i>Áp Dụng Cho:</strong>
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check-circle me-1"></i>Tất Cả Sản Phẩm
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (promotion?.Type == Bloomie.Models.Entities.PromotionType.Shipping)
+                                                {
+                                                    <div class="detail-item mb-3">
+                                                        <strong><i class="fas fa-map-marked-alt me-2"></i>Khu Vực Áp Dụng:</strong>
+                                                        @{
+                                                            var hasDistricts = !string.IsNullOrEmpty(promotion.ApplyDistricts);
+                                                            List<string>? districtList = null;
+                                                            if (hasDistricts)
+                                                            {
+                                                                try
+                                                                {
+                                                                    districtList = System.Text.Json.JsonSerializer.Deserialize<List<string>>(promotion.ApplyDistricts!);
+                                                                }
+                                                                catch
+                                                                {
+                                                                    hasDistricts = false;
+                                                                }
+                                                            }
+                                                        }
+                                                        <div class="mt-2">
+                                                            @if (hasDistricts && districtList != null && districtList.Any())
+                                                            {
+                                                                <span class="badge bg-info mb-2">
+                                                                    <i class="fas fa-location-dot me-1"></i>Phường/Xã Được Áp Dụng (@districtList.Count)
+                                                                </span>
+                                                                <div class="ms-3 mt-2">
+                                                                    @if (districtList.Count <= 5)
+                                                                    {
+                                                                        <ul class="list-unstyled mb-0">
+                                                                            @foreach (var district in districtList)
+                                                                            {
+                                                                                <li class="mb-1 small">
+                                                                                    <i class="fas fa-map-pin text-info me-2"></i>@district
+                                                                                </li>
+                                                                            }
+                                                                        </ul>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        var wardCollapsedId = $"wards_{voucher.Id}";
+                                                                        <ul class="list-unstyled mb-0">
+                                                                            @for (int i = 0; i < districtList.Count; i++)
+                                                                            {
+                                                                                <li class="mb-1 small @(i >= 5 ? "collapse" : "")" id="@(i >= 5 ? wardCollapsedId : "")">
+                                                                                    <i class="fas fa-map-pin text-info me-2"></i>@districtList[i]
+                                                                                </li>
+                                                                            }
+                                                                        </ul>
+                                                                        <a class="btn btn-sm btn-outline-info ms-3 mt-2" 
+                                                                           data-bs-toggle="collapse" 
+                                                                           href="#@wardCollapsedId" 
+                                                                           role="button" 
+                                                                           aria-expanded="false">
+                                                                            <i class="fas fa-angle-down me-1"></i>
+                                                                            <span class="toggle-text">Xem thêm @(districtList.Count - 5) phường/xã</span>
+                                                                        </a>
+                                                                    }
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge bg-success">
+                                                                    <i class="fas fa-globe me-1"></i>Áp Dụng Tất Cả Khu Vực
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                }
+                                                else if (promotion?.Type == Bloomie.Models.Entities.PromotionType.Gift)
+                                                {
+                                                    var giftPromo = promotion.PromotionGifts?.FirstOrDefault();
+                                                    
+                                                    @if (giftPromo != null)
+                                                    {                                                
+                                                        <!-- Phần TẶNG GÌ -->
+                                                        <div class="detail-item mb-3">
+                                                            <strong><i class="fas fa-gift me-2 text-success"></i>Được Tặng @giftPromo.GiftQuantity Sản Phẩm Từ:</strong>
+                                                            @if (giftPromo.GiftProducts?.Any() == true || giftPromo.GiftCategories?.Any() == true)
+                                                            {
+                                                                @if (giftPromo.GiftProducts?.Any() == true)
+                                                                {
+                                                                    var giftProductList = giftPromo.GiftProducts.ToList();
+                                                                    var giftProdCollapsedId = $"giftProds_{voucher.Id}";
+                                                                    <div class="mt-2">
+                                                                        <span class="badge bg-success mb-2">
+                                                                            <i class="fas fa-box me-1"></i>Sản Phẩm (@giftProductList.Count)
+                                                                        </span>
+                                                                        <ul class="list-unstyled ms-3 mb-0">
+                                                                            @for (int i = 0; i < giftProductList.Count; i++)
+                                                                            {
+                                                                                var gp = giftProductList[i];
+                                                                                <li class="mb-1 small @(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? giftProdCollapsedId : "")">
+                                                                                    <i class="fas fa-chevron-right text-success me-2"></i>
+                                                                                    <a href="@Url.Action("Details", "Product", new { id = gp.Product?.Id })" 
+                                                                                       target="_blank" 
+                                                                                       class="text-decoration-none text-success">
+                                                                                        @gp.Product?.Name
+                                                                                        <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                                                                                    </a>
+                                                                                </li>
+                                                                            }
+                                                                        </ul>
+                                                                        @if (giftProductList.Count > 3)
+                                                                        {
+                                                                            <a class="btn btn-sm btn-outline-success ms-3 mt-2" 
+                                                                               data-bs-toggle="collapse" 
+                                                                               href="#@giftProdCollapsedId">
+                                                                                <i class="fas fa-angle-down me-1"></i>
+                                                                                <span class="toggle-text">Xem thêm @(giftProductList.Count - 3) sản phẩm</span>
+                                                                            </a>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                                @if (giftPromo.GiftCategories?.Any() == true)
+                                                                {
+                                                                    var giftCategoryList = giftPromo.GiftCategories.ToList();
+                                                                    var giftCatCollapsedId = $"giftCats_{voucher.Id}";
+                                                                    <div class="mt-2">
+                                                                        <span class="badge bg-warning text-dark mb-2">
+                                                                            <i class="fas fa-list me-1"></i>Danh Mục (@giftCategoryList.Count)
+                                                                        </span>
+                                                                        <ul class="list-unstyled ms-3 mb-0">
+                                                                            @for (int i = 0; i < giftCategoryList.Count; i++)
+                                                                            {
+                                                                                var gc = giftCategoryList[i];
+                                                                                <li class="mb-1 small @(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? giftCatCollapsedId : "")">
+                                                                                    <i class="fas fa-chevron-right text-warning me-2"></i>
+                                                                                    <a href="@Url.Action("Index", "Product", new { categoryId = gc.Category?.Id })" 
+                                                                                       target="_blank" 
+                                                                                       class="text-decoration-none text-warning">
+                                                                                        @gc.Category?.Name
+                                                                                        <i class="fas fa-external-link-alt ms-1" style="font-size: 0.7rem;"></i>
+                                                                                    </a>
+                                                                                </li>
+                                                                            }
+                                                                        </ul>
+                                                                        @if (giftCategoryList.Count > 3)
+                                                                        {
+                                                                            <a class="btn btn-sm btn-outline-warning ms-3 mt-2" 
+                                                                               data-bs-toggle="collapse" 
+                                                                               href="#@giftCatCollapsedId">
+                                                                                <i class="fas fa-angle-down me-1"></i>
+                                                                                <span class="toggle-text">Xem thêm @(giftCategoryList.Count - 3) danh mục</span>
+                                                                            </a>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="mt-2">
+                                                                    <span class="badge bg-success">
+                                                                        <i class="fas fa-check-circle me-1"></i>Tất Cả Sản Phẩm
+                                                                    </span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                }
+                                                
+                                                <!-- Điều kiện áp dụng -->
+                                                <div class="detail-item mb-3">
+                                                    <strong><i class="fas fa-clipboard-list me-2"></i>Điều Kiện Áp Dụng:</strong>
+                                                    <ul class="list-unstyled mb-0 mt-2">
+                                                        @if (promotion?.Type == Bloomie.Models.Entities.PromotionType.Gift)
+                                                        {
+                                                            var giftPromo = promotion.PromotionGifts?.FirstOrDefault();
+                                                            if (giftPromo != null)
+                                                            {
+                                                                @if (giftPromo.BuyProducts?.Any() == true)
+                                                                {
+                                                                    var buyProductList = giftPromo.BuyProducts.ToList();
+                                                                    var moreItemsId = $"moreBuyProds_{voucher.Id}";
+                                                                    <li class="mb-1">
+                                                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                                                        @if (giftPromo.BuyConditionType == "MinQuantity" && giftPromo.BuyConditionValue.HasValue)
+                                                                        {
+                                                                            <text>Mua tối thiểu <strong>@giftPromo.BuyConditionValue.Value</strong> sản phẩm: </text>
+                                                                        }
+                                                                        else if (giftPromo.BuyConditionType == "MinValue" && giftPromo.BuyConditionValueMoney.HasValue)
+                                                                        {
+                                                                            <text>Mua sản phẩm trị giá tối thiểu <strong>@string.Format("{0:N0}", giftPromo.BuyConditionValueMoney.Value)₫</strong> từ: </text>
+                                                                        }
+                                                                        @for (int i = 0; i < buyProductList.Count; i++)
+                                                                        {
+                                                                            var bp = buyProductList[i];
+                                                                            <span class="@(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? moreItemsId : "")">
+                                                                                <a href="@Url.Action("Details", "Product", new { id = bp.Product?.Id })" 
+                                                                                   target="_blank" 
+                                                                                   class="text-decoration-none">
+                                                                                    <strong>@bp.Product?.Name</strong>
+                                                                                </a>@(i < buyProductList.Count - 1 ? ", " : "")
+                                                                            </span>
+                                                                        }
+                                                                        @if (buyProductList.Count > 3)
+                                                                        {
+                                                                            <a href="#" 
+                                                                               class="text-decoration-none ms-1" 
+                                                                               data-bs-toggle="collapse" 
+                                                                               data-bs-target="#@moreItemsId">
+                                                                                <small>(Xem thêm @(buyProductList.Count - 3))</small>
+                                                                            </a>
+                                                                        }
+                                                                    </li>
+                                                                }
+                                                                @if (giftPromo.BuyCategories?.Any() == true)
+                                                                {
+                                                                    var buyCategoryList = giftPromo.BuyCategories.ToList();
+                                                                    var moreItemsId = $"moreBuyCats_{voucher.Id}";
+                                                                    <li class="mb-1">
+                                                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                                                        @if (giftPromo.BuyConditionType == "MinQuantity" && giftPromo.BuyConditionValue.HasValue)
+                                                                        {
+                                                                            <text>Mua tối thiểu <strong>@giftPromo.BuyConditionValue.Value</strong> sản phẩm của danh mục: </text>
+                                                                        }
+                                                                        else if (giftPromo.BuyConditionType == "MinValue" && giftPromo.BuyConditionValueMoney.HasValue)
+                                                                        {
+                                                                            <text>Mua sản phẩm trị giá tối thiểu <strong>@string.Format("{0:N0}", giftPromo.BuyConditionValueMoney.Value)₫</strong> từ danh mục: </text>
+                                                                        }
+                                                                        @for (int i = 0; i < buyCategoryList.Count; i++)
+                                                                        {
+                                                                            var bc = buyCategoryList[i];
+                                                                            <span class="@(i >= 3 ? "collapse" : "")" id="@(i >= 3 ? moreItemsId : "")">
+                                                                                <a href="@Url.Action("Index", "Product", new { categoryId = bc.Category?.Id })" 
+                                                                                   target="_blank" 
+                                                                                   class="text-decoration-none">
+                                                                                    <strong>@bc.Category?.Name</strong>
+                                                                                </a>@(i < buyCategoryList.Count - 1 ? ", " : "")
+                                                                            </span>
+                                                                        }
+                                                                        @if (buyCategoryList.Count > 3)
+                                                                        {
+                                                                            <a href="#" 
+                                                                               class="text-decoration-none ms-1" 
+                                                                               data-bs-toggle="collapse" 
+                                                                               data-bs-target="#@moreItemsId">
+                                                                                <small>(Xem thêm @(buyCategoryList.Count - 3))</small>
+                                                                            </a>
+                                                                        }
+                                                                    </li>
+                                                                }
+                                                                @if (giftPromo.BuyProducts?.Any() != true && giftPromo.BuyCategories?.Any() != true)
+                                                                {
+                                                                    <li class="mb-1">
+                                                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                                                        @if (giftPromo.BuyConditionType == "MinQuantity" && giftPromo.BuyConditionValue.HasValue)
+                                                                        {
+                                                                            <text>Mua tối thiểu <strong>@giftPromo.BuyConditionValue.Value</strong> sản phẩm bất kỳ</text>
+                                                                        }
+                                                                        else if (giftPromo.BuyConditionType == "MinValue" && giftPromo.BuyConditionValueMoney.HasValue)
+                                                                        {
+                                                                            <text>Mua sản phẩm bất kỳ trị giá tối thiểu <strong>@string.Format("{0:N0}", giftPromo.BuyConditionValueMoney.Value)₫</strong></text>
+                                                                        }
+                                                                    </li>
+                                                                }
+                                                            }
+                                                        }
+                                                        
+                                                        @if (voucher.PromotionCode?.MinOrderValue.HasValue == true && voucher.PromotionCode.MinOrderValue.Value > 0)
+                                                        {
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                Đơn hàng tối thiểu: <strong>@string.Format("{0:N0}", voucher.PromotionCode.MinOrderValue.Value)₫</strong>
+                                                            </li>
+                                                        }
+                                                        @if (promotion?.MinProductQuantity.HasValue == true && promotion.MinProductQuantity.Value > 0)
+                                                        {
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                Số lượng sản phẩm tối thiểu: <strong>@promotion.MinProductQuantity.Value</strong>
+                                                            </li>
+                                                        }
+                                                        @if (voucher.PromotionCode?.LimitPerCustomer == true)
+                                                        {
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                Mỗi khách hàng chỉ được sử dụng <strong>1 lần</strong>
+                                                            </li>
+                                                        }
+                                                        @* @if (voucher.PromotionCode?.UsageLimit.HasValue == true)
+                                                        {
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                Tổng số lượt sử dụng: <strong>@voucher.PromotionCode.UsedCount/@voucher.PromotionCode.UsageLimit.Value</strong>
+                                                            </li>
+                                                        } *@
+                                                        @* @if (voucher.PromotionCode?.IsPercent == true && voucher.PromotionCode.MaxDiscount.HasValue)
+                                                        {
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                Giảm tối đa: <strong>@string.Format("{0:N0}", voucher.PromotionCode.MaxDiscount.Value)₫</strong>
+                                                            </li>
+                                                        } *@
+                                                    </ul>
+                                                </div>
+                                                
+                                                <!-- Ngày hết hạn -->
+                                                <div class="detail-item mb-3">
+                                                    <strong><i class="fas fa-clock me-2"></i>Hạn Sử Dụng Mã:</strong>
+                                                    <span class="@(isExpired ? "text-danger" : daysLeft <= 3 ? "text-warning" : "text-success")">
+                                                        @voucher.ExpiryDate.ToString("dd/MM/yyyy HH:mm")
+                                                        @if (!isExpired && daysLeft <= 7)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-2">Còn @daysLeft ngày</span>
+                                                        }
+                                                    </span>
+                                                </div>
+                                                
+                                                @* <!-- Nguồn -->
+                                                <div class="detail-item">
+                                                    <strong><i class="fas fa-gift me-2"></i>Nguồn:</strong>
+                                                    @{
+                                                        var modalSourceIcon = voucher.Source switch
+                                                        {
+                                                            "LuckyWheel" => "spinner",
+                                                            "FlashSale" => "bolt",
+                                                            "Birthday" => "birthday-cake",
+                                                            "Referral" => "user-plus",
+                                                            "AdminGift" => "gift",
+                                                            _ => "ticket-alt"
+                                                        };
+                                                        var modalSourceName = voucher.Source switch
+                                                        {
+                                                            "Campaign" => "Chương Trình",
+                                                            "LuckyWheel" => "Vòng Quay",
+                                                            "FlashSale" => "Flash Sale",
+                                                            "Birthday" => "Sinh Nhật",
+                                                            "Referral" => "Giới Thiệu",
+                                                            "AdminGift" => "Quà Tặng",
+                                                            _ => voucher.Source
+                                                        };
+                                                    }
+                                                    <span class="badge bg-info">
+                                                        <i class="fas fa-@modalSourceIcon me-1"></i>@modalSourceName
+                                                    </span>
+                                                </div> *@
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            @if (!isUsed && !isExpired)
+                                            {
+                                                var usageLimitReached = voucher.PromotionCode?.UsageLimit.HasValue == true && 
+                                                                       voucher.PromotionCode.UsedCount >= voucher.PromotionCode.UsageLimit.Value;
+                                                
+                                                @if (usageLimitReached)
+                                                {
+                                                    <div class="w-100 text-center py-2">
+                                                        <div class="alert alert-danger mb-3">
+                                                            <i class="fas fa-ban me-2"></i>
+                                                            <strong>Voucher đã hết lượt sử dụng!</strong>
+                                                            <p class="mb-0 mt-2 small">Rất tiếc, voucher này đã đạt giới hạn số lượt sử dụng.</p>
+                                                        </div>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                            <i class="fas fa-times me-2"></i>Đóng
+                                                        </button>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <button type="button" class="btn btn-primary use-voucher-btn" data-voucher="@voucher.PromotionCode?.Code" data-bs-dismiss="modal">
+                                                        <i class="fas fa-shopping-cart me-2"></i>Sử Dụng Ngay
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times me-2"></i>Đóng
+                                                    </button>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="fas fa-times me-2"></i>Đóng
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Toggle text cho nút "Xem thêm"
+            $('[data-bs-toggle="collapse"]').on('click', function(e) {
+                e.stopPropagation(); // Ngăn trigger modal
+                var $this = $(this);
+                var $icon = $this.find('i.fa-angle-down, i.fa-angle-up');
+                var $text = $this.find('.toggle-text');
+                var target = $this.attr('href');
+                
+                // Lưu text gốc nếu chưa có
+                if (!$this.data('original-text')) {
+                    $this.data('original-text', $text.text());
+                }
+                
+                // Đợi collapse animation hoàn tất
+                setTimeout(function() {
+                    var isExpanded = $(target).hasClass('show');
+                    
+                    if (isExpanded) {
+                        $icon.removeClass('fa-angle-down').addClass('fa-angle-up');
+                        $text.text('Thu gọn');
+                    } else {
+                        $icon.removeClass('fa-angle-up').addClass('fa-angle-down');
+                        $text.text($this.data('original-text'));
+                    }
+                }, 350);
+            });
+            
+            // ===== XÓA BACKDROP - KHÔNG DÙNG OVERLAY =====
+            // Khi modal mở
+            $('.modal').on('show.bs.modal', function (e) {
+                // XÓA backdrop của Bootstrap
+                setTimeout(function() {
+                    $('.modal-backdrop').remove();
+                    // Cho phép scroll trang bên dưới
+                    $('body').css({
+                        'overflow': 'auto',
+                        'padding-right': '0'
+                    });
+                }, 10);
+            });
+            
+            // Sau khi modal hiện
+            $('.modal').on('shown.bs.modal', function (e) {
+                // XÓA backdrop lại lần nữa
+                $('.modal-backdrop').remove();
+                // Đảm bảo body có thể scroll
+                $('body').css({
+                    'overflow': 'auto',
+                    'padding-right': '0'
+                }).removeClass('modal-open');
+            });
+            
+            // Khi modal đóng
+            $('.modal').on('hidden.bs.modal', function (e) {
+                // Đảm bảo xóa hết backdrop
+                $('.modal-backdrop').remove();
+                // Khôi phục scroll
+                $('body').css({
+                    'overflow': 'auto',
+                    'padding-right': '0'
+                }).removeClass('modal-open');
+            });
+        });
+        
+        // XỬ LÝ CLICK CARD - Mở modal (nhưng KHÔNG khi click button)
+        $(document).on('click', '.voucher-card', function (e) {
+            // KHÔNG mở modal nếu click vào button hoặc link
+            if ($(e.target).closest('.use-voucher-btn, a, button').length > 0) {
+                return;
+            }
+            
+            var modalId = $(this).data('modal-target');
+            if (modalId) {
+                $('#' + modalId).modal('show');
+            }
+        });
+        
+        $(document).on('click', '.use-voucher-btn', function (e) {
+            e.stopPropagation();
+            e.stopImmediatePropagation(); // CHẶN TẤT CẢ event khác
+            e.preventDefault();
+            
+            var voucherCode = $(this).data('voucher');
+            var $btn = $(this);
+            var originalText = $btn.html();
+            
+            // Hiển thị loading
+            $btn.prop('disabled', true)
+                .html('<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...');
+            
+            // Gọi Ajax kiểm tra giỏ hàng
+            $.get('/ShoppingCart/CheckCart', function (hasItems) {
+                if (hasItems === true || hasItems === 'true') {
+                    // Hiển thị đang chuyển trang
+                    $btn.html('<i class="fas fa-check me-2"></i>Đang chuyển...');
+                    
+                    // Chuyển trang mượt hơn với timeout nhỏ
+                    setTimeout(function() {
+                        window.location.href = '/Order/Checkout?voucherCode=' + encodeURIComponent(voucherCode);
+                    }, 200);
+                } else {
+                    // Giỏ hàng trống
+                    $btn.html('<i class="fas fa-shopping-cart me-2"></i>Chuyển đến sản phẩm...');
+                    setTimeout(function() {
+                        window.location.href = '/Product/Index';
+                    }, 200);
+                }
+            }).fail(function() {
+                // Nếu lỗi, hiển thị thông báo và reset button
+                $btn.html('<i class="fas fa-exclamation-circle me-2"></i>Lỗi! Thử lại');
+                setTimeout(function() {
+                    $btn.prop('disabled', false).html(originalText);
+                }, 2000);
+            });
+            
+            return false;
+        });
+        
+        // Ngăn links và buttons trigger modal
+        $(document).on('click', '.voucher-card a, .voucher-card button:disabled', function(e) {
+            e.stopPropagation();
+        });
+    </script>
+
+    <style>
+    /* Animations */
+    .customer-header {
+        animation: slideDown 0.6s ease-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .container {
+        animation: fadeInUp 0.7s ease-out;
+        animation-fill-mode: both;
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Simple Customer-Friendly Header */
+    .customer-header {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+        padding: 2.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw;
+    }
+
+    .customer-header .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.875rem;
+    }
+
+    .customer-header .breadcrumb-item a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    .customer-header .breadcrumb-item a:hover {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item.active {
+        color: white;
+    }
+
+    .customer-header .breadcrumb-item + .breadcrumb-item::before {
+        content: ">";
+        color: rgba(255, 255, 255, 0.6);
+        float: none;
+        padding-right: 0.5rem;
+        padding-left: 0.35rem;
+    }
+
+    .header-title-section {
+        text-align: center;
+        margin-top: 1rem;
+    }
+
+    .header-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 0 0.5rem 0;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .header-subtitle {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+    }
+
+    @@media (max-width: 576px) {
+        .customer-header {
+            padding: 2rem 0;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    .nav-pills {
+        background: #fff;
+        padding: 8px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: inline-flex;
+        gap: 8px;
+    }
+    
+    .nav-pills .nav-link {
+        color: #666;
+        background: transparent;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .nav-pills .nav-link:hover {
+        color: #ff9500;
+        background: rgba(255, 149, 0, 0.08);
+    }
+    
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #ff9500 0%, #ff5722 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+    }
+    
+    .nav-pills .nav-link .badge {
+        font-size: 0.75rem;
+        padding: 0.25em 0.6em;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    .nav-pills .nav-link.active .badge {
+        background: rgba(255, 255, 255, 0.3) !important;
+        color: white;
+    }
+    
+    .card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        cursor: pointer;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+    
+    code {
+        font-size: 1rem;
+        color: #d63384;
+    }
+    
+    /* ===== MODAL STYLING - ĐƠN GIẢN ===== */
+    /* Modal chính */
+    .modal {
+        z-index: 1050 !important;
+        background-color: transparent !important;
+        overflow-y: auto !important; /* Cho phép scroll modal */
+    }
+    
+    .modal.show {
+        display: block !important;
+    }
+    
+    .modal-dialog {
+        position: relative;
+        margin: 1.75rem auto;
+        max-width: 600px;
+        width: 95%;
+        z-index: 1051 !important;
+    }
+    
+    .modal-content {
+        position: relative;
+        background-color: #fff !important;
+        border: 1px solid rgba(0,0,0,.2);
+        border-radius: 0.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,.5);
+        z-index: 1052 !important;
+    }
+    
+    /* Đảm bảo modal có thể scroll */
+    .modal-body {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+        background-color: #fff !important;
+    }
+    
+    .modal-header {
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    
+    .voucher-detail .detail-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .voucher-detail .detail-item:last-child {
+        border-bottom: none;
+    }
+    
+    .voucher-detail strong {
+        display: block;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .voucher-detail ul li {
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .voucher-detail ul li strong {
+        display: inline;
+        color: #212529;
+        font-size: 0.9rem;
+    }
+    
+    .voucher-detail ul li i.fa-check-circle {
+        font-size: 0.85rem;
+    }
+    
+    /* Links trong modal */
+    .voucher-detail a {
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+    
+    .voucher-detail a:hover {
+        text-decoration: underline !important;
+        opacity: 0.8;
+    }
+    
+    .voucher-detail .btn-outline-primary,
+    .voucher-detail .btn-outline-info {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.75rem;
+        transition: all 0.3s;
+    }
+    
+    .voucher-detail .btn-outline-primary:hover {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .voucher-detail .btn-outline-info:hover {
+        background-color: #0dcaf0;
+        color: white;
+    }
+    
+    .voucher-card {
+        position: relative;
+    }
+    
+    .voucher-card::after {
+        content: '�';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .voucher-card:hover::after {
+        opacity: 0.7;
+    }
+</style>
+}

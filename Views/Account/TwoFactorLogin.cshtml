@@ -1,0 +1,31 @@
+@using Bloomie.Models.ViewModels
+@model TwoFactorViewModel
+@{
+    ViewData["Title"] = "Đăng nhập với Mã 2FA";
+    Layout = "~/Views/Shared/_IdentityLayout.cshtml";
+}
+@if (TempData["info"] != null)
+{
+    <div class="alert alert-info">@TempData["info"]</div>
+}
+@if (TempData["error"] != null)
+{
+    <div class="alert alert-danger">@TempData["error"]</div>
+}
+
+<h2>Đăng nhập với Mã Xác thực</h2>
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+<form asp-action="TwoFactorLogin" method="post">
+    <div class="form-group">
+        <label>Nhập mã xác thực đã gửi đến email của bạn:</label>
+        <input type="hidden" name="UserName" value="@Model.UserName" />
+        <input type="text" name="TwoFactorCode" class="form-control" />
+        <span class="text-danger" asp-validation-for="TwoFactorCode"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+</form>
+
+<form asp-action="ResendTwoFactorCode" method="post" style="margin-top:10px;">
+    <input type="hidden" name="userName" value="@Model.UserName" />
+    <button type="submit" class="btn btn-link">Gửi lại mã xác thực</button>
+</form>
